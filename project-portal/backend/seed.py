@@ -381,38 +381,112 @@ def seed_sample_users(db, domain_map: dict) -> None:
                     print(f"  [OK] Assigned {chosen.problem_code} to existing project for {uname}")
 
 
+def seed_bulk_users_inline(db, domain_map: dict) -> None:
+    """Seed 40 test users across all domains (idempotent — skips existing)."""
+    from app.core.security import hash_password
+
+    TEST_USERS = [
+        # AI domain (14)
+        ("Team NeuralNexus",    "team_neuralnexus",    "neuralnexus@test.com",    "AI",            "Arjun Sharma",    "Priya Nair",      "Rohit Das",     "Sneha Pillai",  "IIT Bombay",         "Computer Science",    "2025-2026"),
+        ("Team DeepMind Delta", "team_deepmind_delta", "deepminddelta@test.com",  "AI",            "Kiran Mehta",     "Anjali Verma",    "Suresh Reddy",  "Divya Rajan",   "IIT Delhi",          "AI and ML",           "2025-2026"),
+        ("Team AlphaWave",      "team_alphawave",      "alphawave@test.com",      "AI",            "Vikram Singh",    "Pooja Mishra",    "Ankit Gupta",   "Riya Kapoor",   "NIT Trichy",         "Data Science",        "2025-2026"),
+        ("Team VisionCore",     "team_visioncore",     "visioncore@test.com",     "AI",            "Rahul Patel",     "Meena Iyer",      "Sanjay Kumar",  "Tara Bose",     "VIT Vellore",        "Computer Vision",     "2025-2026"),
+        ("Team SynthIQ",        "team_synthiq",        "synthiq@test.com",        "AI",            "Aditya Joshi",    "Kavitha Rao",     "Nikhil Menon",  None,            "BITS Pilani",        "Artificial Intel.",   "2025-2026"),
+        ("Team LogicForge",     "team_logicforge",     "logicforge@test.com",     "AI",            "Harish Nambiar",  "Shruti Tiwari",   "Pranav Yadav",  "Lakshmi Pillai","SRM University",     "Machine Learning",    "2025-2026"),
+        ("Team EdgeBrain",      "team_edgebrain",      "edgebrain@test.com",      "AI",            "Vinay Choudhary", "Deepa Krishnan",  "Manoj Patil",   "Nisha Sharma",  "Manipal University", "Computer Science",    "2025-2026"),
+        ("Team OmegaAI",        "team_omegaai",        "omegaai@test.com",        "AI",            "Sandeep Ravi",    "Geeta Nair",      "Tarun Jain",    "Pallavi Mehta", "Anna University",    "AI and Robotics",     "2025-2026"),
+        ("Team QuantumLeap",    "team_quantumleap",    "quantumleap@test.com",    "AI",            "Rajesh Kumar",    "Swathi Reddy",    "Aryan Bose",    None,            "Jadavpur University","Deep Learning",       "2025-2026"),
+        ("Team NovaMind",       "team_novamind",       "novamind@test.com",       "AI",            "Varun Sharma",    "Asha Pillai",     "Ravi Teja",     "Shalini Gupta", "Amrita University",  "Neural Networks",     "2025-2026"),
+        ("Team PulseCog",       "team_pulsecog",       "pulsecog@test.com",       "AI",            "Kiran Raj",       "Bhavna Iyer",     "Gaurav Singh",  "Nandita Das",   "PSG College",        "AI Engineering",      "2025-2026"),
+        ("Team ZeroGravAI",     "team_zerogravai",     "zerogravai@test.com",     "AI",            "Mohit Verma",     "Chitra Menon",    "Lokesh Reddy",  "Ananya Rao",    "CEG Chennai",        "Computer Science",    "2025-2026"),
+        ("Team FusionNet",      "team_fusionnet",      "fusionnet@test.com",      "AI",            "Suman Ghosh",     "Rekha Krishnan",  "Arun Pandey",   None,            "IIIT Hyderabad",     "ML and Data Science", "2025-2026"),
+        ("Team NexusByte",      "team_nexusbyte",      "nexusbyte@test.com",      "AI",            "Dinesh Patel",    "Vandana Sharma",  "Sunil Mishra",  "Farah Khan",    "Thapar University",  "AI Research",         "2025-2026"),
+        # Cybersecurity domain (13)
+        ("Team CipherX",        "team_cipherx",        "cipherx@test.com",        "CYBERSECURITY", "Akash Dubey",     "Nandini Bose",    "Vasudev Rao",   "Preethi Nair",  "IIT Madras",         "Cybersecurity",       "2025-2026"),
+        ("Team GhostNet",       "team_ghostnet",       "ghostnet@test.com",       "CYBERSECURITY", "Naveen Kumar",    "Soumya Das",      "Harshit Joshi", None,            "IIT Roorkee",        "Network Security",    "2025-2026"),
+        ("Team PhantomByte",    "team_phantombyte",    "phantombyte@test.com",    "CYBERSECURITY", "Vivek Nair",      "Smitha Pillai",   "Deven Shah",    "Ritu Gupta",    "NIT Surathkal",      "Ethical Hacking",     "2025-2026"),
+        ("Team IronShield",     "team_ironshield",     "ironshield@test.com",     "CYBERSECURITY", "Sriram Iyengar",  "Madhavi Iyer",    "Rohit Sinha",   "Kavya Menon",   "IIIT Bangalore",     "Cryptography",        "2025-2026"),
+        ("Team DarkVector",     "team_darkvector",     "darkvector@test.com",     "CYBERSECURITY", "Suresh Babu",     "Gayathri Raj",    "Kiran Desai",   None,            "Amity University",   "Forensics",           "2025-2026"),
+        ("Team ZeroDay",        "team_zeroday",        "zeroday@test.com",        "CYBERSECURITY", "Amar Srivastava", "Sunita Pandey",   "Yash Kapoor",   "Tanya Singh",   "Symbiosis Institute","Penetration Testing", "2025-2026"),
+        ("Team SteelGuard",     "team_steelguard",     "steelguard@test.com",     "CYBERSECURITY", "Mahesh Iyer",     "Deepika Raman",   "Souvik Das",    "Arpita Roy",    "Manipal University", "Network Defence",     "2025-2026"),
+        ("Team NullByte",       "team_nullbyte",       "nullbyte@test.com",       "CYBERSECURITY", "Rajan Pillai",    "Anitha Kumar",    "Dev Sharma",    None,            "SRM University",     "Cybersecurity",       "2025-2026"),
+        ("Team ByteForce",      "team_byteforce",      "byteforce@test.com",      "CYBERSECURITY", "Praveen Reddy",   "Lalitha Menon",   "Shankar Rao",   "Isha Malhotra", "SASTRA University",  "Security Engineering","2025-2026"),
+        ("Team HexHunter",      "team_hexhunter",      "hexhunter@test.com",      "CYBERSECURITY", "Ashwin Kumar",    "Yamini Naidu",    "Siddharth Roy", "Neha Agarwal",  "Karunya University", "Ethical Hacking",     "2025-2026"),
+        ("Team FortressX",      "team_fortressx",      "fortressx@test.com",      "CYBERSECURITY", "Balaji Krishnan", "Padma Suresh",    "Nilesh Patil",  None,            "CIT Coimbatore",     "Cloud Security",      "2025-2026"),
+        ("Team RedTeam9",       "team_redteam9",       "redteam9@test.com",       "CYBERSECURITY", "Surya Prakash",   "Jaya Lakshmi",    "Aditya Rout",   "Pooja Sharma",  "Chandigarh Univ.",   "Red Teaming",         "2025-2026"),
+        ("Team VigilanceOps",   "team_vigilanceops",   "vigilanceops@test.com",   "CYBERSECURITY", "Ramesh Babu",     "Kavitha Srinivas","Girish Nair",   "Anjali Rathi",  "PESIT Bangalore",    "SOC Operations",      "2025-2026"),
+        # Open Innovation domain (13)
+        ("Team Ignite360",      "team_ignite360",      "ignite360@test.com",      "OPEN_INNOVATION","Aarav Shah",     "Ishaan Mehta",    "Disha Kapoor",  "Kriti Nair",    "DSCE Bangalore",     "Innovation Design",   "2025-2026"),
+        ("Team VaultVision",    "team_vaultvision",    "vaultvision@test.com",    "OPEN_INNOVATION","Prakash Iyer",   "Sindhu Rajan",    "Alok Mishra",   None,            "GEC Thrissur",       "Product Design",      "2025-2026"),
+        ("Team BlueSparks",     "team_bluesparks",     "bluesparks@test.com",     "OPEN_INNOVATION","Tejesh Kumar",   "Chaitra Reddy",   "Nitin Bhat",    "Ranjana Patel", "NITK Surathkal",     "Embedded Systems",    "2025-2026"),
+        ("Team Tectonic",       "team_tectonic",       "tectonic@test.com",       "OPEN_INNOVATION","Gopal Shankar",  "Preethi Menon",   "Suhas Rao",     "Bhoomika Jain", "BIT Mesra",          "Emerging Tech",       "2025-2026"),
+        ("Team SolarFlux",      "team_solarflux",      "solarflux@test.com",      "OPEN_INNOVATION","Aryan Verma",    "Roshni Pillai",   "Tushar Sinha",  None,            "DAIICT Gandhinagar", "Green Technology",    "2025-2026"),
+        ("Team PixelPulse",     "team_pixelpulse",     "pixelpulse@test.com",     "OPEN_INNOVATION","Mithun Raj",     "Lakshanya Iyer",  "Yash Dubey",    "Swathi Pillai", "SIT Tumkur",         "UX and Design",       "2025-2026"),
+        ("Team StormCell",      "team_stormcell",      "stormcell@test.com",      "OPEN_INNOVATION","Deepak Sharma",  "Archana Reddy",   "Jayesh Patel",  "Shreya Gupta",  "RIT Bangalore",      "IoT Systems",         "2025-2026"),
+        ("Team EchoLabs",       "team_echolabs",       "echolabs@test.com",       "OPEN_INNOVATION","Santhosh Kumar", "Vidya Nair",      "Prashant Roy",  None,            "JSSATE Bangalore",   "Product Development", "2025-2026"),
+        ("Team TitanX",         "team_titanx",         "titanx@test.com",         "OPEN_INNOVATION","Raghavendra Rao","Uma Shankar",     "Kiran Pillai",  "Divya Sharma",  "MVJ College",        "Robotics",            "2025-2026"),
+        ("Team AuraFlow",       "team_auraflow",       "auraflow@test.com",       "OPEN_INNOVATION","Shiva Prasad",   "Nalini Krishnan", "Bhuvan Raj",    "Parvathy Iyer", "RNSIT Bangalore",    "AR VR Technology",    "2025-2026"),
+        ("Team NovaSpark",      "team_novaspark",      "novaspark@test.com",      "OPEN_INNOVATION","Abhishek Jain",  "Kavya Pillai",    "Santosh Das",   None,            "BMS College",        "Smart Systems",       "2025-2026"),
+        ("Team CodeBridge",     "team_codebridge",     "codebridge@test.com",     "OPEN_INNOVATION","Venkatesh Rao",  "Sridevi Menon",   "Mohan Lal",     "Geeta Singh",   "Nitte University",   "Software Innovation", "2025-2026"),
+        ("Team WarpDrive",      "team_warpdrive",      "warpdrive@test.com",      "OPEN_INNOVATION","Jayant Kumar",   "Kamala Nair",     "Srihari Bhat",  "Anushka Rao",   "Presidency College", "Future Tech",         "2025-2026"),
+    ]
+
+    created = 0
+    for (name, username, email, dname, leader, m1, m2, m3, college, dept, yr) in TEST_USERS:
+        existing = db.query(User).filter(User.username == username).first()
+        if existing:
+            continue
+        suffix = username.replace("team_", "").capitalize()
+        password = f"Pass@{suffix}2025"
+        domain = domain_map.get(dname)
+        user = User(
+            name=name, username=username, email=email,
+            password_hash=hash_password(password),
+            role=UserRole.USER, status=UserStatus.ACTIVE,
+            domain_id=domain.id if domain else None,
+            team_name=name, team_leader=leader,
+            member_one=m1, member_two=m2, member_three=m3,
+            college_name=college, organization=college,
+            department=dept, academic_year=yr,
+        )
+        db.add(user)
+        db.flush()
+        created += 1
+    print(f"  [OK] Bulk users: {created} created (rest already existed).")
+
+
 def main():
     print("\n Starting database initialization and seed process...")
     from app.database.database import engine
     from app.database.base import Base
     import app.models  # noqa: F401
 
-    print("\n[0/5] Ensuring all database tables exist...")
+    print("\n[0/4] Ensuring all database tables exist...")
     Base.metadata.create_all(bind=engine)
     print("  [OK] Database schema initialized.")
 
     db = SessionLocal()
     try:
-        print("\n[1/5] Seeding domains...")
+        print("\n[1/4] Seeding domains...")
         domain_map = seed_domains(db)
 
-        print("\n[2/5] Cleaning legacy topics...")
+        print("\n[2/4] Cleaning legacy topics...")
         clean_legacy_topics(db)
 
-        print("\n[3/5] Seeding predefined problem statements (10 AI, 10 Cyber, 0 OI)...")
+        print("\n[3/4] Seeding predefined problem statements (10 AI, 10 Cyber, 0 OI)...")
         seed_problem_statements(db, domain_map)
 
-        print("\n[4/5] Seeding admin account...")
+        print("\n[4/4] Seeding admin account...")
         seed_admin(db, domain_map)
 
-        print("\n[5/5] Seeding sample users & projects...")
-        seed_sample_users(db, domain_map)
+        print("\n[5/4] Seeding 40 bulk test users...")
+        seed_bulk_users_inline(db, domain_map)
 
         db.commit()
         print("\n[SUCCESS] Seed completed successfully!\n")
         print(f"   Admin username : {settings.ADMIN_USERNAME}")
         print(f"   Admin password : {settings.ADMIN_PASSWORD}")
-        print(f"   Sample users   : alice_ai, bob_cyber, carol_oi (password: UserPassword123!)")
+        print(f"   Test users     : 40 users seeded (see test_credentials.txt)")
         print(f"   API docs       : http://localhost:8000/docs\n")
     except Exception as e:
         db.rollback()
