@@ -90,11 +90,20 @@ app.include_router(projects.router)
 app.include_router(admin.router)
 
 
-@app.get("/", tags=["Health"])
-def root():
-    return {"success": True, "message": f"{settings.APP_NAME} API is running", "docs": "/docs"}
-
-
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "ok", "app": settings.APP_NAME, "env": settings.APP_ENV}
+
+
+# ─── Frontend Static Files ───────────────────────────────────────────────────
+import os
+from fastapi.staticfiles import StaticFiles
+
+# Path to project-portal/frontend
+_frontend_dir = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "frontend"
+)
+if os.path.exists(_frontend_dir):
+    app.mount("/", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
+
