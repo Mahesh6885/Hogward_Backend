@@ -21,7 +21,15 @@ ENV/
 .env.production
 
 # ── Secrets (NEVER commit real .env) ─────────────────────────────────────────
+*.env
+.env
 backend/.env
+project-portal/backend/.env
+
+# ── Databases ────────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
 
 # ── Test & Coverage ───────────────────────────────────────────────────────────
 .pytest_cache/
