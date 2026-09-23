@@ -9,6 +9,7 @@ engine = create_engine(
     settings.DATABASE_URL,
     echo=(settings.APP_ENV == "development"),
     pool_pre_ping=True,
+    pool_recycle=280,
     pool_size=10,
     max_overflow=20,
 )

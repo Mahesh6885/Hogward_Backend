@@ -382,7 +382,15 @@ def seed_sample_users(db, domain_map: dict) -> None:
 
 
 def main():
-    print("\n Starting seed process...")
+    print("\n Starting database initialization and seed process...")
+    from app.database.database import engine
+    from app.database.base import Base
+    import app.models  # noqa: F401
+
+    print("\n[0/5] Ensuring all database tables exist...")
+    Base.metadata.create_all(bind=engine)
+    print("  [OK] Database schema initialized.")
+
     db = SessionLocal()
     try:
         print("\n[1/5] Seeding domains...")
