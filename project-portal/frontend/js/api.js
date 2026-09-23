@@ -3,11 +3,10 @@
  */
 
 // Auto-detect API base URL:
-// - In local dev (served on port 5500 or 3000), backend is on localhost:8000
-// - In production (PythonAnywhere), the API is on the same domain
-const PROD_URL = 'https://mahesh6885.pythonanywhere.com'; // ← Update with your PA username
+// - In local dev, backend runs on localhost:8000
+// - In production (PythonAnywhere), it automatically uses the current origin
 const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API_BASE = isDev ? 'http://localhost:8000' : PROD_URL;
+const API_BASE = isDev ? 'http://localhost:8000' : window.location.origin;
 
 export function getToken() {
   return localStorage.getItem('access_token');
