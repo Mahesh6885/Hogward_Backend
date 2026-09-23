@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Portal — Admin Console</title>
+  <meta name="description" content="Administrator console for the Project Portal." />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .badge-admin { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+    .table-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
+    .filters-bar { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filters-bar select, .filters-bar input {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+    }
+    .pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#">
+    <div class="navbar-logo" style="background: var(--admin-gradient)">⚡</div>
+    <div>
+      <div class="navbar-title">Project Portal <span class="badge badge-admin text-xs ml-1">ADMIN</span></div>
+    </div>
+  </a>
+  <div class="navbar-actions">
+    <div class="navbar-user">
+      <div class="navbar-avatar" id="nav-avatar" style="background: var(--admin-gradient)">A</div>
+      <div>
+        <div class="text-sm" style="font-weight:600" id="nav-name">Administrator</div>
+        <div class="text-xs text-muted" id="nav-role">ADMIN CONSOLE</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ── Layout ─────────────────────────────────────────────────────────── -->
+<div class="layout-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Management</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item active" data-view="dashboard" id="nav-dashboard">
+        <span class="icon">📊</span> Overview
+      </button>
+      <button class="sidebar-item" data-view="teams" id="nav-teams">
+        <span class="icon">👥</span> Teams
+      </button>
+      <button class="sidebar-item" data-view="projects" id="nav-projects">
+        <span class="icon">📁</span> Projects &amp; Reviews
+      </button>
+      <button class="sidebar-item" data-view="topics" id="nav-topics">
+        <span class="icon">💡</span> Topics
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Global Alert -->
+    <div id="admin-alert" class="alert alert-hidden mb-3"></div>
+
+    <!-- ── 1. DASHBOARD VIEW ────────────────────────────────────────────── -->
+    <div id="view-dashboard" class="fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">Admin <span class="gradient-text">Overview</span></h1>
+          <button class="btn btn-primary" onclick="switchAdminView('projects')">Review Projects →</button>
+        </div>
+        <p class="text-muted">Real-time statistics across teams, domains, and project submissions.</p>
+      </div>
+
+      <div class="grid-4 mb-3">
+        <div class="stat-card accent-blue">
+          <div class="stat-label">Total Teams</div>
+          <div class="stat-value" id="stat-total-users">—</div>
+          <div class="text-xs text-muted" id="stat-user-domains">AI: 0 · Cyber: 0 · OI: 0</div>
+        </div>
+        <div class="stat-card accent-green">
+          <div class="stat-label">Active Teams</div>
+          <div class="stat-value text-success" id="stat-active-users">—</div>
+          <div class="text-xs text-muted" id="stat-inactive-users">0 inactive</div>
+        </div>
+        <div class="stat-card accent-purple">
+          <div class="stat-label">Total Projects</div>
+          <div class="stat-value" id="stat-total-projects">—</div>
+          <div class="text-xs text-muted" id="stat-project-pending">0 submitted</div>
+        </div>
+        <div class="stat-card accent-orange">
+          <div class="stat-label">Under Review</div>
+          <div class="stat-value" id="stat-under-review">—</div>
+          <div class="text-xs text-muted" id="stat-completed-projects">0 completed</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 class="mb-2">Project Status Distribution</h3>
+          <div id="project-breakdown-list" style="display:flex;flex-direction:column;gap:0.75rem">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+        <div class="card">
+          <h3 class="mb-2">Projects by Review Round</h3>
+          <div id="rounds-breakdown-list" style="display:flex;flex-direction:column;gap:0.75rem">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2. TEAMS MANAGEMENT VIEW ─────────────────────────────────────── -->
+    <div id="view-teams" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">Team <span class="gradient-text">Management</span></h1>
+          <button class="btn btn-primary" id="btn-open-create-team">➕ Register New Team</button>
+        </div>
+        <p class="text-muted">Register and manage team accounts, member rosters, domain workflows, and credentials.</p>
+      </div>
+
+      <div class="filters-bar">
+        <input type="text" id="search-team-name" placeholder="Search by team name or leader…" style="min-width:260px" />
+        <select id="filter-team-domain">
+          <option value="">All Domains</option>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+          <option value="OPEN_INNOVATION">Open Innovation</option>
+        </select>
+        <select id="filter-team-status">
+          <option value="">All Statuses</option>
+          <option value="ACTIVE">Active</option>
+          <option value="INACTIVE">Inactive</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-teams">🔄 Refresh</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Team Name</th>
+              <th>Team Leader</th>
+              <th>Username</th>
+              <th>Domain</th>
+              <th>Project Status</th>
+              <th>Current Round</th>
+              <th>Created Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="teams-table-body">
+            <tr><td colspan="8" class="text-center py-4 text-muted">Loading teams…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <span class="text-xs text-muted" id="teams-page-info">Showing page 1</span>
+        <div style="display:flex;gap:0.5rem">
+          <button class="btn btn-ghost btn-sm" id="btn-teams-prev" disabled>← Previous</button>
+          <button class="btn btn-ghost btn-sm" id="btn-teams-next" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3. PROJECTS & REVIEWS VIEW ──────────────────────────────────── -->
+    <div id="view-projects" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">Projects &amp; <span class="gradient-text">Reviews</span></h1>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh-projects">🔄 Refresh</button>
+        </div>
+        <p class="text-muted">Review comprehensive team submissions, provide feedback, suggested improvements, and advance rounds.</p>
+      </div>
+
+      <div class="filters-bar">
+        <select id="filter-project-status">
+          <option value="">All Statuses</option>
+          <option value="SUBMITTED">Submitted</option>
+          <option value="UNDER_REVIEW">Under Review</option>
+          <option value="IN_PROGRESS">In Progress</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="REJECTED">Rejected</option>
+        </select>
+        <select id="filter-project-domain">
+          <option value="">All Domains</option>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+          <option value="OPEN_INNOVATION">Open Innovation</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Team</th>
+              <th>Domain</th>
+              <th>Topic / Title</th>
+              <th>Round</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="projects-table-body">
+            <tr><td colspan="8" class="text-center py-4 text-muted">Loading projects…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 4. TOPICS VIEW ──────────────────────────────────────────────── -->
+    <div id="view-topics" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">Topic <span class="gradient-text">Pool</span></h1>
+          <button class="btn btn-primary" id="btn-open-create-topic">➕ Add New Topic</button>
+        </div>
+        <p class="text-muted">Manage predefined topics for AI and Cybersecurity domains.</p>
+      </div>
+
+      <div class="filters-bar">
+        <select id="filter-topic-domain">
+          <option value="">All Domains</option>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+        </select>
+        <select id="filter-topic-status">
+          <option value="">All Statuses</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-topics">🔄 Refresh</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="topics-table-body">
+            <tr><td colspan="5" class="text-center py-4 text-muted">Loading topics…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAL: CREATE TEAM ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-create-team">
+  <div class="modal" style="max-width:720px">
+    <div class="modal-header">
+      <h3 class="modal-title">Register New Team Account</h3>
+      <button class="modal-close" onclick="closeModal('modal-create-team')">&times;</button>
+    </div>
+
+    <form id="form-create-team" class="modal-form">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-team-name">Team Name *</label>
+          <input class="form-input" type="text" id="new-team-name" required placeholder="e.g. Team Alpha" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-team-leader">Team Leader Name *</label>
+          <input class="form-input" type="text" id="new-team-leader" required placeholder="e.g. Alice Walker" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-username">Account Username *</label>
+          <input class="form-input" type="text" id="new-username" required placeholder="e.g. team_alpha" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-email">Team Email *</label>
+          <input class="form-input" type="email" id="new-email" required placeholder="e.g. alpha@college.edu" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-password">Password * (min 8 chars)</label>
+          <div style="position:relative">
+            <input class="form-input" type="password" id="new-password" required placeholder="••••••••" minlength="8" style="padding-right:3rem" />
+            <button type="button" onclick="var f=document.getElementById('new-password');f.type=f.type==='password'?'text':'password';this.textContent=f.type==='password'?'👁':'🙈'" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">👁</button>
+          </div>
+          <span class="text-xs text-muted">Passwords are hashed using bcrypt before storing.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-phone">Phone Number</label>
+          <input class="form-input" type="text" id="new-phone" placeholder="+1-555-0100" />
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label" for="new-college">College / Organization *</label>
+          <input class="form-input" type="text" id="new-college" required placeholder="e.g. Harvard University" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-dept">Department</label>
+          <input class="form-input" type="text" id="new-dept" placeholder="e.g. Computer Science" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-year">Academic Year</label>
+          <input class="form-input" type="text" id="new-year" placeholder="e.g. 2025-2026" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-domain">Domain (Dropdown) *</label>
+          <select class="form-input" id="new-domain" required>
+            <option value="AI">AI</option>
+            <option value="CYBERSECURITY">Cybersecurity</option>
+            <option value="OPEN_INNOVATION">Open Innovation</option>
+          </select>
+          <span class="text-xs text-muted">Controls whether 10 locked topics or custom topic form is shown.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-status">Account Status *</label>
+          <select class="form-input" id="new-status" required>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+      </div>
+
+      <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">Team Members Roster</h4>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-member-1">Member 1</label>
+          <input class="form-input" type="text" id="new-member-1" placeholder="Full Name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-member-2">Member 2</label>
+          <input class="form-input" type="text" id="new-member-2" placeholder="Full Name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-member-3">Member 3</label>
+          <input class="form-input" type="text" id="new-member-3" placeholder="Full Name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="new-member-4">Member 4 (Optional)</label>
+          <input class="form-input" type="text" id="new-member-4" placeholder="Full Name (optional)" />
+        </div>
+      </div>
+
+      <div id="modal-team-alert" class="alert alert-hidden"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-create-team')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-create-team">Create Team Account</button>
+      </div>
+    </form>
+
+    <!-- Credentials Step -->
+    <div id="create-team-success-step" class="modal-form hidden">
+      <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="font-size:3rem;margin-bottom:0.5rem">✅</div>
+        <h3 style="margin:0">Team Account Created Successfully!</h3>
+        <p class="text-muted text-sm mt-1">The team account has been registered and activated in PostgreSQL.</p>
+      </div>
+      <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
+        <div style="margin-bottom:0.75rem">
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">CREATED USERNAME</div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <code id="creds-username" style="font-size:1.15rem;color:var(--accent-blue);font-weight:700;flex:1">—</code>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="copyText('creds-username',this)">📋 Copy</button>
+          </div>
+        </div>
+        <div style="margin-bottom:0.75rem">
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">INITIAL PASSWORD</div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <code id="creds-password" style="font-size:1.15rem;color:var(--accent-green);font-weight:700;flex:1">—</code>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="copyText('creds-password',this)">📋 Copy</button>
+          </div>
+        </div>
+        <div style="margin-bottom:0.75rem">
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">TEAM NAME</div>
+          <div id="creds-team-name" style="font-size:1rem;color:var(--text-primary);font-weight:600">—</div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm btn-full mt-1" id="btn-copy-all-creds" onclick="copyAllCredentials(this)">
+          📋 Copy Login Credentials (Username &amp; Password)
+        </button>
+      </div>
+      <div class="alert alert-info" style="font-size:0.8rem">
+        💡 <strong>Share With Team:</strong> Copy the username and password above and provide them to the team leader. They can log in immediately at <code>index.html</code>.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" onclick="closeModal('modal-create-team')">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: EDIT TEAM ───────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-edit-team">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3 class="modal-title">Edit Team Details</h3>
+      <button class="modal-close" onclick="closeModal('modal-edit-team')">&times;</button>
+    </div>
+    <form id="form-edit-team" class="modal-form">
+      <input type="hidden" id="edit-team-id" />
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="edit-team-name">Team Name *</label>
+          <input class="form-input" type="text" id="edit-team-name" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-team-leader">Team Leader *</label>
+          <input class="form-input" type="text" id="edit-team-leader" required />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="edit-team-email">Email Address *</label>
+          <input class="form-input" type="email" id="edit-team-email" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-team-phone">Phone Number</label>
+          <input class="form-input" type="text" id="edit-team-phone" />
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="form-group">
+          <label class="form-label" for="edit-team-college">College / Organization</label>
+          <input class="form-input" type="text" id="edit-team-college" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-team-dept">Department</label>
+          <input class="form-input" type="text" id="edit-team-dept" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-team-year">Academic Year</label>
+          <input class="form-input" type="text" id="edit-team-year" />
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="edit-team-domain">Domain</label>
+          <select class="form-input" id="edit-team-domain">
+            <option value="AI">AI</option>
+            <option value="CYBERSECURITY">Cybersecurity</option>
+            <option value="OPEN_INNOVATION">Open Innovation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-team-status">Status</label>
+          <select class="form-input" id="edit-team-status">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+      </div>
+
+      <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">Team Members Roster</h4>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="edit-member-1">Member 1</label>
+          <input class="form-input" type="text" id="edit-member-1" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-member-2">Member 2</label>
+          <input class="form-input" type="text" id="edit-member-2" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-member-3">Member 3</label>
+          <input class="form-input" type="text" id="edit-member-3" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="edit-member-4">Member 4 (Optional)</label>
+          <input class="form-input" type="text" id="edit-member-4" />
+        </div>
+      </div>
+
+      <div id="modal-edit-team-alert" class="alert alert-hidden"></div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-team')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Team Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL: VIEW TEAM DETAILS ───────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-view-team">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h3 class="modal-title">Team Profile &amp; Project Info</h3>
+      <button class="modal-close" onclick="closeModal('modal-view-team')">&times;</button>
+    </div>
+    <div id="view-team-modal-body">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-view-team')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: RESET PASSWORD ──────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-reset-pwd">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Reset Team Password</h3>
+      <button class="modal-close" onclick="closeModal('modal-reset-pwd')">&times;</button>
+    </div>
+    <form id="form-reset-pwd" class="modal-form">
+      <input type="hidden" id="reset-pwd-user-id" />
+      <p class="text-sm text-secondary">Resetting credentials for: <strong id="reset-pwd-username">team</strong></p>
+      <div class="form-group">
+        <label class="form-label" for="reset-new-password">New Password (min 8 chars)</label>
+        <input class="form-input" type="password" id="reset-new-password" required minlength="8" placeholder="••••••••" />
+      </div>
+      <div id="modal-pwd-alert" class="alert alert-hidden"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-reset-pwd')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save New Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL: CREATE TOPIC ────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-create-topic">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Add Predefined Topic</h3>
+      <button class="modal-close" onclick="closeModal('modal-create-topic')">&times;</button>
+    </div>
+    <form id="form-create-topic" class="modal-form">
+      <div class="form-group">
+        <label class="form-label" for="topic-domain">Domain *</label>
+        <select class="form-input" id="topic-domain" required>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="topic-title">Topic Title *</label>
+        <input class="form-input" type="text" id="topic-title" required placeholder="e.g. Federated Learning in Edge Computing" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="topic-desc">Description (Optional)</label>
+        <textarea class="form-textarea" id="topic-desc" rows="3" placeholder="Brief outline of the topic..."></textarea>
+      </div>
+      <div id="modal-topic-alert" class="alert alert-hidden"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-create-topic')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Topic</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL: ADMIN PROJECT DETAILS & REVIEW ───────────────────────────── -->
+<div class="modal-overlay" id="modal-review-project">
+  <div class="modal" style="max-width:860px">
+    <div class="modal-header">
+      <h3 class="modal-title">Admin Project Review &amp; Details</h3>
+      <button class="modal-close" onclick="closeModal('modal-review-project')">&times;</button>
+    </div>
+    
+    <!-- Complete Submitted Information Container -->
+    <div id="admin-project-detail-body" class="mb-3">
+      <!-- Populated via JS -->
+    </div>
+
+    <!-- Admin Editable Overrides Form -->
+    <div class="card mb-3" style="border-top:2px solid var(--accent-purple)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h4 style="font-weight:700;margin:0">Admin Overrides &amp; Locked Field Editing</h4>
+        <span class="badge badge-purple">Admin Controls</span>
+      </div>
+      <form id="form-admin-edit-project" class="modal-form">
+        <input type="hidden" id="admin-edit-project-id" />
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-title">Project Title</label>
+            <input class="form-input" id="admin-edit-title" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-domain">Domain</label>
+            <select class="form-input" id="admin-edit-domain">
+              <option value="AI">AI</option>
+              <option value="CYBERSECURITY">Cybersecurity</option>
+              <option value="OPEN_INNOVATION">Open Innovation</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-github">GitHub Repository Link</label>
+            <input class="form-input" id="admin-edit-github" placeholder="https://github.com/..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-status">Project Status</label>
+            <select class="form-input" id="admin-edit-status">
+              <option value="DRAFT">DRAFT</option>
+              <option value="SUBMITTED">SUBMITTED</option>
+              <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="REJECTED">REJECTED</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="admin-edit-round">Review Round</label>
+            <select class="form-input" id="admin-edit-round">
+              <option value="1">Round 1</option>
+              <option value="2">Round 2</option>
+              <option value="3">Round 3</option>
+            </select>
+          </div>
+        </div>
+        <div id="modal-admin-edit-alert" class="alert alert-hidden"></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button type="submit" class="btn btn-secondary btn-sm" id="btn-save-admin-edit">💾 Save Admin Overrides</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Review Submission Form -->
+    <div class="card" style="border-top:2px solid var(--accent-blue)">
+      <h4 style="font-weight:700;margin-bottom:1rem">Submit Review for Current Round</h4>
+      <form id="form-submit-review" class="modal-form">
+        <input type="hidden" id="review-project-id" />
+        <input type="hidden" id="review-project-round" />
+        <div class="form-group">
+          <label class="form-label" for="review-status">Review Status Decision *</label>
+          <select class="form-input" id="review-status" required>
+            <option value="PASSED">Passed (Advance to next round or complete)</option>
+            <option value="NEEDS_IMPROVEMENT">Needs Improvement (Requires revisions)</option>
+            <option value="IN_REVIEW">In Review (Keep currently under review)</option>
+            <option value="REJECTED">Rejected</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="review-text">Admin Feedback &amp; Evaluation * (min 10 chars)</label>
+          <textarea class="form-textarea" id="review-text" rows="4" required minlength="10" placeholder="Provide evaluation, strengths, and critique..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="review-improvements">Suggested Improvements (Visible to Team)</label>
+          <textarea class="form-textarea" id="review-improvements" rows="3" placeholder="Actionable guidance and recommended next steps..."></textarea>
+        </div>
+        <div id="modal-review-alert" class="alert alert-hidden"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modal-review-project')">Close</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-review-action">Submit Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ── Client Logic ────────────────────────────────────────────────────── -->
+<script type="module">
+  import { requireAdmin, logout } from './js/auth.js';
+  import { api } from './js/api.js';
+
+  const user = requireAdmin();
+  if (!user) throw new Error('Not authorized');
+
+  document.getElementById('nav-name').textContent = user.name;
+  document.getElementById('logout-btn').addEventListener('click', logout);
+
+  const domainColors = {
+    AI: 'badge-blue',
+    Cybersecurity: 'badge-cyan',
+    CYBERSECURITY: 'badge-cyan',
+    'Open Innovation': 'badge-orange',
+    OPEN_INNOVATION: 'badge-orange'
+  };
+
+  const statusColors = {
+    SUBMITTED: 'badge-blue',
+    UNDER_REVIEW: 'badge-purple',
+    IN_PROGRESS: 'badge-yellow',
+    COMPLETED: 'badge-green',
+    REJECTED: 'badge-red'
+  };
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  let currentView = 'dashboard';
+  window.switchAdminView = function(view) {
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+    document.getElementById(`view-${currentView}`).classList.add('hidden');
+    currentView = view;
+    document.getElementById(`view-${view}`).classList.remove('hidden');
+
+    if (view === 'dashboard') loadDashboard();
+    else if (view === 'teams') loadTeams();
+    else if (view === 'projects') loadProjects();
+    else if (view === 'topics') loadTopics();
+  };
+
+  document.querySelectorAll('.sidebar-item').forEach(btn => {
+    btn.addEventListener('click', () => switchAdminView(btn.dataset.view));
+  });
+
+  window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
+  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+
+  window.copyText = function(elementId, btnEl) {
+    const text = document.getElementById(elementId)?.textContent;
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btnEl.textContent;
+      btnEl.textContent = '✓ Copied!';
+      setTimeout(() => { btnEl.textContent = orig; }, 2000);
+    });
+  };
+
+  window.copyAllCredentials = function(btn) {
+    const u = document.getElementById('creds-username').textContent;
+    const p = document.getElementById('creds-password').textContent;
+    const t = document.getElementById('creds-team-name').textContent;
+    const text = `Team: ${t}\nUsername: ${u}\nPassword: ${p}\nLogin Portal: ${window.location.origin}/index.html`;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Login Credentials Copied to Clipboard!';
+      setTimeout(() => {
+        btn.textContent = orig;
+      }, 2500);
+    });
+  };
+
+  function showAlert(msg, type = 'success') {
+    const el = document.getElementById('admin-alert');
+    el.className = `alert alert-${type}`;
+    el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span><span>${escHtml(msg)}</span>`;
+    el.classList.remove('alert-hidden');
+    setTimeout(() => el.classList.add('alert-hidden'), 4500);
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── 1. DASHBOARD ──────────────────────────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const resp = await api.get('/api/admin/dashboard');
+      const d = resp.data;
+      document.getElementById('stat-total-users').textContent = d.users.total;
+      document.getElementById('stat-user-domains').textContent = `AI: ${d.users.ai} · Cyber: ${d.users.cybersecurity} · OI: ${d.users.open_innovation}`;
+      document.getElementById('stat-active-users').textContent = d.users.active;
+      document.getElementById('stat-inactive-users').textContent = `${d.users.inactive} inactive`;
+
+      document.getElementById('stat-total-projects').textContent = d.projects.total;
+      document.getElementById('stat-project-pending').textContent = `${d.projects.submitted} submitted`;
+      document.getElementById('stat-under-review').textContent = d.projects.under_review;
+      document.getElementById('stat-completed-projects').textContent = `${d.projects.completed} completed`;
+
+      const pList = document.getElementById('project-breakdown-list');
+      const statuses = [
+        { label: 'Submitted', count: d.projects.submitted, color: 'var(--accent-blue)' },
+        { label: 'Under Review', count: d.projects.under_review, color: 'var(--accent-purple)' },
+        { label: 'In Progress', count: d.projects.in_progress, color: 'var(--accent-yellow)' },
+        { label: 'Completed', count: d.projects.completed, color: 'var(--accent-green)' },
+        { label: 'Rejected', count: d.projects.rejected, color: 'var(--accent-red)' },
+      ];
+      pList.innerHTML = statuses.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="display:flex;align-items:center;gap:0.5rem">
+            <span style="width:10px;height:10px;border-radius:50%;background:${s.color}"></span>
+            ${s.label}
+          </span>
+          <strong>${s.count}</strong>
+        </div>
+      `).join('');
+
+      const rList = document.getElementById('rounds-breakdown-list');
+      rList.innerHTML = (d.rounds || []).map(r => `
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span>Round ${r.round}</span>
+          <span class="badge badge-blue">${r.count} projects</span>
+        </div>
+      `).join('');
+    } catch (e) {
+      showAlert(`Dashboard error: ${e.message}`, 'error');
+    }
+  }
+
+  // ── 2. TEAMS MANAGEMENT ──────────────────────────────────────────────────
+  let teamsPage = 1;
+  let teamsTotalPages = 1;
+
+  async function loadTeams() {
+    const tbody = document.getElementById('teams-table-body');
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Loading teams…</td></tr>`;
+
+    const search = document.getElementById('search-team-name').value.trim();
+    const domain = document.getElementById('filter-team-domain').value;
+    const status = document.getElementById('filter-team-status').value;
+
+    let query = `/api/admin/teams?page=${teamsPage}&page_size=15`;
+    if (search) query += `&search=${encodeURIComponent(search)}`;
+    if (domain) query += `&domain=${domain}`;
+    if (status) query += `&status=${status}`;
+
+    try {
+      const resp = await api.get(query);
+      teamsTotalPages = resp.total_pages || 1;
+      document.getElementById('teams-page-info').textContent = `Page ${resp.page} of ${teamsTotalPages} (${resp.total} total teams)`;
+      document.getElementById('btn-teams-prev').disabled = teamsPage <= 1;
+      document.getElementById('btn-teams-next').disabled = teamsPage >= teamsTotalPages;
+
+      if (!resp.data.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No teams found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = resp.data.map(u => {
+        const teamName = u.team_name || u.name || u.username;
+        const leader = u.team_leader || u.name || '—';
+        const dName = u.domain ? u.domain.display_name : 'None';
+        const dBadge = domainColors[u.domain?.name] || domainColors[dName] || 'badge-gray';
+        const statusBadge = u.status === 'ACTIVE' ? 'badge-green' : 'badge-red';
+        const prjStatus = u.project ? `<span class="badge ${statusColors[u.project.status] || 'badge-gray'}">${u.project.status}</span>` : `<span class="badge badge-gray">Not Submitted</span>`;
+        const currentRound = u.project ? `Round ${u.project.current_round}` : '—';
+        const createdDate = new Date(u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+
+        return `
+          <tr>
+            <td><strong>${escHtml(teamName)}</strong></td>
+            <td>${escHtml(leader)}</td>
+            <td><code>${escHtml(u.username)}</code></td>
+            <td><span class="badge ${dBadge}">${escHtml(dName)}</span></td>
+            <td>${prjStatus}</td>
+            <td>${currentRound}</td>
+            <td class="text-xs text-muted">${createdDate}</td>
+            <td>
+              <div class="table-actions">
+                <button class="btn btn-ghost btn-sm" onclick="viewTeamModal(${u.id})">View</button>
+                <button class="btn btn-ghost btn-sm" onclick="editTeamModal(${u.id})">Edit</button>
+                <button class="btn btn-ghost btn-sm" onclick="promptResetPassword(${u.id}, '${escHtml(u.username)}')">Reset Pwd</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleTeamStatus(${u.id}, '${u.status}')">
+                  ${u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                </button>
+                <button class="btn btn-ghost btn-sm text-danger" onclick="deleteTeam(${u.id}, '${escHtml(teamName)}')">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  document.getElementById('btn-teams-prev').addEventListener('click', () => {
+    if (teamsPage > 1) { teamsPage--; loadTeams(); }
+  });
+  document.getElementById('btn-teams-next').addEventListener('click', () => {
+    if (teamsPage < teamsTotalPages) { teamsPage++; loadTeams(); }
+  });
+  document.getElementById('search-team-name').addEventListener('input', () => { teamsPage = 1; loadTeams(); });
+  document.getElementById('filter-team-domain').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
+  document.getElementById('filter-team-status').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
+  document.getElementById('btn-refresh-teams').addEventListener('click', loadTeams);
+
+  // Create Team Modal
+  document.getElementById('btn-open-create-team').addEventListener('click', () => {
+    document.getElementById('form-create-team').reset();
+    document.getElementById('modal-team-alert').classList.add('alert-hidden');
+    document.getElementById('form-create-team').classList.remove('hidden');
+    document.getElementById('create-team-success-step').classList.add('hidden');
+    openModal('modal-create-team');
+  });
+
+  document.getElementById('form-create-team').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-create-team');
+    btn.disabled = true;
+    btn.textContent = 'Creating Team Account…';
+    const alertEl = document.getElementById('modal-team-alert');
+
+    const payload = {
+      team_name: document.getElementById('new-team-name').value.trim(),
+      team_leader: document.getElementById('new-team-leader').value.trim(),
+      username: document.getElementById('new-username').value.trim(),
+      email: document.getElementById('new-email').value.trim(),
+      password: document.getElementById('new-password').value,
+      phone: document.getElementById('new-phone').value.trim() || null,
+      college_name: document.getElementById('new-college').value.trim(),
+      organization: document.getElementById('new-college').value.trim(),
+      department: document.getElementById('new-dept').value.trim() || null,
+      academic_year: document.getElementById('new-year').value.trim() || null,
+      domain: document.getElementById('new-domain').value,
+      status: document.getElementById('new-status').value,
+      member_one: document.getElementById('new-member-1').value.trim() || null,
+      member_two: document.getElementById('new-member-2').value.trim() || null,
+      member_three: document.getElementById('new-member-3').value.trim() || null,
+      member_four: document.getElementById('new-member-4').value.trim() || null,
+    };
+
+    try {
+      const resp = await api.post('/api/admin/teams', payload);
+      document.getElementById('form-create-team').classList.add('hidden');
+      const createdUsername = resp?.data?.username || payload.username.trim().toLowerCase();
+      document.getElementById('creds-username').textContent = createdUsername;
+      document.getElementById('creds-password').textContent = payload.password;
+      document.getElementById('creds-team-name').textContent = payload.team_name;
+      document.getElementById('create-team-success-step').classList.remove('hidden');
+      showAlert(`Team '${payload.team_name}' registered successfully!`);
+      loadTeams();
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create Team Account';
+    }
+  });
+
+  // View Team Modal
+  window.viewTeamModal = async function(id) {
+    try {
+      const resp = await api.get(`/api/admin/teams/${id}`);
+      const t = resp.data;
+      const b = document.getElementById('view-team-modal-body');
+      b.innerHTML = `
+        <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <h3 style="font-size:1.3rem;font-weight:700">${escHtml(t.team_name || t.name)}</h3>
+            <span class="badge ${t.status === 'ACTIVE' ? 'badge-green' : 'badge-red'}">${t.status}</span>
+          </div>
+          <div class="doc-meta-grid">
+            <div class="doc-meta-item"><span class="doc-meta-label">Leader</span><span class="doc-meta-value">${escHtml(t.team_leader || '—')}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Domain</span><span class="doc-meta-value">${escHtml(t.domain?.display_name || t.domain?.name)}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Username</span><span class="doc-meta-value font-mono">${escHtml(t.username)}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">College</span><span class="doc-meta-value">${escHtml(t.college_name || t.organization || '—')}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Department</span><span class="doc-meta-value">${escHtml(t.department || '—')}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Academic Year</span><span class="doc-meta-value">${escHtml(t.academic_year || '—')}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Email</span><span class="doc-meta-value font-mono">${escHtml(t.email)}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Phone</span><span class="doc-meta-value font-mono">${escHtml(t.phone || '—')}</span></div>
+          </div>
+        </div>
+
+        <h4 style="font-weight:700;margin-bottom:0.5rem">Team Members Roster</h4>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;margin-bottom:1rem">
+          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Leader:</span> <strong>${escHtml(t.team_leader || '—')}</strong></div>
+          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 1:</span> <strong>${escHtml(t.member_one || 'Not assigned')}</strong></div>
+          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 2:</span> <strong>${escHtml(t.member_two || 'Not assigned')}</strong></div>
+          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 3:</span> <strong>${escHtml(t.member_three || 'Not assigned')}</strong></div>
+          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 4:</span> <strong>${escHtml(t.member_four || 'Not assigned')}</strong></div>
+        </div>
+
+        <h4 style="font-weight:700;margin-bottom:0.5rem">Project Information</h4>
+        <div class="card" style="padding:1rem">
+          ${t.project ? `
+            <div><strong>${escHtml(t.project.project_title || 'Project')}</strong> (${escHtml(t.project.project_code)})</div>
+            <div class="text-xs text-muted mt-1">Status: <span class="badge ${statusColors[t.project.status] || 'badge-gray'}">${t.project.status}</span> · Round: ${t.project.current_round}</div>
+          ` : '<span class="text-muted">No project submitted yet by this team.</span>'}
+        </div>
+      `;
+      openModal('modal-view-team');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  // Edit Team Modal
+  window.editTeamModal = async function(id) {
+    try {
+      const resp = await api.get(`/api/admin/teams/${id}`);
+      const t = resp.data;
+      document.getElementById('edit-team-id').value = t.id;
+      document.getElementById('edit-team-name').value = t.team_name || t.name || '';
+      document.getElementById('edit-team-leader').value = t.team_leader || t.name || '';
+      document.getElementById('edit-team-email').value = t.email || '';
+      document.getElementById('edit-team-phone').value = t.phone || '';
+      document.getElementById('edit-team-college').value = t.college_name || t.organization || '';
+      document.getElementById('edit-team-dept').value = t.department || '';
+      document.getElementById('edit-team-year').value = t.academic_year || '';
+      document.getElementById('edit-team-domain').value = t.domain?.name || 'AI';
+      document.getElementById('edit-team-status').value = t.status || 'ACTIVE';
+      document.getElementById('edit-member-1').value = t.member_one || '';
+      document.getElementById('edit-member-2').value = t.member_two || '';
+      document.getElementById('edit-member-3').value = t.member_three || '';
+      document.getElementById('edit-member-4').value = t.member_four || '';
+      document.getElementById('modal-edit-team-alert').classList.add('alert-hidden');
+      openModal('modal-edit-team');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  document.getElementById('form-edit-team').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-team-id').value;
+    const alertEl = document.getElementById('modal-edit-team-alert');
+    const payload = {
+      team_name: document.getElementById('edit-team-name').value.trim(),
+      team_leader: document.getElementById('edit-team-leader').value.trim(),
+      email: document.getElementById('edit-team-email').value.trim(),
+      phone: document.getElementById('edit-team-phone').value.trim() || null,
+      college_name: document.getElementById('edit-team-college').value.trim() || null,
+      organization: document.getElementById('edit-team-college').value.trim() || null,
+      department: document.getElementById('edit-team-dept').value.trim() || null,
+      academic_year: document.getElementById('edit-team-year').value.trim() || null,
+      domain: document.getElementById('edit-team-domain').value,
+      status: document.getElementById('edit-team-status').value,
+      member_one: document.getElementById('edit-member-1').value.trim() || null,
+      member_two: document.getElementById('edit-member-2').value.trim() || null,
+      member_three: document.getElementById('edit-member-3').value.trim() || null,
+      member_four: document.getElementById('edit-member-4').value.trim() || null,
+    };
+
+    try {
+      await api.put(`/api/admin/teams/${id}`, payload);
+      closeModal('modal-edit-team');
+      showAlert('Team details successfully updated!');
+      loadTeams();
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    }
+  });
+
+  // Toggle Team Status
+  window.toggleTeamStatus = async function(id, curStatus) {
+    const nextStatus = curStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    if (!confirm(`Are you sure you want to set this team account to ${nextStatus}?`)) return;
+    try {
+      await api.patch(`/api/admin/teams/${id}/status`, { status: nextStatus });
+      showAlert(`Team status updated to ${nextStatus}.`);
+      loadTeams();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
+  };
+
+  // Reset Password
+  window.promptResetPassword = function(userId, username) {
+    document.getElementById('reset-pwd-user-id').value = userId;
+    document.getElementById('reset-pwd-username').textContent = username;
+    document.getElementById('reset-new-password').value = '';
+    document.getElementById('modal-pwd-alert').classList.add('alert-hidden');
+    openModal('modal-reset-pwd');
+  };
+
+  document.getElementById('form-reset-pwd').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const userId = document.getElementById('reset-pwd-user-id').value;
+    const newPassword = document.getElementById('reset-new-password').value;
+    const alertEl = document.getElementById('modal-pwd-alert');
+    try {
+      await api.patch(`/api/admin/teams/${userId}/password`, { new_password: newPassword });
+      closeModal('modal-reset-pwd');
+      showAlert('Team password reset successfully!');
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    }
+  });
+
+  // Delete Team
+  window.deleteTeam = async function(userId, teamName) {
+    if (!confirm(`Are you sure you want to permanently delete team '${teamName}'? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/api/admin/teams/${userId}`);
+      showAlert(`Team '${teamName}' deleted successfully.`);
+      loadTeams();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
+  };
+
+  // ── 3. PROJECTS & REVIEWS ─────────────────────────────────────────────────
+  async function loadProjects() {
+    const tbody = document.getElementById('projects-table-body');
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Loading projects…</td></tr>`;
+
+    const status = document.getElementById('filter-project-status').value;
+    const domain = document.getElementById('filter-project-domain').value;
+    let query = `/api/admin/projects?page=1&page_size=50`;
+    if (status) query += `&status=${status}`;
+    if (domain) query += `&domain=${domain}`;
+
+    try {
+      const resp = await api.get(query);
+      if (!resp.data.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No projects found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = resp.data.map(p => {
+        const title = p.project_title || (p.topic ? p.topic.title : p.custom_topic) || '—';
+        const teamName = p.user?.team_name || p.user?.name || '—';
+        const dBadge = domainColors[p.domain?.name] || 'badge-blue';
+        const sBadge = statusColors[p.status] || 'badge-gray';
+        const submittedDate = new Date(p.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+
+        return `
+          <tr>
+            <td><code style="color:var(--accent-blue)">${escHtml(p.project_code)}</code></td>
+            <td><strong>${escHtml(teamName)}</strong></td>
+            <td><span class="badge ${dBadge}">${escHtml(p.domain?.display_name || p.domain?.name)}</span></td>
+            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(title)}</td>
+            <td><span class="badge badge-purple">Round ${p.current_round}</span></td>
+            <td><span class="badge ${sBadge}">${p.status}</span></td>
+            <td class="text-xs text-muted">${submittedDate}</td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="openReviewModal(${p.id})">
+                Review &amp; Details →
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  document.getElementById('filter-project-status').addEventListener('change', loadProjects);
+  document.getElementById('filter-project-domain').addEventListener('change', loadProjects);
+  document.getElementById('btn-refresh-projects').addEventListener('click', loadProjects);
+
+  // Admin Project Details & Review Modal
+  window.openReviewModal = async function(projectId) {
+    try {
+      const resp = await api.get(`/api/admin/projects/${projectId}`);
+      const p = resp.data;
+      const b = document.getElementById('admin-project-detail-body');
+
+      const team = p.user || {};
+      const teamName = team.team_name || team.name || 'Team';
+      const leader = team.team_leader || team.name || '—';
+      const dName = p.domain?.display_name || p.domain?.name || 'Domain';
+      const subDate = new Date(p.submitted_at).toLocaleString();
+
+      b.innerHTML = `
+        <div class="doc-meta-card mb-3">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+            <div>
+              <span class="text-xs font-mono text-muted">PROJECT ${escHtml(p.project_code)}</span>
+              <h2 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin-top:0.25rem">${escHtml(p.project_title || p.custom_topic || p.topic?.title || 'Untitled')}</h2>
+            </div>
+            <div style="display:flex;gap:0.5rem">
+              <span class="badge ${domainColors[p.domain?.name] || 'badge-blue'}">${escHtml(dName)}</span>
+              <span class="badge ${statusColors[p.status] || 'badge-gray'}">${p.status}</span>
+            </div>
+          </div>
+
+          <div class="doc-meta-grid">
+            <div class="doc-meta-item"><span class="doc-meta-label">Team Name</span><span class="doc-meta-value">${escHtml(teamName)}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Team Leader</span><span class="doc-meta-value">${escHtml(leader)}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">College / Organization</span><span class="doc-meta-value">${escHtml(team.college_name || team.organization || '—')}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Current Round</span><span class="doc-meta-value">Round ${p.current_round} of 3</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Submitted Date</span><span class="doc-meta-value">${subDate}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-label">Contact</span><span class="doc-meta-value font-mono">${escHtml(team.email || '—')}</span></div>
+          </div>
+        </div>
+
+        <div class="card mb-3" style="padding:1rem">
+          <h4 style="font-weight:700;margin-bottom:0.5rem">Team Members Roster</h4>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <span class="badge badge-gray">Leader: ${escHtml(leader)}</span>
+            ${team.member_one ? `<span class="badge badge-gray">M1: ${escHtml(team.member_one)}</span>` : ''}
+            ${team.member_two ? `<span class="badge badge-gray">M2: ${escHtml(team.member_two)}</span>` : ''}
+            ${team.member_three ? `<span class="badge badge-gray">M3: ${escHtml(team.member_three)}</span>` : ''}
+            ${team.member_four ? `<span class="badge badge-gray">M4: ${escHtml(team.member_four)}</span>` : ''}
+          </div>
+        </div>
+
+        <div class="grid-2 mb-3">
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Abstract</h4>
+            <p class="text-sm text-secondary">${escHtml(p.abstract || 'None provided')}</p>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Problem Statement</h4>
+            <p class="text-sm text-secondary">${escHtml(p.problem_statement || 'None provided')}</p>
+          </div>
+        </div>
+
+        <div class="grid-2 mb-3">
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Objectives</h4>
+            <p class="text-sm text-secondary">${escHtml(p.objectives || 'None provided')}</p>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Proposed Solution</h4>
+            <p class="text-sm text-secondary">${escHtml(p.proposed_solution || 'None provided')}</p>
+          </div>
+        </div>
+
+        <div class="grid-2 mb-3">
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Technologies</h4>
+            <p class="text-sm text-secondary">${escHtml(p.technologies || 'None provided')}</p>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <h4 style="font-weight:700;margin-bottom:0.5rem">Expected Outcome</h4>
+            <p class="text-sm text-secondary">${escHtml(p.expected_outcome || 'None provided')}</p>
+          </div>
+        </div>
+
+        ${p.github_url || p.demo_url ? `
+          <div class="card mb-3" style="padding:1rem;display:flex;gap:1.5rem;flex-wrap:wrap">
+            ${p.github_url ? `<div><span class="text-xs text-muted">GitHub:</span> <a href="${escHtml(p.github_url)}" target="_blank" style="color:var(--accent-blue)">${escHtml(p.github_url)}</a></div>` : ''}
+            ${p.demo_url ? `<div><span class="text-xs text-muted">Demo:</span> <a href="${escHtml(p.demo_url)}" target="_blank" style="color:var(--accent-cyan)">${escHtml(p.demo_url)}</a></div>` : ''}
+          </div>
+        ` : ''}
+
+        <div class="card mb-3">
+          <h4 style="font-weight:700;margin-bottom:0.5rem">Full Project Description</h4>
+          <div class="doc-scroll-container">${escHtml(p.project_description || 'No detailed description provided.')}</div>
+        </div>
+
+        <h4 style="font-weight:700;margin-bottom:0.75rem">Evaluation &amp; Review History</h4>
+        <div id="modal-review-history" class="mb-3">
+          ${(p.reviews || []).length ? p.reviews.map(r => `
+            <div class="review-history-card" style="padding:1rem;margin-bottom:0.75rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                <strong>Round ${r.round_number} Review (${r.status})</strong>
+                <span class="text-xs text-muted">${new Date(r.reviewed_at || r.created_at).toLocaleDateString()}</span>
+              </div>
+              <div class="feedback-box" style="margin-top:0.25rem">
+                <div class="feedback-box-title">Admin Feedback</div>
+                <div class="text-sm">${escHtml(r.review_text)}</div>
+              </div>
+              ${r.suggested_improvements ? `
+                <div class="improvement-box" style="margin-top:0.5rem">
+                  <div class="improvement-box-title">Suggested Improvements</div>
+                  <div class="text-sm">${escHtml(r.suggested_improvements)}</div>
+                </div>
+              ` : ''}
+            </div>
+          `).join('') : '<div class="text-xs text-muted">No reviews recorded yet.</div>'}
+        </div>
+      `;
+
+      document.getElementById('review-project-id').value = p.id;
+      document.getElementById('review-project-round').value = p.current_round;
+      document.getElementById('review-text').value = '';
+      document.getElementById('review-improvements').value = '';
+      document.getElementById('modal-review-alert').classList.add('alert-hidden');
+
+      // Populate Admin Overrides Form
+      document.getElementById('admin-edit-project-id').value = p.id;
+      document.getElementById('admin-edit-title').value = p.project_title || p.custom_topic || p.topic?.title || '';
+      document.getElementById('admin-edit-domain').value = p.domain?.name || 'AI';
+      document.getElementById('admin-edit-github').value = p.github_url || '';
+      document.getElementById('admin-edit-status').value = p.status || 'SUBMITTED';
+      document.getElementById('admin-edit-round').value = String(p.current_round || 1);
+      document.getElementById('modal-admin-edit-alert').classList.add('alert-hidden');
+
+      openModal('modal-review-project');
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  document.getElementById('form-admin-edit-project').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const projectId = document.getElementById('admin-edit-project-id').value;
+    const alertEl = document.getElementById('modal-admin-edit-alert');
+    const btn = document.getElementById('btn-save-admin-edit');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const payload = {
+      project_title: document.getElementById('admin-edit-title').value.trim() || null,
+      domain: document.getElementById('admin-edit-domain').value,
+      github_url: document.getElementById('admin-edit-github').value.trim() || null,
+      status: document.getElementById('admin-edit-status').value,
+      current_round: parseInt(document.getElementById('admin-edit-round').value, 10),
+    };
+
+    try {
+      await api.put(`/api/admin/projects/${projectId}`, payload);
+      alertEl.className = 'alert alert-success';
+      alertEl.innerHTML = `<span>✅</span><span>Project locked fields updated successfully!</span>`;
+      alertEl.classList.remove('alert-hidden');
+      loadProjects();
+      loadDashboard();
+      // Re-fetch project details to update read-only cards
+      openReviewModal(projectId);
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💾 Save Admin Overrides';
+    }
+  });
+
+  document.getElementById('form-submit-review').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const projectId = document.getElementById('review-project-id').value;
+    const currentRound = parseInt(document.getElementById('review-project-round').value, 10);
+    const alertEl = document.getElementById('modal-review-alert');
+    const btn = document.getElementById('btn-submit-review-action');
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+
+    const payload = {
+      round_number: currentRound,
+      status: document.getElementById('review-status').value,
+      review_text: document.getElementById('review-text').value.trim(),
+      suggested_improvements: document.getElementById('review-improvements').value.trim() || null,
+    };
+
+    try {
+      await api.post(`/api/admin/projects/${projectId}/reviews`, payload);
+      closeModal('modal-review-project');
+      showAlert(`Review for Round ${currentRound} successfully submitted!`);
+      loadProjects();
+      loadDashboard();
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Submit Review';
+    }
+  });
+
+  // ── 4. TOPICS ─────────────────────────────────────────────────────────────
+  async function loadTopics() {
+    const tbody = document.getElementById('topics-table-body');
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Loading topics…</td></tr>`;
+
+    const domain = document.getElementById('filter-topic-domain').value;
+    const status = document.getElementById('filter-topic-status').value;
+    let query = `/api/admin/topics?page=1&page_size=100`;
+    if (domain) query += `&domain=${domain}`;
+    if (status !== '') query += `&is_active=${status}`;
+
+    try {
+      const resp = await api.get(query);
+      if (!resp.data.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No topics found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = resp.data.map(t => {
+        const dBadge = t.domain?.name === 'AI' ? 'badge-blue' : 'badge-cyan';
+        return `
+          <tr>
+            <td><span class="badge ${dBadge}">${escHtml(t.domain?.display_name || t.domain?.name)}</span></td>
+            <td><strong>${escHtml(t.title)}</strong></td>
+            <td class="text-secondary text-sm">${escHtml(t.description || '—')}</td>
+            <td><span class="badge ${t.is_active ? 'badge-green' : 'badge-red'}">${t.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td>
+              <button class="btn btn-ghost btn-sm" onclick="toggleTopicStatus(${t.id}, ${t.is_active})">
+                ${t.is_active ? 'Deactivate' : 'Activate'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+    }
+  }
+
+  document.getElementById('filter-topic-domain').addEventListener('change', loadTopics);
+  document.getElementById('filter-topic-status').addEventListener('change', loadTopics);
+  document.getElementById('btn-refresh-topics').addEventListener('click', loadTopics);
+
+  document.getElementById('btn-open-create-topic').addEventListener('click', () => {
+    document.getElementById('form-create-topic').reset();
+    document.getElementById('modal-topic-alert').classList.add('alert-hidden');
+    openModal('modal-create-topic');
+  });
+
+  document.getElementById('form-create-topic').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertEl = document.getElementById('modal-topic-alert');
+    const payload = {
+      domain: document.getElementById('topic-domain').value,
+      title: document.getElementById('topic-title').value.trim(),
+      description: document.getElementById('topic-desc').value.trim() || null,
+    };
+    try {
+      await api.post('/api/admin/topics', payload);
+      closeModal('modal-create-topic');
+      showAlert(`Topic '${payload.title}' created!`);
+      loadTopics();
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    }
+  });
+
+  window.toggleTopicStatus = async function(id, isCurrentlyActive) {
+    const nextState = !isCurrentlyActive;
+    try {
+      await api.patch(`/api/admin/topics/${id}/status`, { is_active: nextState });
+      showAlert(`Topic status updated.`);
+      loadTopics();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
+  };
+
+  // Initial load
+  loadDashboard();
+</script>
+</body>
+</html>

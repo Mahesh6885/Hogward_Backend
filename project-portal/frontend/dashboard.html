@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Portal — Team Dashboard</title>
+  <meta name="description" content="Team-based project selection and review dashboard." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- ── Navbar ─────────────────────────────────────────────────────────── -->
+<nav class="navbar">
+  <a class="navbar-brand" href="#">
+    <div class="navbar-logo">🎓</div>
+    <div>
+      <div class="navbar-title">Project Portal</div>
+    </div>
+  </a>
+  <div class="navbar-actions">
+    <div id="domain-badge" class="badge badge-blue"></div>
+    <div class="navbar-user">
+      <div class="navbar-avatar" id="nav-avatar">T</div>
+      <div>
+        <div class="text-sm" style="font-weight:700" id="nav-team-name">Loading…</div>
+        <div class="text-xs text-muted" id="nav-role">TEAM ACCOUNT</div>
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Sign Out</button>
+  </div>
+</nav>
+
+<!-- ── Layout ─────────────────────────────────────────────────────────── -->
+<div class="layout-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-item active" data-view="home" id="nav-home">
+        <span class="icon">🏠</span> Dashboard
+      </button>
+      <button class="sidebar-item" data-view="project" id="nav-project">
+        <span class="icon">📁</span> My Project
+      </button>
+      <button class="sidebar-item" data-view="timeline" id="nav-timeline">
+        <span class="icon">⏱️</span> Timeline
+      </button>
+      <button class="sidebar-item" data-view="reviews" id="nav-reviews">
+        <span class="icon">📝</span> Review History
+      </button>
+      <button class="sidebar-item" data-view="team" id="nav-team">
+        <span class="icon">👥</span> Team Details
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ── VIEW 1: HOME / DASHBOARD OVERVIEW ────────────────────────── -->
+    <div id="view-home" class="fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
+        </div>
+        <p class="text-muted" id="welcome-subtitle">Track your project lifecycle and review milestones.</p>
+      </div>
+
+      <!-- Welcome Info Summary Card -->
+      <!-- Welcome Info Summary Card -->
+      <div class="doc-meta-card mb-3">
+        <div class="doc-meta-grid" style="grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))">
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Project Code</span>
+            <span class="doc-meta-value font-mono" id="dash-code">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Project Title</span>
+            <span class="doc-meta-value" id="dash-title" style="font-weight:700">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Domain</span>
+            <span class="doc-meta-value" id="dash-domain">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Submitted Date</span>
+            <span class="doc-meta-value" id="dash-submitted-date">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Project Status</span>
+            <span class="doc-meta-value" id="dash-status"><span class="badge badge-gray">Not Submitted</span></span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Current Review Round</span>
+            <span class="doc-meta-value" id="dash-round">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Team Leader</span>
+            <span class="doc-meta-value" id="dash-leader">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Organization / College</span>
+            <span class="doc-meta-value" id="dash-college">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Progress Card Widget -->
+      <div class="progress-card-main">
+        <div class="progress-header">
+          <div>
+            <h3 style="font-weight:700">Team Review Progress</h3>
+            <p class="text-xs text-muted">Real-time completion tracking across review rounds</p>
+          </div>
+          <div id="progress-percent-badge" class="badge badge-blue">0% Completed</div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-stats-grid">
+          <div class="progress-stat-box">
+            <div class="progress-stat-val" id="stat-submitted">No</div>
+            <div class="progress-stat-lbl">Project Submitted</div>
+          </div>
+          <div class="progress-stat-box">
+            <div class="progress-stat-val" id="stat-current-round">0</div>
+            <div class="progress-stat-lbl">Current Round</div>
+          </div>
+          <div class="progress-stat-box">
+            <div class="progress-stat-val" id="stat-total-rounds">3</div>
+            <div class="progress-stat-lbl">Total Rounds</div>
+          </div>
+          <div class="progress-stat-box">
+            <div class="progress-stat-val" id="stat-pct">0%</div>
+            <div class="progress-stat-lbl">Completion</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alert -->
+      <div id="home-alert" class="alert alert-hidden mb-3"></div>
+
+      <!-- State: Loading -->
+      <div id="state-loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <span>Loading your team dashboard…</span>
+      </div>
+
+      <!-- State: Draft Project In Progress -->
+      <div id="state-draft-project" class="hidden">
+        <div class="card mb-3" style="border-left: 4px solid var(--accent-yellow)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div style="font-size:2.25rem">📝</div>
+              <div>
+                <h3 style="font-weight:700">Project Proposal Draft in Progress</h3>
+                <p class="text-sm text-secondary">Your team has an active draft saved in PostgreSQL. You can continue drafting in <strong>My Project</strong>.</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.75rem">
+              <button class="btn btn-primary" onclick="switchView('project')">Continue Editing Project →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State: Already Has Project -->
+      <div id="state-has-project" class="hidden">
+        <div class="card" style="border-left: 4px solid var(--accent-green)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+            <div style="display:flex;align-items:center;gap:1rem">
+              <div style="font-size:2.25rem">✅</div>
+              <div>
+                <h3 style="font-weight:700">Project Submitted Successfully</h3>
+                <p class="text-sm text-secondary">Your project is locked in the system. Read details in <strong>My Project</strong> or view timeline progress.</p>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.75rem">
+              <button class="btn btn-primary" onclick="switchView('project')">My Project →</button>
+              <button class="btn btn-ghost" onclick="switchView('timeline')">View Timeline ⏱️</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State: AI / Cybersecurity — Assigned Problem Statement Banner -->
+      <div id="state-ps-assigned" class="hidden">
+        <div id="domain-header" class="domain-header domain-header-ai mb-3">
+          <h2 id="domain-title">Your Problem Statement Has Been Assigned</h2>
+          <p id="domain-description" class="mt-1">
+            Your team has been assigned a predefined problem statement by the system. It is read-only. Begin drafting your proposal in <strong>My Project</strong>.
+          </p>
+        </div>
+
+        <div class="card mb-3" style="border-left:4px solid var(--accent-blue)">
+          <div style="display:flex;align-items:flex-start;gap:1rem;margin-bottom:1rem">
+            <span style="font-size:2rem;flex-shrink:0">🎯</span>
+            <div style="flex:1">
+              <div class="text-xs text-muted font-mono" style="margin-bottom:0.4rem">PREDEFINED PROBLEM STATEMENT · READ-ONLY</div>
+              <div style="font-weight:700;font-size:1.1rem;color:var(--text-primary);margin-bottom:0.75rem" id="ps-assigned-code">Loading…</div>
+              <div class="text-sm" style="line-height:1.7;color:var(--text-secondary);max-height:160px;overflow-y:auto" id="ps-assigned-preview">Loading your assigned problem statement…</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.75rem;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="openProblemStatementModal()">🔍 View Full Statement</button>
+            <button class="btn btn-primary" onclick="switchView('project')">Start Drafting My Project →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- State: Open Innovation — Custom Topic Form -->
+      <div id="state-oi-form" class="hidden">
+        <div class="domain-header domain-header-oi mb-3">
+          <h2>Open Innovation Team Submission</h2>
+          <p class="mt-1">Propose your custom topic and complete project proposal below.</p>
+        </div>
+
+        <div class="card mb-3">
+          <form id="form-oi-submission" class="modal-form">
+            <div class="form-group">
+              <label class="form-label" for="oi-topic-title">Custom Topic Title *</label>
+              <input class="form-input" id="oi-topic-title" required placeholder="e.g. Autonomous Drone Swarm for Forest Fire Detection" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="oi-abstract">Abstract *</label>
+              <textarea class="form-textarea" id="oi-abstract" rows="3" required placeholder="Summary of the innovation..."></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="oi-problem">Problem Statement *</label>
+                <textarea class="form-textarea" id="oi-problem" rows="3" required placeholder="Describe the challenge..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="oi-objectives">Objectives *</label>
+                <textarea class="form-textarea" id="oi-objectives" rows="3" required placeholder="Target milestones and metrics..."></textarea>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="oi-solution">Proposed Solution *</label>
+                <textarea class="form-textarea" id="oi-solution" rows="3" required placeholder="Your proposed innovative approach..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="oi-technologies">Technology Stack *</label>
+                <textarea class="form-textarea" id="oi-technologies" rows="3" required placeholder="e.g. Embedded C, ROS2, Python, AWS IoT..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="oi-outcome">Expected Outcome *</label>
+              <textarea class="form-textarea" id="oi-outcome" rows="3" required placeholder="What will be built and demonstrated..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="oi-description">Full Project Description *</label>
+              <textarea class="form-textarea" id="oi-description" rows="6" required placeholder="Multi-paragraph detailed proposal..."></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="oi-github">GitHub Repository URL (Optional)</label>
+                <input class="form-input" id="oi-github" type="url" placeholder="https://github.com/team/repo" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="oi-demo">Demo Link (Optional)</label>
+                <input class="form-input" id="oi-demo" type="url" placeholder="https://demo.project.org" />
+              </div>
+            </div>
+
+            <div id="oi-alert" class="alert alert-hidden"></div>
+
+            <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+              <button type="submit" class="btn btn-primary btn-lg" id="btn-submit-oi">
+                Submit Open Innovation Project →
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── VIEW 2: MY PROJECT (EDITABLE FORM BLOCKS OR READ-ONLY VIEW) ── -->
+    <div id="view-project" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">My Project</h1>
+          <span class="badge badge-gray" id="prj-read-only-badge">Loading…</span>
+        </div>
+        <p class="text-muted" id="prj-header-subtitle">Edit your project proposal blocks below or view your finalized submission.</p>
+      </div>
+
+      <div id="project-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Loading project details…</span></div>
+
+      <div id="project-empty" class="card hidden text-center" style="padding:3rem">
+        <div style="font-size:3rem;margin-bottom:1rem">📁</div>
+        <h3>Project Not Yet Initialized</h3>
+        <p class="text-muted mt-1 mb-3">Return to the Dashboard to initialize your project with an assigned problem statement.</p>
+        <button class="btn btn-primary" onclick="switchView('home')">Go to Dashboard →</button>
+      </div>
+
+      <!-- EDITABLE FORM BLOCKS (Active when DRAFT / Unsubmitted) -->
+      <div id="project-editor" class="hidden">
+        <!-- Draft Status Banner -->
+        <div class="draft-banner">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span style="font-size:1.5rem">📝</span>
+            <div>
+              <strong style="color:var(--text-primary)">Draft Mode Active (Editable Until Final Submit)</strong>
+              <div class="text-xs text-muted" id="draft-last-saved-time">Each block can be saved individually. When ready, click 'Final Submit' to lock your project.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <span class="badge badge-yellow">DRAFT</span>
+          </div>
+        </div>
+
+        <!-- Predefined Problem Statement Card -->
+        <div class="form-block-card" style="border-left:4px solid var(--accent-blue)">
+          <div class="form-block-header">
+            <div class="form-block-title">
+              <span>🎯 Problem Statement</span>
+              <span class="badge badge-blue text-xs">Predefined · Read-Only</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-view-problem-modal" onclick="openProblemStatementModal()">
+              🔍 [ View ] Full Problem Statement
+            </button>
+          </div>
+          <div class="text-sm text-secondary mb-2" id="draft-problem-preview" style="line-height:1.6">
+            Loading predefined problem statement…
+          </div>
+          <p class="text-xs text-muted" style="margin:0">
+            ℹ️ The problem statement is predefined by your assigned topic and cannot be edited. Click <strong>[ View ]</strong> to open the full popup.
+          </p>
+        </div>
+
+        <!-- Abstract Form Block -->
+        <div class="form-block-card">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-abstract">
+              <span>📄 Abstract *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('abstract', '📄 Abstract', 'PROJECT ABSTRACT')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-abstract" onclick="saveFieldDraft('abstract', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <textarea class="form-textarea" id="draft-abstract" rows="4" placeholder="Comprehensive high-level summary of your proposed project..."></textarea>
+        </div>
+
+        <!-- Objectives Form Block -->
+        <div class="form-block-card">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-objectives">
+              <span>📌 Objectives (List / Bullet Points) *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('objectives', '📌 Objectives', 'TARGET OBJECTIVES')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-objectives" onclick="saveFieldDraft('objectives', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <textarea class="form-textarea" id="draft-objectives" rows="4" placeholder="• Objective 1: Measurable technical milestone&#10;• Objective 2: Core functional deliverable&#10;• Objective 3: Performance benchmark"></textarea>
+        </div>
+
+        <!-- Proposed Solution Form Block -->
+        <div class="form-block-card">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-solution">
+              <span>💡 Proposed Solution *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('proposed_solution', '💡 Proposed Solution', 'ARCHITECTURE & SOLUTION')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-solution" onclick="saveFieldDraft('proposed_solution', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <textarea class="form-textarea" id="draft-solution" rows="4" placeholder="Explain your technical architecture, methodology, algorithms, and implementation design..."></textarea>
+        </div>
+
+        <!-- Technology Stack Form Block -->
+        <div class="form-block-card">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-technologies">
+              <span>🛠️ Technology Stack *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('technologies', '🛠️ Technology Stack', 'TECH STACK')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-technologies" onclick="saveFieldDraft('technologies', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-muted mb-1">Click common technology tags to quickly add or remove them from your stack:</p>
+          <div class="chip-group" id="tech-chip-group">
+            <span class="tech-chip" data-tech="FastAPI" onclick="toggleTechChip(this, 'FastAPI')">+ FastAPI</span>
+            <span class="tech-chip" data-tech="PostgreSQL" onclick="toggleTechChip(this, 'PostgreSQL')">+ PostgreSQL</span>
+            <span class="tech-chip" data-tech="Docker" onclick="toggleTechChip(this, 'Docker')">+ Docker</span>
+            <span class="tech-chip" data-tech="TensorFlow" onclick="toggleTechChip(this, 'TensorFlow')">+ TensorFlow</span>
+            <span class="tech-chip" data-tech="Python" onclick="toggleTechChip(this, 'Python')">+ Python</span>
+            <span class="tech-chip" data-tech="PyTorch" onclick="toggleTechChip(this, 'PyTorch')">+ PyTorch</span>
+            <span class="tech-chip" data-tech="React" onclick="toggleTechChip(this, 'React')">+ React</span>
+            <span class="tech-chip" data-tech="Node.js" onclick="toggleTechChip(this, 'Node.js')">+ Node.js</span>
+            <span class="tech-chip" data-tech="Kubernetes" onclick="toggleTechChip(this, 'Kubernetes')">+ Kubernetes</span>
+            <span class="tech-chip" data-tech="Redis" onclick="toggleTechChip(this, 'Redis')">+ Redis</span>
+          </div>
+          <input class="form-input" id="draft-technologies" placeholder="e.g. Python, FastAPI, PostgreSQL, Docker, TensorFlow" />
+        </div>
+
+        <!-- Expected Outcome Form Block -->
+        <div class="form-block-card">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-outcome">
+              <span>🏆 Expected Outcome *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('expected_outcome', '🏆 Expected Outcome', 'DELIVERABLES & METRICS')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-outcome" onclick="saveFieldDraft('expected_outcome', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <textarea class="form-textarea" id="draft-outcome" rows="4" placeholder="Describe the tangible outcomes, deliverables, and metrics..."></textarea>
+        </div>
+
+        <!-- Detailed Project Description Form Block -->
+        <div class="form-block-card" style="border-left:4px solid var(--accent-purple)">
+          <div class="form-block-header">
+            <label class="form-block-title" for="draft-description">
+              <span>📖 Detailed Project Description (Outcomes, Functionalities, Do's &amp; Don'ts) *</span>
+            </label>
+            <div style="display:flex;gap:0.4rem;align-items:center">
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('project_description', '📖 Detailed Project Description', 'FULL SPECIFICATIONS & GUIDELINES')">
+                🔍 [ View ]
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="insertDescriptionTemplate()" title="Insert structured template with Functionalities, Outcomes, Do's and Don'ts">
+                ✨ Insert Template
+              </button>
+              <button type="button" class="btn-save-draft" id="btn-save-description" onclick="saveFieldDraft('project_description', this)">
+                💾 Save Draft
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-muted mb-2">
+            Detail your project specifications: core functionalities, measurable outcomes, system Do's (best practices &amp; standards), and Don'ts (forbidden anti-patterns).
+          </p>
+          <div style="display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost btn-sm text-xs" onclick="insertSection('functionalities')">+ Core Functionalities</button>
+            <button type="button" class="btn btn-ghost btn-sm text-xs" onclick="insertSection('outcomes')">+ Expected Outcomes</button>
+            <button type="button" class="btn btn-ghost btn-sm text-xs" onclick="insertSection('dos')">+ System Do's (✓)</button>
+            <button type="button" class="btn btn-ghost btn-sm text-xs" onclick="insertSection('donts')">+ System Don'ts (✗)</button>
+          </div>
+          <textarea class="form-textarea font-mono" id="draft-description" rows="10" placeholder="=== 1. SYSTEM FUNCTIONALITIES &amp; ARCHITECTURE ===&#10;• Core Module: [Description]&#10;&#10;=== 2. DETAILED DELIVERABLES &amp; OUTCOMES ===&#10;• Deliverable 1: [Description]&#10;&#10;=== 3. SYSTEM DO'S (Best Practices) ===&#10;✓ DO implement secure JWT auth&#10;✓ DO sanitize all user inputs&#10;&#10;=== 4. SYSTEM DON'TS (Anti-Patterns) ===&#10;✗ DON'T store plaintext passwords&#10;✗ DON'T hardcode API keys"></textarea>
+        </div>
+
+        <!-- GitHub Repository & Demo Links -->
+        <div class="grid-2">
+          <div class="form-block-card">
+            <div class="form-block-header">
+              <label class="form-block-title" for="draft-github" id="lbl-draft-github">
+                <span>🐙 GitHub Repository Link</span>
+              </label>
+              <button type="button" class="btn-save-draft" id="btn-save-github" onclick="saveFieldDraft('github_url', this)">
+                💾 Save Draft
+              </button>
+            </div>
+            <input class="form-input" id="draft-github" type="url" placeholder="https://github.com/your-team/project" />
+            <p class="text-xs text-muted mt-1" id="github-helper-text">
+              Must start with <code>https://github.com/</code>. Once submitted, only Admin can edit this link.
+            </p>
+          </div>
+
+          <div class="form-block-card">
+            <div class="form-block-header">
+              <label class="form-block-title" for="draft-demo">
+                <span>🌐 Demo Link (Optional)</span>
+              </label>
+              <button type="button" class="btn-save-draft" id="btn-save-demo" onclick="saveFieldDraft('demo_url', this)">
+                💾 Save Draft
+              </button>
+            </div>
+            <input class="form-input" id="draft-demo" type="url" placeholder="https://demo.project-portal.org" />
+            <p class="text-xs text-muted mt-1">Live demo or video presentation link.</p>
+          </div>
+        </div>
+
+        <!-- Draft Alert -->
+        <div id="draft-alert" class="alert alert-hidden mb-3"></div>
+
+        <!-- Bottom Controls -->
+        <div class="card" style="margin-top:1.5rem;padding:1.25rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem">
+          <div>
+            <button type="button" class="btn btn-ghost" id="btn-bottom-save-draft" onclick="saveAllDraft(this)">
+              💾 Save Draft
+            </button>
+          </div>
+          <div style="display:flex;gap:0.75rem;align-items:center">
+            <button type="button" class="btn btn-secondary" id="btn-preview-project" onclick="openPreviewModal()">
+              👁️ Preview
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" id="btn-final-submit" onclick="submitFinalProject(this)">
+              🚀 Final Submit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- READ-ONLY VIEW (Active when SUBMITTED) -->
+      <div id="project-content" class="doc-shell hidden">
+        <div class="locked-banner">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span style="font-size:1.5rem">🔒</span>
+            <div>
+              <strong style="color:var(--accent-green)">Project Successfully Submitted &amp; Locked</strong>
+              <div class="text-xs text-muted">Proposal is permanently recorded for evaluation. Contact your administrator if corrections are required.</div>
+            </div>
+          </div>
+          <span class="badge badge-green">SUBMITTED</span>
+        </div>
+
+        <!-- Project Information Card -->
+        <div class="doc-meta-card">
+          <div class="doc-meta-grid">
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Project Code</span>
+              <span class="doc-meta-value font-mono" id="doc-code">—</span>
+            </div>
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Project Title</span>
+              <span class="doc-meta-value" id="doc-title" style="font-size:1.05rem;font-weight:700">—</span>
+            </div>
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Domain</span>
+              <span class="doc-meta-value" id="doc-domain">—</span>
+            </div>
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Submitted Date</span>
+              <span class="doc-meta-value" id="doc-date">—</span>
+            </div>
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Project Status</span>
+              <span class="doc-meta-value" id="doc-status">—</span>
+            </div>
+            <div class="doc-meta-item">
+              <span class="doc-meta-label">Current Review Round</span>
+              <span class="doc-meta-value" id="doc-round">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Problem Statement Card -->
+        <div class="doc-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div class="doc-section-title" style="margin-bottom:0">🎯 Problem Statement</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('problem_statement', '🎯 Predefined Problem Statement', 'PREDEFINED TOPIC')">
+              🔍 [ View ] Full Problem Statement
+            </button>
+          </div>
+          <div class="doc-section-body" id="doc-problem">—</div>
+        </div>
+
+        <!-- Abstract & Proposed Solution -->
+        <div class="grid-2">
+          <div class="doc-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div class="doc-section-title" style="margin-bottom:0">📄 Abstract</div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('abstract', '📄 Abstract', 'PROJECT ABSTRACT')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div class="doc-section-body" id="doc-abstract">—</div>
+          </div>
+          <div class="doc-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div class="doc-section-title" style="margin-bottom:0">💡 Proposed Solution</div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('proposed_solution', '💡 Proposed Solution', 'ARCHITECTURE & SOLUTION')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div class="doc-section-body" id="doc-solution">—</div>
+          </div>
+        </div>
+
+        <!-- Objectives & Expected Outcome -->
+        <div class="grid-2">
+          <div class="doc-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div class="doc-section-title" style="margin-bottom:0">📌 Objectives</div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('objectives', '📌 Objectives', 'GOALS & MILESTONES')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div class="doc-section-body" id="doc-objectives">—</div>
+          </div>
+          <div class="doc-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+              <div class="doc-section-title" style="margin-bottom:0">🏆 Expected Outcome</div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('expected_outcome', '🏆 Expected Outcome', 'DELIVERABLES & METRICS')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div class="doc-section-body" id="doc-outcome">—</div>
+          </div>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="doc-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div class="doc-section-title" style="margin-bottom:0">🛠️ Technology Stack</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('technologies', '🛠️ Technology Stack', 'TECH STACK')">
+              🔍 [ View ]
+            </button>
+          </div>
+          <div class="doc-section-body" id="doc-technologies">—</div>
+        </div>
+
+        <!-- Links -->
+        <div class="doc-section" id="doc-links-section">
+          <div class="doc-section-title">🔗 Project Links</div>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap">
+            <div id="doc-github-container">
+              <span class="text-xs text-muted">GitHub Repository:</span>
+              <a href="#" target="_blank" rel="noreferrer" id="doc-github" class="font-mono text-sm" style="color:var(--accent-blue);margin-left:0.5rem">None</a>
+              <span class="text-xs text-muted ml-1">(Locked · Admin edit only)</span>
+            </div>
+            <div id="doc-demo-container">
+              <span class="text-xs text-muted">Live Demo:</span>
+              <a href="#" target="_blank" rel="noreferrer" id="doc-demo" class="font-mono text-sm" style="color:var(--accent-cyan);margin-left:0.5rem">None</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="doc-section" id="doc-desc-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div class="doc-section-title" style="margin-bottom:0">📖 Full Project Description</div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('project_description', '📖 Detailed Project Description', 'FULL SPECIFICATIONS & GUIDELINES')">
+              🔍 [ View ] Full Description
+            </button>
+          </div>
+          <div class="doc-scroll-container" id="doc-description">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW 3: PROJECT TIMELINE ──────────────────────────────────── -->
+    <div id="view-timeline" class="hidden fade-in">
+      <div class="page-header">
+        <h1 class="page-title">Project Progress Timeline</h1>
+        <p class="text-muted">Vertical timeline tracking your project lifecycle from submission to decision.</p>
+      </div>
+      <div id="timeline-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Loading timeline…</span></div>
+      <div id="timeline-empty" class="card hidden text-center" style="padding:3rem">
+        <div style="font-size:3rem;margin-bottom:1rem">⏱️</div>
+        <h3>No Timeline Milestones Yet</h3>
+        <p class="text-muted mt-1">Submit your project to initialize your progress timeline.</p>
+      </div>
+      <div id="timeline-container" class="timeline hidden"></div>
+    </div>
+
+    <!-- ── VIEW 4: REVIEW HISTORY ────────────────────────────────────── -->
+    <div id="view-reviews" class="hidden fade-in">
+      <div class="page-header">
+        <h1 class="page-title">Review History</h1>
+        <p class="text-muted">Permanent records of all evaluation rounds, admin feedback, and suggested improvements.</p>
+      </div>
+      <div id="reviews-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Loading reviews…</span></div>
+      <div id="reviews-empty" class="card hidden text-center" style="padding:3rem">
+        <div style="font-size:3rem;margin-bottom:1rem">📝</div>
+        <h3>No Reviews Yet</h3>
+        <p class="text-muted mt-1">Reviews will appear here once the administrator evaluates your project rounds.</p>
+      </div>
+      <div id="reviews-list"></div>
+    </div>
+
+    <!-- ── VIEW 5: TEAM DETAILS ──────────────────────────────────────── -->
+    <div id="view-team" class="hidden fade-in">
+      <div class="page-header">
+        <h1 class="page-title">Team Details</h1>
+        <p class="text-muted">Registered team roster and institutional information.</p>
+      </div>
+
+      <div id="team-loading" class="loading-overlay hidden"><div class="spinner"></div></div>
+
+      <div class="team-profile-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)">
+          <div>
+            <div class="text-xs font-mono text-muted">TEAM ACCOUNT</div>
+            <h2 id="team-view-name" style="font-size:1.75rem;font-weight:800;color:var(--text-primary);margin-top:0.25rem">—</h2>
+            <div class="text-sm text-secondary" id="team-view-inst">—</div>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center">
+            <span id="team-view-domain-badge" class="badge badge-blue">—</span>
+            <span id="team-view-status-badge" class="badge badge-green">ACTIVE</span>
+          </div>
+        </div>
+
+        <div class="doc-meta-grid mt-3">
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Team Leader</span>
+            <span class="doc-meta-value" id="team-view-leader">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">College / Organization</span>
+            <span class="doc-meta-value" id="team-view-college">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Department</span>
+            <span class="doc-meta-value" id="team-view-department">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Academic Year</span>
+            <span class="doc-meta-value" id="team-view-year">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Team Email</span>
+            <span class="doc-meta-value font-mono" id="team-view-email">—</span>
+          </div>
+          <div class="doc-meta-item">
+            <span class="doc-meta-label">Phone Number</span>
+            <span class="doc-meta-value font-mono" id="team-view-phone">—</span>
+          </div>
+        </div>
+
+        <h3 class="mt-4" style="font-size:1.1rem;font-weight:700">Team Members Roster</h3>
+        <p class="text-xs text-muted">Members registered under this project team account.</p>
+
+        <div class="team-members-grid" id="team-members-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="alert alert-info mt-4">
+          ℹ️ <strong>Note:</strong> Team members are registered by the Administrator. Contact your admin if you need to update member information.
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAL: VIEW PREDEFINED PROBLEM STATEMENT ────────────────────── -->
+<div class="modal-overlay" id="modal-view-problem-statement">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div>
+        <span class="text-xs text-muted font-mono">PREDEFINED TOPIC PROBLEM STATEMENT</span>
+        <h3 class="modal-title mt-1" id="ps-modal-topic-title">Problem Statement</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-view-problem-statement')">&times;</button>
+    </div>
+    <div class="doc-scroll-container mb-3" id="ps-modal-body" style="max-height:450px">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-view-problem-statement')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: VIEW SECTION DETAIL ─────────────────────────────────── -->
+<div class="modal-overlay" id="modal-view-section-detail">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <div>
+        <span class="text-xs text-muted font-mono" id="section-modal-category">PROJECT SPECIFICATION</span>
+        <h3 class="modal-title mt-1" id="section-modal-title">Section Details</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-view-section-detail')">&times;</button>
+    </div>
+    <div class="doc-scroll-container mb-3" id="section-modal-body" style="max-height:520px;font-size:0.95rem;line-height:1.7">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center">
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-section-content" onclick="copyModalSectionContent(this)">📋 Copy Content</button>
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-view-section-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: PROJECT SUBMISSION PREVIEW ───────────────────────────── -->
+<div class="modal-overlay" id="modal-preview-project">
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <div>
+        <span class="text-xs text-muted font-mono">SUBMISSION PREVIEW</span>
+        <h3 class="modal-title mt-1">Project Proposal Preview</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-preview-project')">&times;</button>
+    </div>
+    <div id="preview-modal-body" class="doc-shell mb-3">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-preview-project')">Close Preview</button>
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-preview-project'); document.getElementById('btn-final-submit').click();">Proceed to Final Submit →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Client Logic ────────────────────────────────────────────────────── -->
+<script type="module">
+  import { requireUser, logout } from './js/auth.js';
+  import { api } from './js/api.js';
+
+  const user = requireUser();
+  if (!user) throw new Error('Not authenticated');
+
+  document.getElementById('logout-btn').addEventListener('click', logout);
+
+  const domainColors = {
+    AI: 'badge-blue',
+    Cybersecurity: 'badge-cyan',
+    CYBERSECURITY: 'badge-cyan',
+    'Open Innovation': 'badge-orange',
+    OPEN_INNOVATION: 'badge-orange'
+  };
+
+  const statusColors = {
+    SUBMITTED: 'badge-blue',
+    UNDER_REVIEW: 'badge-yellow',
+    IN_PROGRESS: 'badge-purple',
+    COMPLETED: 'badge-green',
+    REJECTED: 'badge-red'
+  };
+
+  let cachedTeam = null;
+  let cachedProject = null;
+  let selectedTopicId = null;
+
+  // ── Tab Routing ──────────────────────────────────────────────────────────
+  window.switchView = function(view) {
+    document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
+    document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
+
+    ['home', 'project', 'timeline', 'reviews', 'team'].forEach(v => {
+      const el = document.getElementById(`view-${v}`);
+      if (el) el.classList.add('hidden');
+    });
+
+    const target = document.getElementById(`view-${view}`);
+    if (target) target.classList.remove('hidden');
+
+    if (view === 'home') initDashboard();
+    else if (view === 'project') loadProjectDetails();
+    else if (view === 'timeline') loadTimeline();
+    else if (view === 'reviews') loadReviews();
+    else if (view === 'team') loadTeamView();
+  };
+
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => switchView(btn.dataset.view));
+  });
+
+  let currentProblemStatement = '';
+  let currentProblemTitle = '';
+
+  window.openModal = function(id) { document.getElementById(id)?.classList.add('open'); };
+  window.closeModal = function(id) { document.getElementById(id)?.classList.remove('open'); };
+
+  window.viewSectionModal = function(fieldKey, fieldTitle, categoryLabel) {
+    let content = '';
+    const isEditorActive = !document.getElementById('project-editor')?.classList.contains('hidden');
+
+    if (fieldKey === 'problem_statement') {
+      content = currentProblemStatement || cachedProject?.problem_statement || (cachedProject?.topic ? cachedProject.topic.description : '') || 'Predefined problem statement.';
+    } else if (fieldKey === 'abstract') {
+      content = (isEditorActive ? document.getElementById('draft-abstract')?.value : cachedProject?.abstract) || '';
+    } else if (fieldKey === 'proposed_solution') {
+      content = (isEditorActive ? document.getElementById('draft-solution')?.value : cachedProject?.proposed_solution) || '';
+    } else if (fieldKey === 'objectives') {
+      content = (isEditorActive ? document.getElementById('draft-objectives')?.value : cachedProject?.objectives) || '';
+    } else if (fieldKey === 'expected_outcome') {
+      content = (isEditorActive ? document.getElementById('draft-outcome')?.value : cachedProject?.expected_outcome) || '';
+    } else if (fieldKey === 'technologies') {
+      content = (isEditorActive ? document.getElementById('draft-technologies')?.value : (cachedProject?.technologies || cachedProject?.technology_stack)) || '';
+    } else if (fieldKey === 'project_description') {
+      content = (isEditorActive ? document.getElementById('draft-description')?.value : cachedProject?.project_description) || '';
+    }
+
+    document.getElementById('section-modal-title').textContent = fieldTitle || 'Project Section Details';
+    document.getElementById('section-modal-category').textContent = categoryLabel || 'PROJECT TOPIC DETAILS';
+
+    const bodyEl = document.getElementById('section-modal-body');
+    if (!content || !content.trim()) {
+      bodyEl.innerHTML = `<div class="text-muted text-center py-4" style="font-style:italic">No content provided yet for this section.</div>`;
+    } else if (fieldKey === 'project_description') {
+      bodyEl.innerHTML = window.renderFormattedDescription(content);
+    } else if (fieldKey === 'technologies' && content.includes(',')) {
+      const chips = content.split(',').map(t => t.trim()).filter(Boolean);
+      bodyEl.innerHTML = `
+        <p class="text-sm text-muted mb-2">Configured Technology Stack components:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+          ${chips.map(c => `<span class="badge badge-blue" style="font-size:0.9rem;padding:0.4rem 0.75rem">${escHtml(c)}</span>`).join('')}
+        </div>
+      `;
+    } else {
+      bodyEl.innerHTML = `<div style="white-space:pre-line;word-break:break-word;line-height:1.7">${escHtml(content)}</div>`;
+    }
+
+    openModal('modal-view-section-detail');
+  };
+
+  window.copyModalSectionContent = function(btn) {
+    const bodyEl = document.getElementById('section-modal-body');
+    const text = bodyEl?.innerText || '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied to Clipboard!';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    });
+  };
+
+  window.openProblemStatementModal = function() {
+    viewSectionModal('problem_statement', currentProblemTitle ? `🎯 ${currentProblemTitle}` : '🎯 Problem Statement', 'PREDEFINED TOPIC');
+  };
+
+  window.renderFormattedDescription = function(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return '<div class="text-muted">No detailed description provided.</div>';
+    }
+    const lines = rawText.split('\n');
+    let html = '';
+    let inList = false;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<div style="height:0.5rem"></div>';
+        return;
+      }
+
+      // Check for Header / Section divider
+      if (trimmed.startsWith('===') || trimmed.startsWith('##') || /^[0-9]+\.\s+[A-Z\s]{4,}/.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        const cleanTitle = trimmed.replace(/^(=+|-+|#+)\s*/, '').replace(/\s*(=+|-+|#+)$/, '');
+        html += `<h4 style="color:var(--text-primary);margin-top:1.25rem;margin-bottom:0.5rem;font-size:1.05rem;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:0.35rem">${escHtml(cleanTitle)}</h4>`;
+        return;
+      }
+
+      // Check for DO's
+      if (trimmed.startsWith('✓') || /^DO\b/i.test(trimmed) || /^\(DO\)/i.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<div style="background:rgba(34,197,94,0.1);border-left:3px solid #22c55e;color:var(--text-primary);padding:0.4rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.35rem;font-size:0.875rem"><strong style="color:#22c55e">✓ DO:</strong> ${escHtml(trimmed.replace(/^(✓|DO:?|\(DO\))\s*/i, ''))}</div>`;
+        return;
+      }
+
+      // Check for DON'T's
+      if (trimmed.startsWith('✗') || /^DON'?T\b/i.test(trimmed) || /^\(DON'?T\)/i.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<div style="background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;color:var(--text-primary);padding:0.4rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.35rem;font-size:0.875rem"><strong style="color:#ef4444">✗ DON'T:</strong> ${escHtml(trimmed.replace(/^(✗|DON'?T:?|\(DON'?T\))\s*/i, ''))}</div>`;
+        return;
+      }
+
+      // Check for Bullet points
+      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+        if (!inList) { html += '<ul style="margin:0 0 0.5rem 1.25rem;padding:0">'; inList = true; }
+        html += `<li style="margin-bottom:0.25rem;font-size:0.875rem">${escHtml(trimmed.replace(/^[•\-\*]\s*/, ''))}</li>`;
+        return;
+      }
+
+      // Normal paragraph
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p style="margin:0 0 0.5rem 0;font-size:0.875rem;line-height:1.6">${escHtml(trimmed)}</p>`;
+    });
+
+    if (inList) { html += '</ul>'; }
+    return html;
+  };
+
+  window.insertDescriptionTemplate = function() {
+    const el = document.getElementById('draft-description');
+    if (!el) return;
+    const template = `=== 1. SYSTEM FUNCTIONALITIES & MODULES ===
+• Module A (Authentication & Security): Secure JWT token flow and role-based access control.
+• Module B (Core Workflow & Pipeline): Asynchronous job orchestration with real-time feedback.
+• Module C (Data Storage & Auditing): Scalable transactional schemas with audit trails.
+
+=== 2. DETAILED DELIVERABLES & OUTCOMES ===
+• Responsive, modern web interface with real-time state synchronization.
+• Enterprise-grade RESTful API endpoints with schema validation and test suites.
+• High availability and fault-tolerant architecture with sub-second response times.
+
+=== 3. SYSTEM DO'S (Best Practices & Architecture Guidelines) ===
+✓ DO implement strict input validation and sanitize all parameters.
+✓ DO enforce centralized error handling with descriptive logging.
+✓ DO store credentials securely using salted bcrypt hashing.
+✓ DO maintain comprehensive API documentation and automated test suites.
+
+=== 4. SYSTEM DON'TS (Forbidden Anti-Patterns & Constraints) ===
+✗ DON'T hardcode sensitive credentials, secrets, or API keys in the repository.
+✗ DON'T bypass role-based authentication or authorization checks.
+✗ DON'T execute unindexed queries on large database tables.
+✗ DON'T ignore uncaught exceptions or expose raw stack traces to users.`;
+
+    if (el.value.trim() && !confirm("Replace current description with the structured template?")) {
+      return;
+    }
+    el.value = template;
+    el.focus();
+  };
+
+  window.insertSection = function(type) {
+    const el = document.getElementById('draft-description');
+    if (!el) return;
+    let snippet = '';
+    if (type === 'functionalities') {
+      snippet = `\n\n=== SYSTEM FUNCTIONALITIES ===\n• Feature: [Describe core feature and workflow]\n• Module: [Describe component interface and logic]`;
+    } else if (type === 'outcomes') {
+      snippet = `\n\n=== EXPECTED OUTCOMES ===\n• Outcome 1: [Quantifiable performance or deliverable metric]\n• Outcome 2: [Operational milestone reached]`;
+    } else if (type === 'dos') {
+      snippet = `\n\n=== SYSTEM DO'S ===\n✓ DO: [Recommended practice, security standard, or design principle]\n✓ DO: [Data validation, testing, or optimization guideline]`;
+    } else if (type === 'donts') {
+      snippet = `\n\n=== SYSTEM DON'TS ===\n✗ DON'T: [Prohibited practice or architectural flaw to avoid]\n✗ DON'T: [Security vulnerability or antipattern]`;
+    }
+    el.value = el.value + snippet;
+    el.focus();
+  };
+
+  window.openPreviewModal = function() {
+    const title = cachedProject?.project_title || cachedProject?.topic?.title || 'Project Proposal';
+    const abstract = document.getElementById('draft-abstract')?.value.trim() || '—';
+    const objectives = document.getElementById('draft-objectives')?.value.trim() || '—';
+    const solution = document.getElementById('draft-solution')?.value.trim() || '—';
+    const tech = document.getElementById('draft-technologies')?.value.trim() || '—';
+    const outcome = document.getElementById('draft-outcome')?.value.trim() || '—';
+    const description = document.getElementById('draft-description')?.value.trim() || '';
+    const github = document.getElementById('draft-github')?.value.trim() || 'None provided';
+    const demo = document.getElementById('draft-demo')?.value.trim() || 'None provided';
+
+    const b = document.getElementById('preview-modal-body');
+    b.innerHTML = `
+      <div class="doc-meta-card">
+        <h3 style="margin:0 0 0.5rem 0;color:var(--text-primary)">${escHtml(title)}</h3>
+        <div class="text-xs text-muted">Domain: <strong>${escHtml(cachedTeam?.domain?.display_name || cachedTeam?.domain?.name || '—')}</strong> · Team: <strong>${escHtml(cachedTeam?.team_name || cachedTeam?.name || '—')}</strong></div>
+      </div>
+      <div class="doc-section">
+        <div class="doc-section-title">🎯 Predefined Problem Statement</div>
+        <div class="doc-section-body">${escHtml(currentProblemStatement || 'Predefined by topic.')}</div>
+      </div>
+      <div class="grid-2">
+        <div class="doc-section"><div class="doc-section-title">📄 Abstract</div><div class="doc-section-body">${escHtml(abstract)}</div></div>
+        <div class="doc-section"><div class="doc-section-title">💡 Proposed Solution</div><div class="doc-section-body">${escHtml(solution)}</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="doc-section"><div class="doc-section-title">📌 Objectives</div><div class="doc-section-body" style="white-space:pre-line">${escHtml(objectives)}</div></div>
+        <div class="doc-section"><div class="doc-section-title">🏆 Expected Outcome</div><div class="doc-section-body">${escHtml(outcome)}</div></div>
+      </div>
+      <div class="doc-section">
+        <div class="doc-section-title">🛠️ Technology Stack</div>
+        <div class="doc-section-body">${escHtml(tech)}</div>
+      </div>
+      <div class="doc-section">
+        <div class="doc-section-title">📖 Detailed Project Description</div>
+        <div class="doc-scroll-container">${window.renderFormattedDescription(description)}</div>
+      </div>
+      <div class="doc-section">
+        <div class="doc-section-title">🔗 Project Links</div>
+        <div class="text-sm">GitHub: <code>${escHtml(github)}</code> | Demo: <code>${escHtml(demo)}</code></div>
+      </div>
+    `;
+    openModal('modal-preview-project');
+  };
+
+  window.toggleTechChip = function(el, techName) {
+    el.classList.toggle('selected');
+    const input = document.getElementById('draft-technologies');
+    let currentTags = input.value.split(',').map(s => s.trim()).filter(Boolean);
+    const idx = currentTags.findIndex(t => t.toLowerCase() === techName.toLowerCase());
+    if (idx >= 0) {
+      currentTags.splice(idx, 1);
+    } else {
+      currentTags.push(techName);
+    }
+    input.value = currentTags.join(', ');
+  };
+
+  function syncChipsWithInput() {
+    const input = document.getElementById('draft-technologies');
+    if (!input) return;
+    const currentTags = input.value.split(',').map(s => s.trim().toLowerCase());
+    document.querySelectorAll('#tech-chip-group .tech-chip').forEach(chip => {
+      const tech = chip.dataset.tech.toLowerCase();
+      if (currentTags.includes(tech)) {
+        chip.classList.add('selected');
+      } else {
+        chip.classList.remove('selected');
+      }
+    });
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Initialize Dashboard ─────────────────────────────────────────────────
+  async function initDashboard() {
+    showState('loading');
+    try {
+      // 1. Fetch team profile
+      const teamResp = await api.get('/api/users/me/team').catch(() => null);
+      if (teamResp && teamResp.data) {
+        cachedTeam = teamResp.data;
+        populateNavbarAndSummary(cachedTeam);
+      }
+
+      // 2. Fetch project
+      const prjResp = await api.get('/api/projects/me').catch(() => null);
+      if (prjResp && prjResp.data) {
+        cachedProject = prjResp.data;
+        updateProgressWidget(cachedProject);
+        updateSummaryCard(cachedProject);
+
+        if (cachedProject.is_submitted || cachedProject.status !== 'DRAFT') {
+          showState('has-project');
+        } else {
+          showState('draft-project');
+        }
+      } else {
+        cachedProject = null;
+        updateProgressWidget(null);
+        updateSummaryCard(null);
+        handleNotSubmittedFlow();
+      }
+    } catch (e) {
+      showAlert('home-alert', 'error', e.message);
+      showState(null);
+    }
+  }
+
+  function populateNavbarAndSummary(t) {
+    const tName = t.team_name || t.name || t.username;
+    document.getElementById('nav-team-name').textContent = tName;
+    document.getElementById('welcome-team-name').textContent = tName;
+    document.getElementById('nav-avatar').textContent = (tName[0] || 'T').toUpperCase();
+
+    const dName = t.domain?.display_name || t.domain?.name || 'Assigned Domain';
+    const dBadge = document.getElementById('domain-badge');
+    dBadge.textContent = dName;
+    dBadge.className = `badge ${domainColors[t.domain?.name] || domainColors[dName] || 'badge-gray'}`;
+
+    document.getElementById('dash-domain').textContent = dName;
+    document.getElementById('dash-leader').textContent = t.team_leader || t.name || '—';
+    document.getElementById('dash-college').textContent = t.college_name || t.organization || '—';
+  }
+
+  function updateSummaryCard(prj) {
+    if (prj) {
+      document.getElementById('dash-code').textContent = prj.project_code || '—';
+      document.getElementById('dash-title').textContent = prj.project_title || prj.custom_topic || prj.topic?.title || '—';
+      document.getElementById('dash-domain').textContent = prj.domain?.display_name || prj.domain?.name || '—';
+      document.getElementById('dash-submitted-date').textContent = prj.submitted_at 
+        ? new Date(prj.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) 
+        : (prj.status === 'DRAFT' ? 'Draft in progress' : 'Not submitted');
+      const stEl = document.getElementById('dash-status');
+      stEl.innerHTML = `<span class="badge ${statusColors[prj.status] || 'badge-gray'}">${prj.status}</span>`;
+      document.getElementById('dash-round').textContent = `Round ${prj.current_round} of 3`;
+    } else {
+      document.getElementById('dash-code').textContent = 'Not assigned';
+      document.getElementById('dash-title').textContent = '—';
+      document.getElementById('dash-submitted-date').textContent = 'Not submitted';
+      document.getElementById('dash-status').innerHTML = `<span class="badge badge-gray">Not Submitted</span>`;
+      document.getElementById('dash-round').textContent = 'N/A';
+    }
+  }
+
+  function updateProgressWidget(prj) {
+    const subEl = document.getElementById('stat-submitted');
+    const curEl = document.getElementById('stat-current-round');
+    const totEl = document.getElementById('stat-total-rounds');
+    const pctEl = document.getElementById('stat-pct');
+    const barEl = document.getElementById('progress-bar-fill');
+    const badgeEl = document.getElementById('progress-percent-badge');
+
+    if (!prj || !prj.is_submitted) {
+      subEl.textContent = prj?.status === 'DRAFT' ? 'Drafting' : 'No';
+      subEl.style.color = prj?.status === 'DRAFT' ? 'var(--accent-yellow)' : 'var(--text-muted)';
+      curEl.textContent = prj?.status === 'DRAFT' ? 'Draft' : '0';
+      totEl.textContent = '3';
+      pctEl.textContent = '0%';
+      barEl.style.width = '0%';
+      badgeEl.textContent = prj?.status === 'DRAFT' ? 'Draft Mode' : '0% Completed';
+      badgeEl.className = 'badge badge-gray';
+      return;
+    }
+
+    subEl.textContent = 'Yes';
+    subEl.style.color = 'var(--accent-green)';
+    totEl.textContent = '3';
+
+    let round = prj.current_round || 1;
+    let pct = 0;
+
+    if (prj.status === 'COMPLETED') {
+      round = 3;
+      pct = 100;
+    } else if (prj.status === 'REJECTED') {
+      pct = Math.round(((round - 1) / 3) * 100);
+    } else {
+      pct = Math.round((round / 3) * 100);
+      if (pct > 90) pct = 90;
+    }
+
+    curEl.textContent = `Round ${round}`;
+    pctEl.textContent = `${pct}%`;
+    barEl.style.width = `${pct}%`;
+    badgeEl.textContent = `${pct}% Progress`;
+    badgeEl.className = pct === 100 ? 'badge badge-green' : 'badge badge-blue';
+  }
+
+  async function handleNotSubmittedFlow() {
+    const domainName = cachedTeam?.domain?.name || '';
+    if (domainName === 'OPEN_INNOVATION' || domainName === 'Open Innovation') {
+      showState('oi-form');
+    } else {
+      // AI / Cybersecurity: auto-initialize via problem-statement endpoint
+      showState('loading');
+      try {
+        const psResp = await api.get('/api/projects/me/problem-statement');
+        const ps = psResp.data;
+        const isAI = domainName === 'AI';
+        const header = document.getElementById('domain-header');
+        header.className = `domain-header domain-header-${isAI ? 'ai' : 'cyber'} mb-3`;
+        document.getElementById('domain-title').textContent = `Your ${isAI ? 'AI' : 'Cybersecurity'} Problem Statement Has Been Assigned`;
+        document.getElementById('domain-description').textContent = 'Your team has been assigned a predefined problem statement. It is read-only. Begin drafting in My Project.';
+
+        currentProblemStatement = ps.detailed_description || ps.problem_statement || '';
+        currentProblemTitle = ps.problem_code || ps.title || 'Assigned Problem Statement';
+
+        document.getElementById('ps-assigned-code').textContent = ps.problem_code ? `Problem Code: ${ps.problem_code}` : 'Assigned Problem Statement';
+        document.getElementById('ps-assigned-preview').textContent = currentProblemStatement || 'No description available.';
+
+        // Reload the project if it was just created
+        const prjResp = await api.get('/api/projects/me').catch(() => null);
+        if (prjResp && prjResp.data) {
+          cachedProject = prjResp.data;
+          updateProgressWidget(cachedProject);
+          updateSummaryCard(cachedProject);
+        }
+
+        showState('ps-assigned');
+      } catch (e) {
+        showAlert('home-alert', 'error', `Failed to load problem statement: ${e.message}`);
+        showState(null);
+      }
+    }
+  }
+
+  function showState(state) {
+    ['loading', 'has-project', 'draft-project', 'ps-assigned', 'oi-form'].forEach(s => {
+      document.getElementById(`state-${s}`)?.classList.add('hidden');
+    });
+    if (state) document.getElementById(`state-${state}`)?.classList.remove('hidden');
+  }
+
+  // (Legacy topic loading removed — AI/Cyber now use fixed problem statement assignment)
+
+  // ── Submit Open Innovation Initial Proposal ──────────────────────────────
+  document.getElementById('form-oi-submission')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      custom_topic: document.getElementById('oi-topic-title').value.trim(),
+      project_title: document.getElementById('oi-topic-title').value.trim(),
+      abstract: document.getElementById('oi-abstract').value.trim(),
+      problem_statement: document.getElementById('oi-problem').value.trim(),
+      objectives: document.getElementById('oi-objectives').value.trim(),
+      proposed_solution: document.getElementById('oi-solution').value.trim(),
+      technologies: document.getElementById('oi-technologies').value.trim(),
+      technology_stack: document.getElementById('oi-technologies').value.trim(),
+      expected_outcome: document.getElementById('oi-outcome').value.trim(),
+      project_description: document.getElementById('oi-description').value.trim(),
+      github_url: document.getElementById('oi-github').value.trim() || null,
+      demo_url: document.getElementById('oi-demo').value.trim() || null,
+    };
+
+    const btn = document.getElementById('btn-submit-oi');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving Innovation Draft…';
+
+    try {
+      const res = await api.patch('/api/projects/me/draft', payload);
+      cachedProject = res.data;
+      showAlert('home-alert', 'success', 'Open Innovation proposal saved as draft! Continuing in My Project…');
+      switchView('project');
+    } catch (err) {
+      showAlert('oi-alert', 'error', err.message || 'Draft save failed.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Open Innovation Project →';
+    }
+  });
+
+  // ── Load My Project (Editable Draft OR Read-Only View) ───────────────────
+  async function loadProjectDetails() {
+    const loading = document.getElementById('project-loading');
+    const empty = document.getElementById('project-empty');
+    const editor = document.getElementById('project-editor');
+    const content = document.getElementById('project-content');
+
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    editor.classList.add('hidden');
+    content.classList.add('hidden');
+
+    try {
+      const res = await api.get('/api/projects/me');
+      const p = res.data;
+      cachedProject = p;
+
+      // Store problem statement for modal popup
+      currentProblemStatement = p.problem_statement || (p.topic ? p.topic.description : '') || 'Predefined problem statement.';
+      currentProblemTitle = p.project_title || p.custom_topic || p.topic?.title || 'Predefined Topic';
+
+      const isSubmitted = p.is_submitted === true || (p.status && p.status !== 'DRAFT');
+
+      if (!isSubmitted) {
+        // Render EDITABLE DRAFT FORM
+        document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
+        document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+        document.getElementById('prj-header-subtitle').textContent = 'Draft proposal mode. You can edit, save sections individually, and submit when ready.';
+
+        document.getElementById('draft-problem-preview').textContent = currentProblemStatement;
+        document.getElementById('draft-abstract').value = p.abstract || '';
+        document.getElementById('draft-objectives').value = p.objectives || '';
+        document.getElementById('draft-solution').value = p.proposed_solution || '';
+        document.getElementById('draft-technologies').value = p.technologies || p.technology_stack || '';
+        document.getElementById('draft-outcome').value = p.expected_outcome || '';
+        document.getElementById('draft-description').value = p.project_description || '';
+        document.getElementById('draft-github').value = p.github_url || '';
+        document.getElementById('draft-demo').value = p.demo_url || '';
+
+        // Configure GitHub label
+        const isOI = (p.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION');
+        const ghLabel = document.getElementById('lbl-draft-github');
+        if (ghLabel) {
+          ghLabel.innerHTML = isOI 
+            ? `<span>🐙 GitHub Repository Link *</span> <span class="badge badge-orange text-xs">Mandatory (https://github.com/)</span>` 
+            : `<span>🐙 GitHub Repository Link</span> <span class="badge badge-gray text-xs">Optional</span>`;
+        }
+
+        if (p.draft_saved_at) {
+          const dt = new Date(p.draft_saved_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+          document.getElementById('draft-last-saved-time').textContent = `Draft auto-saved to PostgreSQL at ${dt}. Click 'Final Submit' when complete.`;
+        }
+
+        syncChipsWithInput();
+        editor.classList.remove('hidden');
+      } else {
+        // Render READ-ONLY DOCUMENTATION VIEW
+        document.getElementById('prj-read-only-badge').textContent = `${p.status} (Locked)`;
+        document.getElementById('prj-read-only-badge').className = 'badge badge-green';
+        document.getElementById('prj-header-subtitle').textContent = 'Submitted project documentation. Edits are locked.';
+
+        document.getElementById('doc-code').textContent = p.project_code || '—';
+        document.getElementById('doc-title').textContent = p.project_title || p.custom_topic || p.topic?.title || '—';
+        document.getElementById('doc-domain').textContent = p.domain?.display_name || p.domain?.name || '—';
+        document.getElementById('doc-date').textContent = p.submitted_at 
+          ? new Date(p.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) 
+          : '—';
+        document.getElementById('doc-status').innerHTML = `<span class="badge ${statusColors[p.status] || 'badge-gray'}">${p.status}</span>`;
+        document.getElementById('doc-round').textContent = `Round ${p.current_round} of 3`;
+
+        document.getElementById('doc-problem').textContent = p.problem_statement || 'Predefined by topic.';
+        document.getElementById('doc-abstract').textContent = p.abstract || 'No abstract provided.';
+        document.getElementById('doc-objectives').textContent = p.objectives || 'No objectives provided.';
+        document.getElementById('doc-solution').textContent = p.proposed_solution || 'No proposed solution provided.';
+        document.getElementById('doc-technologies').textContent = p.technologies || p.technology_stack || 'No technology stack provided.';
+        document.getElementById('doc-outcome').textContent = p.expected_outcome || 'No expected outcome provided.';
+
+        // GitHub link
+        const ghEl = document.getElementById('doc-github');
+        if (p.github_url) {
+          ghEl.href = p.github_url;
+          ghEl.textContent = p.github_url;
+        } else {
+          ghEl.removeAttribute('href');
+          ghEl.textContent = 'None provided';
+        }
+
+        // Demo link
+        const demoEl = document.getElementById('doc-demo');
+        if (p.demo_url) {
+          demoEl.href = p.demo_url;
+          demoEl.textContent = p.demo_url;
+        } else {
+          demoEl.removeAttribute('href');
+          demoEl.textContent = 'None provided';
+        }
+
+        // Description
+        document.getElementById('doc-description').innerHTML = window.renderFormattedDescription(p.project_description);
+
+        content.classList.remove('hidden');
+      }
+    } catch (e) {
+      if (e.status === 404) {
+        const domainName = cachedTeam?.domain?.name || '';
+        const isOI = domainName === 'OPEN_INNOVATION';
+        if (isOI) {
+          // Open Innovation: open blank editor directly
+          document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
+          document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+          document.getElementById('prj-header-subtitle').textContent = 'Draft your Open Innovation proposal. Fill in the fields and save or submit when ready.';
+          // Blank problem statement preview for OI
+          document.getElementById('draft-problem-preview').textContent = 'Open Innovation — enter your own problem statement below.';
+          editor.classList.remove('hidden');
+        } else {
+          // AI / Cybersecurity — auto-initialize by calling problem-statement endpoint
+          try {
+            const psResp = await api.get('/api/projects/me/problem-statement');
+            const ps = psResp.data;
+            currentProblemStatement = ps.detailed_description || ps.problem_statement || '';
+            currentProblemTitle = ps.problem_code || ps.title || 'Assigned Problem Statement';
+
+            document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
+            document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+            document.getElementById('prj-header-subtitle').textContent = 'Draft proposal mode. Your problem statement has been auto-assigned.';
+            document.getElementById('draft-problem-preview').textContent = currentProblemStatement || 'Loading…';
+
+            // Fetch the project that was just created
+            const prjResp2 = await api.get('/api/projects/me').catch(() => null);
+            if (prjResp2 && prjResp2.data) {
+              const p2 = prjResp2.data;
+              cachedProject = p2;
+              document.getElementById('draft-abstract').value = p2.abstract || '';
+              document.getElementById('draft-objectives').value = p2.objectives || '';
+              document.getElementById('draft-solution').value = p2.proposed_solution || '';
+              document.getElementById('draft-technologies').value = p2.technologies || p2.technology_stack || '';
+              document.getElementById('draft-outcome').value = p2.expected_outcome || '';
+              document.getElementById('draft-description').value = p2.project_description || '';
+              document.getElementById('draft-github').value = p2.github_url || '';
+              document.getElementById('draft-demo').value = p2.demo_url || '';
+              syncChipsWithInput();
+            }
+            editor.classList.remove('hidden');
+          } catch (psErr) {
+            empty.classList.remove('hidden');
+          }
+        }
+      } else {
+        alert(e.message);
+      }
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  // ── Save Individual Block Draft ──────────────────────────────────────────
+  window.saveFieldDraft = async function(fieldName, btnEl) {
+    const inputMap = {
+      abstract: 'draft-abstract',
+      objectives: 'draft-objectives',
+      proposed_solution: 'draft-solution',
+      technologies: 'draft-technologies',
+      technology_stack: 'draft-technologies',
+      expected_outcome: 'draft-outcome',
+      project_description: 'draft-description',
+      github_url: 'draft-github',
+      demo_url: 'draft-demo',
+    };
+
+    const inputId = inputMap[fieldName];
+    const val = document.getElementById(inputId)?.value.trim() || '';
+
+    const origText = btnEl ? btnEl.textContent : '';
+    if (btnEl) {
+      btnEl.disabled = true;
+      btnEl.textContent = 'Saving…';
+    }
+
+    try {
+      const payload = { [fieldName]: val };
+      if (fieldName === 'technologies') payload.technology_stack = val;
+
+      const res = await api.patch('/api/projects/me/draft', payload);
+      cachedProject = res.data;
+
+      if (btnEl) {
+        btnEl.classList.add('saved');
+        btnEl.textContent = '✓ Saved!';
+        setTimeout(() => {
+          btnEl.classList.remove('saved');
+          btnEl.textContent = origText;
+          btnEl.disabled = false;
+        }, 1800);
+      }
+      document.getElementById('draft-last-saved-time').textContent = `Draft block '${fieldName}' saved at ${new Date().toLocaleTimeString()}.`;
+    } catch (err) {
+      alert(`Could not save draft: ${err.message}`);
+      if (btnEl) {
+        btnEl.disabled = false;
+        btnEl.textContent = origText;
+      }
+    }
+  };
+
+  // ── Save All Draft ───────────────────────────────────────────────────────
+  window.saveAllDraft = async function(btnEl) {
+    const origText = btnEl.textContent;
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<span class="spinner"></span> Saving Draft…';
+    const alertEl = document.getElementById('draft-alert');
+
+    const techVal = document.getElementById('draft-technologies').value.trim();
+    const payload = {
+      abstract: document.getElementById('draft-abstract').value.trim(),
+      objectives: document.getElementById('draft-objectives').value.trim(),
+      proposed_solution: document.getElementById('draft-solution').value.trim(),
+      technologies: techVal,
+      technology_stack: techVal,
+      expected_outcome: document.getElementById('draft-outcome').value.trim(),
+      project_description: document.getElementById('draft-description').value.trim(),
+      github_url: document.getElementById('draft-github').value.trim() || null,
+      demo_url: document.getElementById('draft-demo').value.trim() || null,
+    };
+
+    try {
+      const res = await api.patch('/api/projects/me/draft', payload);
+      cachedProject = res.data;
+      alertEl.className = 'alert alert-success';
+      alertEl.innerHTML = `<span>✅</span><span>Entire project draft saved to database successfully!</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-last-saved-time').textContent = `Entire draft saved at ${new Date().toLocaleTimeString()}.`;
+      setTimeout(() => alertEl.classList.add('alert-hidden'), 4000);
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    } finally {
+      btnEl.disabled = false;
+      btnEl.textContent = origText;
+    }
+  };
+
+  // ── Final Submit ─────────────────────────────────────────────────────────
+  window.submitFinalProject = async function(btnEl) {
+    const alertEl = document.getElementById('draft-alert');
+    alertEl.classList.add('alert-hidden');
+
+    const abstract = document.getElementById('draft-abstract').value.trim();
+    const objectives = document.getElementById('draft-objectives').value.trim();
+    const solution = document.getElementById('draft-solution').value.trim();
+    const technologies = document.getElementById('draft-technologies').value.trim();
+    const expected_outcome = document.getElementById('draft-outcome').value.trim();
+    const project_description = document.getElementById('draft-description').value.trim();
+    const github_url = document.getElementById('draft-github').value.trim();
+    const demo_url = document.getElementById('draft-demo').value.trim() || null;
+
+    // Validation
+    if (!abstract || abstract.length < 10) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please provide an Abstract of at least 10 characters before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-abstract').focus();
+      return;
+    }
+    if (!objectives || objectives.length < 10) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please provide project Objectives before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-objectives').focus();
+      return;
+    }
+    if (!solution || solution.length < 10) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please provide a Proposed Solution before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-solution').focus();
+      return;
+    }
+    if (!technologies) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please specify the Technology Stack before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-technologies').focus();
+      return;
+    }
+    if (!expected_outcome || expected_outcome.length < 10) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please describe the Expected Outcome before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-outcome').focus();
+      return;
+    }
+    if (!project_description || project_description.length < 15) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Please provide a Detailed Project Description (Outcomes, Functionalities, Do's &amp; Don'ts) before final submission.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-description').focus();
+      return;
+    }
+
+    const isOI = (cachedProject?.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION');
+    if (isOI) {
+      if (!github_url) {
+        alertEl.className = 'alert alert-error';
+        alertEl.innerHTML = `<span>⚠️</span><span>GitHub repository URL is mandatory for Open Innovation projects.</span>`;
+        alertEl.classList.remove('alert-hidden');
+        document.getElementById('draft-github').focus();
+        return;
+      }
+      if (!github_url.startsWith('https://github.com/')) {
+        alertEl.className = 'alert alert-error';
+        alertEl.innerHTML = `<span>⚠️</span><span>GitHub URL must begin with 'https://github.com/'.</span>`;
+        alertEl.classList.remove('alert-hidden');
+        document.getElementById('draft-github').focus();
+        return;
+      }
+    } else if (github_url && !github_url.startsWith('https://github.com/')) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>GitHub URL must begin with 'https://github.com/'.</span>`;
+      alertEl.classList.remove('alert-hidden');
+      document.getElementById('draft-github').focus();
+      return;
+    }
+
+    const confirmed = confirm(
+      "Are you sure you want to finalize and submit your project proposal?\n\n" +
+      "⚠️ WARNING: Once submitted, all fields will be locked and cannot be edited. " +
+      "Only the Administrator can make modifications after submission."
+    );
+    if (!confirmed) return;
+
+    const origText = btnEl.textContent;
+    btnEl.disabled = true;
+    btnEl.innerHTML = '<span class="spinner"></span> Finalizing Submission…';
+
+    const payload = {
+      abstract,
+      objectives,
+      proposed_solution: solution,
+      technologies,
+      technology_stack: technologies,
+      expected_outcome,
+      project_description,
+      github_url: github_url || null,
+      demo_url: demo_url || null,
+    };
+
+    try {
+      const res = await api.post('/api/projects/me/submit', payload);
+      cachedProject = res.data;
+      alert("🎉 Congratulations! Your project proposal has been submitted successfully and is now locked for review.");
+      // Transition immediately to read-only view
+      loadProjectDetails();
+      initDashboard();
+    } catch (err) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = `<span>⚠️</span><span>Submission failed: ${escHtml(err.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+      btnEl.disabled = false;
+      btnEl.textContent = origText;
+    }
+  };
+
+  // ── Load Vertical Project Timeline ──────────────────────────────────────
+  async function loadTimeline() {
+    const loading = document.getElementById('timeline-loading');
+    const empty = document.getElementById('timeline-empty');
+    const container = document.getElementById('timeline-container');
+
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    container.classList.add('hidden');
+    container.innerHTML = '';
+
+    try {
+      const res = await api.get('/api/projects/me/timeline');
+      const events = res.data || [];
+
+      if (events.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      container.innerHTML = events.map(ev => {
+        let markerClass = 'submitted';
+        if (ev.status === 'PASSED' || ev.status === 'COMPLETED') markerClass = 'passed';
+        else if (ev.status === 'NEEDS_IMPROVEMENT') markerClass = 'needs-improvement';
+        else if (ev.status === 'REJECTED') markerClass = 'rejected';
+
+        const formattedDate = new Date(ev.date).toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        return `
+          <div class="timeline-item">
+            <div class="timeline-marker ${markerClass}">●</div>
+            <div class="timeline-card">
+              <div class="timeline-header">
+                <span class="timeline-title">${escHtml(ev.title)}</span>
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <span class="badge ${statusColors[ev.status] || 'badge-gray'}">${escHtml(ev.status)}</span>
+                  <span class="timeline-date">${formattedDate}</span>
+                </div>
+              </div>
+              <div class="timeline-content">${escHtml(ev.comments || '')}</div>
+              ${ev.suggested_improvements ? `
+                <div class="improvement-box" style="margin-top:0.75rem">
+                  <div class="improvement-box-title">💡 Suggested Improvements</div>
+                  <div class="text-sm" style="color:var(--text-primary);line-height:1.6">${escHtml(ev.suggested_improvements)}</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.classList.remove('hidden');
+    } catch (e) {
+      if (e.status === 404) {
+        empty.classList.remove('hidden');
+      } else {
+        alert(`Failed to load timeline: ${e.message}`);
+      }
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  // ── Load Review History ──────────────────────────────────────────────────
+  async function loadReviews() {
+    const loading = document.getElementById('reviews-loading');
+    const empty = document.getElementById('reviews-empty');
+    const list = document.getElementById('reviews-list');
+
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    list.innerHTML = '';
+
+    try {
+      const res = await api.get('/api/projects/me/reviews');
+      const rawReviews = res.data || [];
+
+      // Deduplicate by review ID to prevent double-render
+      const seenIds = new Set();
+      const reviews = rawReviews.filter(r => {
+        if (seenIds.has(r.id)) return false;
+        seenIds.add(r.id);
+        return true;
+      });
+
+      if (reviews.length === 0) {
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      list.innerHTML = reviews.map(r => {
+        const formattedDate = new Date(r.reviewed_at || r.created_at).toLocaleDateString(undefined, {
+          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        return `
+          <div class="review-history-card" data-review-id="${r.id}">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span style="font-size:1.5rem">📝</span>
+                <div>
+                  <h3 style="font-weight:700;font-size:1.15rem">Round ${r.round_number} Review</h3>
+                  <span class="text-xs text-muted">Evaluated by Admin: <strong>${escHtml(r.admin?.name || 'Administrator')}</strong></span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span class="badge ${statusColors[r.status] || 'badge-gray'}">${escHtml(r.status)}</span>
+                <span class="text-xs text-muted font-mono">${formattedDate}</span>
+              </div>
+            </div>
+
+            <div class="feedback-box">
+              <div class="feedback-box-title">Admin Feedback</div>
+              <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.review_text)}</div>
+            </div>
+
+            ${r.suggested_improvements ? `
+              <div class="improvement-box">
+                <div class="improvement-box-title">💡 Suggested Improvements</div>
+                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.suggested_improvements)}</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      if (e.status === 404) {
+        empty.classList.remove('hidden');
+      } else {
+        alert(e.message);
+      }
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  // ── Load Team Details View ───────────────────────────────────────────────
+  async function loadTeamView() {
+    const loading = document.getElementById('team-loading');
+    loading.classList.remove('hidden');
+
+    try {
+      const res = await api.get('/api/users/me/team');
+      const t = res.data;
+      cachedTeam = t;
+
+      const tName = t.team_name || t.name || t.username;
+      document.getElementById('team-view-name').textContent = tName;
+      document.getElementById('team-view-inst').textContent = `${t.department || 'Department'} · ${t.college_name || t.organization || 'Organization'}`;
+
+      const dName = t.domain?.display_name || t.domain?.name || 'Domain';
+      const dBadge = document.getElementById('team-view-domain-badge');
+      dBadge.textContent = dName;
+      dBadge.className = `badge ${domainColors[t.domain?.name] || domainColors[dName] || 'badge-blue'}`;
+
+      const sBadge = document.getElementById('team-view-status-badge');
+      sBadge.textContent = t.status || 'ACTIVE';
+      sBadge.className = t.status === 'ACTIVE' ? 'badge badge-green' : 'badge badge-red';
+
+      document.getElementById('team-view-leader').textContent = t.team_leader || t.name || '—';
+      document.getElementById('team-view-college').textContent = t.college_name || t.organization || '—';
+      document.getElementById('team-view-department').textContent = t.department || '—';
+      document.getElementById('team-view-year').textContent = t.academic_year || '—';
+      document.getElementById('team-view-email').textContent = t.email || '—';
+      document.getElementById('team-view-phone').textContent = t.phone || '—';
+
+      // Roster
+      const rosterContainer = document.getElementById('team-members-container');
+      rosterContainer.innerHTML = '';
+
+      const members = [
+        { role: 'Team Leader', name: t.team_leader || t.name },
+        { role: 'Member 1', name: t.member_one },
+        { role: 'Member 2', name: t.member_two },
+        { role: 'Member 3', name: t.member_three },
+        { role: 'Member 4 (Optional)', name: t.member_four },
+      ];
+
+      members.forEach((m, idx) => {
+        if (!m.name && idx > 0) return; // Skip empty optional members
+        const card = document.createElement('div');
+        card.className = 'team-member-card';
+        const initial = (m.name ? m.name[0] : 'M').toUpperCase();
+        card.innerHTML = `
+          <div class="team-member-avatar">${initial}</div>
+          <div class="team-member-info">
+            <div class="team-member-role">${m.role}</div>
+            <div class="team-member-name">${m.name || 'Not assigned'}</div>
+          </div>
+        `;
+        rosterContainer.appendChild(card);
+      });
+    } catch (e) {
+      alert(`Failed to load team details: ${e.message}`);
+    } finally {
+      loading.classList.add('hidden');
+    }
+  }
+
+  function showAlert(containerId, type, msg) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.className = `alert alert-${type}`;
+    el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span> <span>${msg}</span>`;
+    el.classList.remove('alert-hidden');
+  }
+
+  // Initial load
+  initDashboard();
+</script>
+</body>
+</html>

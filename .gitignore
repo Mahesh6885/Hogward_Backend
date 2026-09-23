@@ -1,0 +1,48 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.cache/
+
+# ── Virtual Environments ───────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+ENV/
+.env.local
+.env.production
+
+# ── Secrets (NEVER commit real .env) ─────────────────────────────────────────
+backend/.env
+
+# ── Test & Coverage ───────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# ── IDEs ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Alembic (keep migrations, ignore auto-generated pycache) ─────────────────
+backend/alembic/__pycache__/
+backend/alembic/versions/__pycache__/
+
+# ── Node (frontend tooling) ───────────────────────────────────────────────────
+node_modules/
