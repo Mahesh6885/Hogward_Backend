@@ -11,10 +11,11 @@ Place this file path in your PythonAnywhere Web App config:
 import sys
 import os
 
-# Add the backend directory to the Python path
+# Add the backend directory to the Python path and change working directory
 project_dir = os.path.dirname(os.path.abspath(__file__))
 if project_dir not in sys.path:
     sys.path.insert(0, project_dir)
+os.chdir(project_dir)
 
 # Load .env variables before importing the app
 from dotenv import load_dotenv
