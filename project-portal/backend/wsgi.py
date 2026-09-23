@@ -23,6 +23,6 @@ load_dotenv(os.path.join(project_dir, '.env'))
 # Import the FastAPI app and wrap with ASGI middleware for WSGI compatibility
 from app.main import app
 
-# PythonAnywhere uses WSGI; wrap FastAPI (ASGI) with asgiref
-from asgiref.wsgi import WsgiToAsgi
-application = WsgiToAsgi(app)
+# PythonAnywhere uses WSGI; wrap FastAPI (ASGI) with a2wsgi
+from a2wsgi import ASGIMiddleware
+application = ASGIMiddleware(app)

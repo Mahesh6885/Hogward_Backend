@@ -128,8 +128,8 @@ load_dotenv(os.path.join(project_dir, '.env'))
 
 from app.main import app
 
-from asgiref.wsgi import WsgiToAsgi
-application = WsgiToAsgi(app)
+from a2wsgi import ASGIMiddleware
+application = ASGIMiddleware(app)
 ```
 
 > Replace `YOUR_USERNAME` with your actual PythonAnywhere username.
