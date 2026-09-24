@@ -3,30 +3,62 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Portal — Team Dashboard</title>
-  <meta name="description" content="Team-based project selection and review dashboard." />
+  <title>Hogwarts Legacy 5.0 — Team Dashboard</title>
+  <meta name="description" content="Hogwarts Legacy 5.0 National Level Hackathon — Team project submission and review dashboard." />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
+<!-- Stars decorative layer -->
+<div class="stars-layer" aria-hidden="true"></div>
+
+<!-- Mobile Drawer Overlay -->
+<div class="mobile-drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+
+<!-- Mobile Drawer -->
+<nav class="mobile-drawer" id="mobile-drawer" aria-label="Mobile navigation">
+  <div class="mobile-drawer-header">
+    <div class="mobile-drawer-title">⚡ HOGWARTS LEGACY 5.0</div>
+    <button class="mobile-drawer-close" id="drawer-close" aria-label="Close navigation">✕</button>
+  </div>
+  <div class="mobile-drawer-nav" id="mobile-drawer-nav">
+    <button class="mobile-drawer-item active" data-drawer-view="home"><span class="icon">🏠</span> Dashboard</button>
+    <button class="mobile-drawer-item" data-drawer-view="project"><span class="icon">📁</span> My Project</button>
+    <button class="mobile-drawer-item" data-drawer-view="timeline"><span class="icon">⏱️</span> Timeline</button>
+    <button class="mobile-drawer-item" data-drawer-view="reviews"><span class="icon">📝</span> Review History</button>
+    <button class="mobile-drawer-item" data-drawer-view="team"><span class="icon">👥</span> Team Details</button>
+  </div>
+  <div class="mobile-drawer-footer">
+    <button class="btn btn-danger btn-full" id="drawer-logout-btn">🚪 Sign Out</button>
+  </div>
+</nav>
+
 <!-- ── Navbar ─────────────────────────────────────────────────────────── -->
 <nav class="navbar">
-  <a class="navbar-brand" href="#">
-    <div class="navbar-logo">🎓</div>
+  <a class="navbar-brand" href="#" aria-label="Hogwarts Legacy 5.0 Home">
+    <div class="navbar-logo" aria-hidden="true">⚡</div>
     <div>
-      <div class="navbar-title">Project Portal</div>
+      <div class="navbar-title">HOGWARTS LEGACY 5.0</div>
+      <div class="navbar-subtitle">National Hackathon Portal</div>
     </div>
   </a>
   <div class="navbar-actions">
-    <div id="domain-badge" class="badge badge-blue"></div>
+    <div id="domain-badge" class="badge badge-domain-ai" aria-label="Team domain"></div>
     <div class="navbar-user">
-      <div class="navbar-avatar" id="nav-avatar">T</div>
+      <div class="navbar-avatar" id="nav-avatar" aria-hidden="true">T</div>
       <div>
         <div class="text-sm" style="font-weight:700" id="nav-team-name">Loading…</div>
         <div class="text-xs text-muted" id="nav-role">TEAM ACCOUNT</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" id="logout-btn">Sign Out</button>
+    <button class="btn btn-ghost btn-sm" id="logout-btn" aria-label="Sign out">Sign Out</button>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
@@ -59,9 +91,41 @@
 
     <!-- ── VIEW 1: HOME / DASHBOARD OVERVIEW ────────────────────────── -->
     <div id="view-home" class="fade-in">
+
+      <!-- Hero Banner -->
+      <div class="hero-banner" id="hero-banner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem">
+          <div class="hero-content">
+            <div class="hero-greeting">⚡ Welcome Back, Champion</div>
+            <h1 class="hero-team-name">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
+            <div class="hero-meta">
+              <div class="hero-meta-item"><span>🎯</span><span>Domain: <strong id="hero-domain">—</strong></span></div>
+              <div class="hero-meta-item"><span>📋</span><span>Code: <strong id="hero-code" class="font-mono">—</strong></span></div>
+              <div class="hero-meta-item"><span>🔄</span><span>Status: <strong id="hero-status">—</strong></span></div>
+            </div>
+            <p class="hero-quote" id="hero-quote">"It does not do to dwell on dreams and forget to live." — Albus Dumbledore</p>
+          </div>
+          <div class="hero-right">
+            <div class="countdown-widget" aria-label="Hackathon countdown">
+              <div class="countdown-widget-title">⏰ Hackathon Countdown</div>
+              <div id="hero-countdown"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Announcement Banner -->
+      <div class="announcement-banner" id="announcement-banner" style="display:none">
+        <div class="banner-text">
+          <span class="banner-icon">📢</span>
+          <span class="banner-msg"><strong id="announcement-text">Announcement</strong></span>
+        </div>
+        <button class="banner-dismiss" onclick="document.getElementById('announcement-banner').style.display='none'" aria-label="Dismiss announcement">✕</button>
+      </div>
+
       <div class="page-header">
         <div class="page-header-top">
-          <h1 class="page-title">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
+          <h2 class="page-title" style="font-size:1.35rem">Team Overview</h2>
         </div>
         <p class="text-muted" id="welcome-subtitle">Track your project lifecycle and review milestones.</p>
       </div>
@@ -105,14 +169,14 @@
         </div>
       </div>
 
-      <!-- Team Progress Card Widget -->
+      <!-- Team Review Progress -->
       <div class="progress-card-main">
         <div class="progress-header">
           <div>
-            <h3 style="font-weight:700">Team Review Progress</h3>
+            <h3 style="font-weight:700;font-family:'Cinzel',serif">✨ Team Review Progress</h3>
             <p class="text-xs text-muted">Real-time completion tracking across review rounds</p>
           </div>
-          <div id="progress-percent-badge" class="badge badge-blue">0% Completed</div>
+          <div id="progress-percent-badge" class="badge badge-domain-ai">0% Completed</div>
         </div>
         <div class="progress-bar-wrap">
           <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%"></div>
@@ -133,6 +197,45 @@
           <div class="progress-stat-box">
             <div class="progress-stat-val" id="stat-pct">0%</div>
             <div class="progress-stat-lbl">Completion</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Progress Scroll (Milestones) -->
+      <div class="progress-scroll" id="progress-scroll-widget">
+        <div class="progress-scroll-title">📜 Journey Milestones</div>
+        <div class="scroll-steps" id="scroll-steps-container">
+          <div class="scroll-step">
+            <div class="scroll-step-dot done" aria-label="Completed">✓</div>
+            <div class="scroll-step-label done">Registration Completed</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-problem" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-problem-label">Problem Assigned</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-draft" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-draft-label">Draft Saved</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-submitted" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-submitted-label">Project Submitted</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-r1" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-r1-label">Review Round 1</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-r2" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-r2-label">Review Round 2</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-r3" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-r3-label">Review Round 3</div>
+          </div>
+          <div class="scroll-step">
+            <div class="scroll-step-dot" id="step-final" aria-label="Pending">○</div>
+            <div class="scroll-step-label" id="step-final-label">Final Decision</div>
           </div>
         </div>
       </div>
@@ -663,14 +766,14 @@
     <!-- ── VIEW 3: PROJECT TIMELINE ──────────────────────────────────── -->
     <div id="view-timeline" class="hidden fade-in">
       <div class="page-header">
-        <h1 class="page-title">Project Progress Timeline</h1>
-        <p class="text-muted">Vertical timeline tracking your project lifecycle from submission to decision.</p>
+        <h1 class="page-title">⏱️ <span class="gradient-text">Project Timeline</span></h1>
+        <p class="text-muted">Enchanted vertical timeline tracking your project lifecycle from submission to final decision.</p>
       </div>
-      <div id="timeline-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Loading timeline…</span></div>
+      <div id="timeline-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Summoning timeline…</span></div>
       <div id="timeline-empty" class="card hidden text-center" style="padding:3rem">
-        <div style="font-size:3rem;margin-bottom:1rem">⏱️</div>
-        <h3>No Timeline Milestones Yet</h3>
-        <p class="text-muted mt-1">Submit your project to initialize your progress timeline.</p>
+        <div class="empty-state-icon">🕰️</div>
+        <div class="empty-state-title">No Milestones Yet</div>
+        <p class="empty-state-msg">Submit your project to initialize your enchanted progress timeline.</p>
       </div>
       <div id="timeline-container" class="timeline hidden"></div>
     </div>
@@ -678,14 +781,14 @@
     <!-- ── VIEW 4: REVIEW HISTORY ────────────────────────────────────── -->
     <div id="view-reviews" class="hidden fade-in">
       <div class="page-header">
-        <h1 class="page-title">Review History</h1>
-        <p class="text-muted">Permanent records of all evaluation rounds, admin feedback, and suggested improvements.</p>
+        <h1 class="page-title">📜 <span class="gradient-text">Review History</span></h1>
+        <p class="text-muted">Permanent enchanted records of all evaluation rounds, admin feedback, and suggested improvements.</p>
       </div>
-      <div id="reviews-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Loading reviews…</span></div>
+      <div id="reviews-loading" class="loading-overlay hidden"><div class="spinner"></div><span>Consulting the Sorting Hat…</span></div>
       <div id="reviews-empty" class="card hidden text-center" style="padding:3rem">
-        <div style="font-size:3rem;margin-bottom:1rem">📝</div>
-        <h3>No Reviews Yet</h3>
-        <p class="text-muted mt-1">Reviews will appear here once the administrator evaluates your project rounds.</p>
+        <div class="empty-state-icon">📜</div>
+        <div class="empty-state-title">No Reviews Yet</div>
+        <p class="empty-state-msg">Reviews will appear here once the Administrator evaluates your project rounds. Keep your spell-casting ready!</p>
       </div>
       <div id="reviews-list"></div>
     </div>
@@ -693,8 +796,8 @@
     <!-- ── VIEW 5: TEAM DETAILS ──────────────────────────────────────── -->
     <div id="view-team" class="hidden fade-in">
       <div class="page-header">
-        <h1 class="page-title">Team Details</h1>
-        <p class="text-muted">Registered team roster and institutional information.</p>
+        <h1 class="page-title">👥 <span class="gradient-text">Team Details</span></h1>
+        <p class="text-muted">Registered team roster and institutional information for your Hogwarts Legacy squad.</p>
       </div>
 
       <div id="team-loading" class="loading-overlay hidden"><div class="spinner"></div></div>
@@ -818,11 +921,77 @@
 <script type="module">
   import { requireUser, logout } from './js/auth.js';
   import { api } from './js/api.js';
+  import { toast } from './js/toast.js';
+  import { initParticles } from './js/particles.js';
+  import { showLoader, hideLoader, initCountdown, showSuccessAnimation } from './js/theme.js';
+  import { SessionManager, secureLogout } from './js/security.js';
 
   const user = requireUser();
   if (!user) throw new Error('Not authenticated');
 
-  document.getElementById('logout-btn').addEventListener('click', logout);
+  // ── Particles ──
+  initParticles({ count: window.innerWidth < 768 ? 20 : 45, opacity: 0.35 });
+
+  // ── Loader on page init ──
+  showLoader('Loading your dashboard…');
+
+  // ── Countdown timer in hero ──
+  initCountdown('hero-countdown');
+
+  // ── Session Timeout Manager ──
+  const sessionMgr = new SessionManager(
+    () => {
+      secureLogout(true);
+      window.location.href = 'index.html?expired=1';
+    },
+    () => { /* warning shown by modal */ }
+  );
+  sessionMgr.start();
+
+  // ── Logout ──
+  function doLogout() {
+    sessionMgr.stop();
+    secureLogout(true);
+    logout();
+  }
+  document.getElementById('logout-btn').addEventListener('click', doLogout);
+  document.getElementById('drawer-logout-btn')?.addEventListener('click', doLogout);
+
+  // ── Mobile Drawer ──
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const drawerOverlay = document.getElementById('drawer-overlay');
+  const mobileDrawer = document.getElementById('mobile-drawer');
+  const drawerClose = document.getElementById('drawer-close');
+
+  function openDrawer() {
+    mobileDrawer.classList.add('open');
+    drawerOverlay.classList.add('open');
+    hamburgerBtn.classList.add('open');
+    hamburgerBtn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDrawer() {
+    mobileDrawer.classList.remove('open');
+    drawerOverlay.classList.remove('open');
+    hamburgerBtn.classList.remove('open');
+    hamburgerBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  hamburgerBtn?.addEventListener('click', openDrawer);
+  drawerOverlay?.addEventListener('click', closeDrawer);
+  drawerClose?.addEventListener('click', closeDrawer);
+
+  // Drawer nav items
+  document.querySelectorAll('[data-drawer-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.drawerView;
+      document.querySelectorAll('[data-drawer-view]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      switchView(v);
+      closeDrawer();
+    });
+  });
 
   const domainColors = {
     AI: 'badge-blue',
@@ -1112,6 +1281,33 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  // ── Milestone scroll updater ──────────────────────────────────────────────
+  function updateMilestoneScroll(project) {
+    const hasProblem  = !!project;
+    const hasDraft    = project?.status === 'DRAFT' || project?.is_submitted;
+    const isSubmitted = project?.is_submitted === true || (project?.status && project?.status !== 'DRAFT');
+    const round       = project?.current_round || 0;
+    const isComplete  = project?.status === 'COMPLETED';
+
+    function setStep(id, labelId, done, current, label) {
+      const dot = document.getElementById(id);
+      const lbl = document.getElementById(labelId);
+      if (!dot || !lbl) return;
+      dot.className = `scroll-step-dot${done ? ' done' : current ? ' current' : ''}`;
+      dot.textContent = done ? '✓' : current ? '◉' : '○';
+      lbl.className = `scroll-step-label${done ? ' done' : current ? ' current' : ''}`;
+      if (label) lbl.textContent = label;
+    }
+
+    setStep('step-problem',   'step-problem-label',   hasProblem,  !hasProblem, null);
+    setStep('step-draft',     'step-draft-label',     isSubmitted, hasDraft && !isSubmitted, null);
+    setStep('step-submitted', 'step-submitted-label', isSubmitted, false, null);
+    setStep('step-r1',        'step-r1-label',        round > 1 || isComplete, round === 1 && isSubmitted, 'Review Round 1');
+    setStep('step-r2',        'step-r2-label',        round > 2 || isComplete, round === 2, 'Review Round 2');
+    setStep('step-r3',        'step-r3-label',        isComplete,  round === 3, 'Review Round 3');
+    setStep('step-final',     'step-final-label',     isComplete,  false, null);
+  }
+
   // ── Initialize Dashboard ─────────────────────────────────────────────────
   async function initDashboard() {
     showState('loading');
@@ -1144,7 +1340,16 @@
     } catch (e) {
       showAlert('home-alert', 'error', e.message);
       showState(null);
+    } finally {
+      hideLoader(300);
     }
+  }
+
+  function getDomainBadgeClass(domainName) {
+    if (domainName === 'AI') return 'badge-domain-ai';
+    if (domainName === 'CYBERSECURITY' || domainName === 'Cybersecurity') return 'badge-domain-cyber';
+    if (domainName === 'OPEN_INNOVATION' || domainName === 'Open Innovation') return 'badge-domain-oi';
+    return 'badge-gray';
   }
 
   function populateNavbarAndSummary(t) {
@@ -1155,8 +1360,12 @@
 
     const dName = t.domain?.display_name || t.domain?.name || 'Assigned Domain';
     const dBadge = document.getElementById('domain-badge');
-    dBadge.textContent = dName;
-    dBadge.className = `badge ${domainColors[t.domain?.name] || domainColors[dName] || 'badge-gray'}`;
+    dBadge.textContent = `⚡ ${dName}`;
+    dBadge.className = `badge ${getDomainBadgeClass(t.domain?.name || dName)}`;
+
+    // Hero banner updates
+    const herodom = document.getElementById('hero-domain');
+    if (herodom) herodom.textContent = dName;
 
     document.getElementById('dash-domain').textContent = dName;
     document.getElementById('dash-leader').textContent = t.team_leader || t.name || '—';
@@ -1174,6 +1383,12 @@
       const stEl = document.getElementById('dash-status');
       stEl.innerHTML = `<span class="badge ${statusColors[prj.status] || 'badge-gray'}">${prj.status}</span>`;
       document.getElementById('dash-round').textContent = `Round ${prj.current_round} of 3`;
+
+      // Hero banner code & status update
+      const heroCode = document.getElementById('hero-code');
+      const heroStatus = document.getElementById('hero-status');
+      if (heroCode) heroCode.textContent = prj.project_code || '—';
+      if (heroStatus) heroStatus.textContent = prj.status || '—';
     } else {
       document.getElementById('dash-code').textContent = 'Not assigned';
       document.getElementById('dash-title').textContent = '—';
@@ -1184,6 +1399,7 @@
   }
 
   function updateProgressWidget(prj) {
+    updateMilestoneScroll(prj);
     const subEl = document.getElementById('stat-submitted');
     const curEl = document.getElementById('stat-current-round');
     const totEl = document.getElementById('stat-total-rounds');
@@ -1504,8 +1720,9 @@
         }, 1800);
       }
       document.getElementById('draft-last-saved-time').textContent = `Draft block '${fieldName}' saved at ${new Date().toLocaleTimeString()}.`;
+      toast.success('Draft saved successfully!');
     } catch (err) {
-      alert(`Could not save draft: ${err.message}`);
+      toast.error(`Could not save draft: ${err.message}`);
       if (btnEl) {
         btnEl.disabled = false;
         btnEl.textContent = origText;
@@ -1541,10 +1758,12 @@
       alertEl.classList.remove('alert-hidden');
       document.getElementById('draft-last-saved-time').textContent = `Entire draft saved at ${new Date().toLocaleTimeString()}.`;
       setTimeout(() => alertEl.classList.add('alert-hidden'), 4000);
+      toast.success('✨ All draft sections saved!');
     } catch (err) {
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
       alertEl.classList.remove('alert-hidden');
+      toast.error(err.message || 'Draft save failed.');
     } finally {
       btnEl.disabled = false;
       btnEl.textContent = origText;
@@ -1659,7 +1878,9 @@
     try {
       const res = await api.post('/api/projects/me/submit', payload);
       cachedProject = res.data;
-      alert("🎉 Congratulations! Your project proposal has been submitted successfully and is now locked for review.");
+      // Magical success animation instead of alert()
+      showSuccessAnimation('🎉 Project Submitted Successfully! Your proposal is now locked for review.');
+      toast.magic('⚡ Congratulations! Project submitted!');
       // Transition immediately to read-only view
       loadProjectDetails();
       initDashboard();
@@ -1667,6 +1888,7 @@
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = `<span>⚠️</span><span>Submission failed: ${escHtml(err.message)}</span>`;
       alertEl.classList.remove('alert-hidden');
+      toast.error(`Submission failed: ${err.message}`);
       btnEl.disabled = false;
       btnEl.textContent = origText;
     }
@@ -1730,7 +1952,7 @@
       if (e.status === 404) {
         empty.classList.remove('hidden');
       } else {
-        alert(`Failed to load timeline: ${e.message}`);
+        toast.error(`Failed to load timeline: ${e.message}`);
       }
     } finally {
       loading.classList.add('hidden');
@@ -1803,7 +2025,7 @@
       if (e.status === 404) {
         empty.classList.remove('hidden');
       } else {
-        alert(e.message);
+        toast.error(e.message || 'Failed to load reviews.');
       }
     } finally {
       loading.classList.add('hidden');
@@ -1867,7 +2089,7 @@
         rosterContainer.appendChild(card);
       });
     } catch (e) {
-      alert(`Failed to load team details: ${e.message}`);
+      toast.error(`Failed to load team details: ${e.message}`);
     } finally {
       loading.classList.add('hidden');
     }
@@ -1881,7 +2103,16 @@
     el.classList.remove('alert-hidden');
   }
 
-  // Initial load
+  // ── Sync sidebar with drawer on navigation ──
+  const origSwitchView = window.switchView;
+  window.switchView = function(view) {
+    document.querySelectorAll('[data-drawer-view]').forEach(b => {
+      b.classList.toggle('active', b.dataset.drawerView === view);
+    });
+    origSwitchView(view);
+  };
+
+  // ── Initial load ──
   initDashboard();
 </script>
 </body>

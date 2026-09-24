@@ -3,26 +3,104 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Portal — Login</title>
-  <meta name="description" content="Sign in to the Project Portal — a private project topic selection and review system." />
+
+  <!-- SEO -->
+  <title>Hogwarts Legacy 5.0 — Team Login Portal</title>
+  <meta name="description" content="Sign in to Hogwarts Legacy 5.0 — National Level 24-Hour Technical Hackathon Portal by Department of Integrated M.Tech CSE (AI & ML), Erode Sengunthar Engineering College." />
+
+  <!-- Security Headers via Meta -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()" />
+
+  <!-- Preload Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
   <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    /* Extra styles for login page particles layer */
+    .stars-layer { animation: fogDrift 8s ease-in-out infinite; }
+  </style>
 </head>
 <body>
-  <div class="login-page">
-    <div class="login-bg"></div>
-    <div class="login-card fade-in">
-      <div class="login-logo">🎓</div>
-      <h1 class="login-title">Project Portal</h1>
-      <p class="login-subtitle">Sign in with your credentials to continue</p>
 
-      <div id="alert" class="alert alert-error alert-hidden" role="alert">
-        <span>⚠️</span>
+<!-- Stars decorative layer -->
+<div class="stars-layer" aria-hidden="true"></div>
+
+<!-- ── Login Layout ────────────────────────────────────────────────────── -->
+<div class="login-page" id="login-page-root">
+
+  <!-- LEFT PANEL — Hogwarts Artwork -->
+  <div class="login-left" aria-hidden="true">
+    <div class="login-castle" role="img" aria-label="Hogwarts Castle">🏰</div>
+    <div class="login-left-content">
+      <div class="login-left-title">HOGWARTS LEGACY</div>
+      <div class="login-left-edition">5.0</div>
+      <div style="margin-bottom:1rem">
+        <span class="badge badge-domain-ai" style="font-size:0.75rem;padding:0.4rem 1rem">⚡ National Level • 24-Hour Hackathon</span>
+      </div>
+      <div class="login-left-dept">
+        <strong>Department of Integrated M.Tech CSE (AI &amp; ML)</strong><br />
+        Erode Sengunthar Engineering College
+      </div>
+      <blockquote class="login-left-quote">
+        "Happiness can be found even in the darkest of times,<br />
+        if one only remembers to turn on the light."
+        <br /><small style="color:var(--text-muted)">— Albus Dumbledore</small>
+      </blockquote>
+
+      <!-- Floating orb decorations -->
+      <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:center;opacity:0.4">
+        <span style="font-size:1.5rem;animation:castleFloat 3s ease-in-out infinite">✨</span>
+        <span style="font-size:1.5rem;animation:castleFloat 4s ease-in-out infinite 0.5s">🪄</span>
+        <span style="font-size:1.5rem;animation:castleFloat 3.5s ease-in-out infinite 1s">⭐</span>
+        <span style="font-size:1.5rem;animation:castleFloat 4.5s ease-in-out infinite 1.5s">🦉</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL — Login Form -->
+  <div class="login-right">
+    <div class="login-card fade-in">
+
+      <!-- Logo -->
+      <div class="login-logo" aria-hidden="true">⚡</div>
+
+      <!-- Branding -->
+      <h1 class="login-title">Team Portal</h1>
+      <p class="login-subtitle">Enter your credentials to access the hackathon</p>
+
+      <!-- Session-expired notice (shown via URL param) -->
+      <div id="session-expired-notice" class="login-attempts-warning" style="display:none;margin-bottom:1rem">
+        ⏳ Your session expired. Please login again.
+      </div>
+
+      <!-- Error Alert -->
+      <div id="alert" class="alert alert-error alert-hidden" role="alert" aria-live="assertive">
+        <span aria-hidden="true">⚠️</span>
         <span id="alert-msg"></span>
       </div>
 
-      <form class="login-form" id="login-form" novalidate>
+      <!-- Lockout Warning -->
+      <div id="lockout-warning" class="login-attempts-warning" role="alert" aria-live="polite">
+        🔒 <span id="lockout-msg">Account temporarily locked. Try again later.</span>
+      </div>
+
+      <!-- Attempt warning -->
+      <div id="attempt-warning" class="login-attempts-warning" role="alert" aria-live="polite">
+        ⚠️ <span id="attempt-msg">Invalid credentials.</span>
+      </div>
+
+      <!-- Login Form -->
+      <form class="login-form" id="login-form" novalidate autocomplete="on">
+        <!-- Username -->
         <div class="form-group">
-          <label class="form-label" for="username">Username or Email</label>
+          <label class="form-label" for="username">
+            <span aria-hidden="true">👤</span> Username or Email
+          </label>
           <input
             class="form-input"
             type="text"
@@ -31,80 +109,261 @@
             placeholder="Enter your username or email"
             autocomplete="username"
             required
+            aria-required="true"
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="none"
           />
         </div>
 
+        <!-- Password -->
         <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input
-            class="form-input"
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            autocomplete="current-password"
-            required
-          />
+          <label class="form-label" for="password">
+            <span aria-hidden="true">🔑</span> Password
+          </label>
+          <div class="pw-input-wrap">
+            <input
+              class="form-input"
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              required
+              aria-required="true"
+            />
+            <button
+              type="button"
+              class="pw-toggle"
+              id="pw-toggle"
+              aria-label="Show password"
+              aria-pressed="false"
+              tabindex="0"
+            >
+              <!-- Eye open -->
+              <svg id="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <!-- Eye closed (hidden initially) -->
+              <svg id="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <button class="btn btn-primary btn-lg btn-full" type="submit" id="login-btn">
-          Sign In
+        <!-- Remember Me -->
+        <div class="login-options">
+          <label class="remember-me" for="remember-me">
+            <input type="checkbox" id="remember-me" name="remember-me" />
+            <span>Remember Me</span>
+          </label>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary btn-lg btn-full" type="submit" id="login-btn" aria-label="Sign in to the portal">
+          ⚡ Enter the Portal
         </button>
       </form>
 
-      <p class="text-center mt-3 text-xs text-muted">
+      <!-- Footer note -->
+      <p class="text-center mt-3 text-xs text-muted" style="font-family:'Cormorant Garamond',serif;font-style:italic">
         No public registration · Contact your administrator for access
       </p>
     </div>
   </div>
+</div>
 
-  <script type="module">
-    import { login } from './js/auth.js';
-    import { getToken, getUser } from './js/api.js';
+<script type="module">
+  import { getToken, getUser } from './js/api.js';
+  import { login }             from './js/auth.js';
+  import { loginSecurity, sanitizeInput, cleanForApi, saveRememberedUsername, getRememberedUsername, secureLogout } from './js/security.js';
+  import { toast }             from './js/toast.js';
+  import { showLoader, hideLoader } from './js/theme.js';
+  import { initParticles }     from './js/particles.js';
 
-    // Redirect if already logged in
-    const token = getToken();
-    const existing = getUser();
-    if (token && existing) {
+  // ── Init particles (subtle on login page) ──
+  initParticles({ count: window.innerWidth < 768 ? 20 : 40, opacity: 0.4 });
+
+  // ── Session expired notice ──
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('expired') === '1') {
+    document.getElementById('session-expired-notice').style.display = 'block';
+    // Clear the param from URL without reload
+    history.replaceState({}, '', window.location.pathname);
+  }
+
+  // ── Already logged in → redirect ──
+  const token = getToken();
+  const existing = getUser();
+  if (token && existing) {
+    showLoader('Resuming your session…');
+    setTimeout(() => {
       window.location.href = existing.role === 'ADMIN' ? 'admin.html' : 'dashboard.html';
-    }
+    }, 800);
+  }
 
-    const form = document.getElementById('login-form');
-    const btn  = document.getElementById('login-btn');
-    const alert = document.getElementById('alert');
-    const alertMsg = document.getElementById('alert-msg');
+  // ── Autofill remembered username ──
+  const rememberedUser = getRememberedUsername();
+  if (rememberedUser) {
+    document.getElementById('username').value = rememberedUser;
+    document.getElementById('remember-me').checked = true;
+  }
 
-    function showError(msg) {
-      alertMsg.textContent = msg;
-      alert.classList.remove('alert-hidden');
-    }
-    function hideError() {
-      alert.classList.add('alert-hidden');
-    }
+  // ── DOM refs ──
+  const form         = document.getElementById('login-form');
+  const btn          = document.getElementById('login-btn');
+  const alertEl      = document.getElementById('alert');
+  const alertMsg     = document.getElementById('alert-msg');
+  const lockoutWarn  = document.getElementById('lockout-warning');
+  const lockoutMsg   = document.getElementById('lockout-msg');
+  const attemptWarn  = document.getElementById('attempt-warning');
+  const attemptMsg   = document.getElementById('attempt-msg');
+  const pwInput      = document.getElementById('password');
+  const pwToggle     = document.getElementById('pw-toggle');
+  const eyeOpen      = document.getElementById('eye-open');
+  const eyeClosed    = document.getElementById('eye-closed');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideError();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      if (!username || !password) { showError('Please enter username and password.'); return; }
+  // ── Password visibility toggle ──
+  pwToggle.addEventListener('click', () => {
+    const isHidden = pwInput.type === 'password';
+    pwInput.type = isHidden ? 'text' : 'password';
+    eyeOpen.style.display   = isHidden ? 'none'  : '';
+    eyeClosed.style.display = isHidden ? ''      : 'none';
+    pwToggle.setAttribute('aria-label',   isHidden ? 'Hide password' : 'Show password');
+    pwToggle.setAttribute('aria-pressed', isHidden ? 'true' : 'false');
+    pwInput.focus();
+  });
 
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner"></span> Signing in…';
+  // Keyboard support for toggle
+  pwToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pwToggle.click(); }
+  });
 
-      try {
-        const user = await login(username, password);
-        if (user.role === 'ADMIN') {
-          window.location.href = 'admin.html';
-        } else {
-          window.location.href = 'dashboard.html';
-        }
-      } catch (err) {
-        showError(err.message || 'Login failed. Check your credentials.');
+  // ── Alert helpers ──
+  function showError(msg) {
+    alertMsg.textContent = msg;
+    alertEl.classList.remove('alert-hidden');
+    alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function hideError() { alertEl.classList.add('alert-hidden'); }
+
+  function showLockout() {
+    lockoutMsg.textContent = `Account locked for ${loginSecurity.getRemainingLockoutFormatted()}. Too many failed attempts.`;
+    lockoutWarn.classList.add('visible');
+    attemptWarn.classList.remove('visible');
+    btn.disabled = true;
+    btn.textContent = '🔒 Account Locked';
+  }
+
+  function showAttemptWarn(attempts) {
+    const left = loginSecurity.attemptsLeft();
+    attemptMsg.textContent = `Invalid username or password. ${left} attempt${left !== 1 ? 's' : ''} remaining.`;
+    attemptWarn.classList.add('visible');
+  }
+
+  // ── Check lockout on load ──
+  if (loginSecurity.isLocked()) {
+    showLockout();
+    // Poll until lockout expires
+    const lockPoll = setInterval(() => {
+      if (!loginSecurity.isLocked()) {
+        clearInterval(lockPoll);
+        lockoutWarn.classList.remove('visible');
+        attemptWarn.classList.remove('visible');
         btn.disabled = false;
-        btn.innerHTML = 'Sign In';
+        btn.innerHTML = '⚡ Enter the Portal';
+        toast.info('Account unlocked. You may now login.');
+      } else {
+        lockoutMsg.textContent = `Account locked for ${loginSecurity.getRemainingLockoutFormatted()}. Too many failed attempts.`;
       }
-    });
-  </script>
+    }, 10000);
+  }
+
+  // ── Form submit ──
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+
+    // Lockout check
+    if (loginSecurity.isLocked()) { showLockout(); return; }
+
+    // Read & sanitize
+    const rawUser = document.getElementById('username').value;
+    const rawPass = document.getElementById('password').value;
+    const username = cleanForApi(rawUser);  // only trim for API
+    const password = rawPass;               // never modify passwords
+
+    if (!username || !password) {
+      showError('Please enter your username and password.');
+      return;
+    }
+
+    // Remember me
+    const rememberMe = document.getElementById('remember-me').checked;
+
+    // Disable button
+    btn.disabled = true;
+    btn.innerHTML = '<span class="hw-spinner"></span>Entering the portal…';
+
+    try {
+      showLoader('Authenticating…');
+      const user = await login(username, password);
+
+      // Record success — clear lockout
+      loginSecurity.recordSuccess();
+
+      // Handle remember me
+      if (rememberMe) {
+        saveRememberedUsername(username);
+      } else {
+        secureLogout(false);  // clears remembered if unchecked
+        // Re-set tokens (login already set them via auth.js)
+        // We only want to remove the remembered username
+        localStorage.removeItem('hw_remembered_username');
+      }
+
+      hideLoader(200);
+      updateLoaderMessage('Welcome, ' + (user.team_name || user.username) + '!');
+      toast.magic('⚡ Welcome to Hogwarts Legacy 5.0!');
+
+      setTimeout(() => {
+        window.location.href = user.role === 'ADMIN' ? 'admin.html' : 'dashboard.html';
+      }, 1200);
+
+    } catch (err) {
+      hideLoader(0);
+      const attempts = loginSecurity.recordFailure();
+
+      if (loginSecurity.isLocked()) {
+        showLockout();
+        toast.error('Account locked after too many failed attempts.');
+      } else {
+        // Never reveal which field — generic message
+        showError('Invalid username or password.');
+        showAttemptWarn(attempts);
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Enter the Portal';
+    }
+  });
+
+  // ── Suppress duplicate submits on double-click ──
+  let submitting = false;
+  form.addEventListener('submit', () => {
+    if (submitting) return false;
+    submitting = true;
+    setTimeout(() => submitting = false, 3000);
+  }, true);
+
+  // Import updateLoaderMessage separately to avoid scope issues
+  import('./js/theme.js').then(({ updateLoaderMessage }) => {
+    window.updateLoaderMessage = updateLoaderMessage;
+  });
+</script>
+
 </body>
 </html>

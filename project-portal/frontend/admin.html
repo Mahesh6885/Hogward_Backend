@@ -3,11 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Project Portal — Admin Console</title>
-  <meta name="description" content="Administrator console for the Project Portal." />
+  <title>Hogwarts Legacy 5.0 — Ministry & Arbiter Console</title>
+  <meta name="description" content="Administrator console for Hogwarts Legacy 5.0 National Hackathon." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=MedievalSharp&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .badge-admin { background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); }
+    .badge-admin { background: rgba(212,175,55,0.18); color: var(--gold-light); border: 1px solid rgba(212,175,55,0.45); font-family: 'Cinzel', serif; letter-spacing: 0.08em; }
     .table-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; }
     .filters-bar { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
     .filters-bar select, .filters-bar input {
@@ -23,23 +26,51 @@
 </head>
 <body>
 
+<!-- Ambient Stars and Canvas -->
+<div class="stars-layer" aria-hidden="true"></div>
+<canvas id="particles-canvas" class="particles-bg" aria-hidden="true"></canvas>
+
+<!-- Mobile Drawer Overlay -->
+<div class="mobile-drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
+
+<!-- Mobile Drawer -->
+<nav class="mobile-drawer" id="mobile-drawer" aria-label="Mobile navigation">
+  <div class="mobile-drawer-header">
+    <div class="mobile-drawer-title">⚡ HOGWARTS LEGACY 5.0</div>
+    <button class="mobile-drawer-close" id="drawer-close" aria-label="Close navigation">✕</button>
+  </div>
+  <div class="mobile-drawer-nav" id="mobile-drawer-nav">
+    <button class="mobile-drawer-item active" data-drawer-view="dashboard"><span class="icon">📊</span> Overview</button>
+    <button class="mobile-drawer-item" data-drawer-view="teams"><span class="icon">👥</span> Teams</button>
+    <button class="mobile-drawer-item" data-drawer-view="projects"><span class="icon">📁</span> Projects &amp; Reviews</button>
+    <button class="mobile-drawer-item" data-drawer-view="topics"><span class="icon">💡</span> Topics</button>
+  </div>
+  <div class="mobile-drawer-footer">
+    <button class="btn btn-danger btn-full" id="drawer-logout-btn">🚪 Sign Out</button>
+  </div>
+</nav>
+
 <!-- ── Navbar ─────────────────────────────────────────────────────────── -->
 <nav class="navbar">
   <a class="navbar-brand" href="#">
-    <div class="navbar-logo" style="background: var(--admin-gradient)">⚡</div>
+    <div class="navbar-logo" style="background: var(--gold-gradient); color: #0a0703">⚡</div>
     <div>
-      <div class="navbar-title">Project Portal <span class="badge badge-admin text-xs ml-1">ADMIN</span></div>
+      <div class="navbar-title">HOGWARTS LEGACY 5.0 <span class="badge badge-admin text-xs ml-1">ARBITER</span></div>
+      <div class="navbar-subtitle">Ministry of Magic · Review Console</div>
     </div>
   </a>
   <div class="navbar-actions">
     <div class="navbar-user">
-      <div class="navbar-avatar" id="nav-avatar" style="background: var(--admin-gradient)">A</div>
+      <div class="navbar-avatar" id="nav-avatar" style="background: var(--gold-gradient); color: #0a0703; font-weight:700">A</div>
       <div>
-        <div class="text-sm" style="font-weight:600" id="nav-name">Administrator</div>
-        <div class="text-xs text-muted" id="nav-role">ADMIN CONSOLE</div>
+        <div class="text-sm" style="font-weight:700; font-family:'Cinzel',serif; color:var(--gold-light)" id="nav-name">Administrator</div>
+        <div class="text-xs text-muted" id="nav-role">CHIEF ARBITER</div>
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" id="logout-btn">Sign Out</button>
+    <button class="hamburger-btn" id="hamburger-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobile-drawer">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
@@ -684,6 +715,12 @@
 <script type="module">
   import { requireAdmin, logout } from './js/auth.js';
   import { api } from './js/api.js';
+  import { toast } from './js/toast.js';
+  import { initParticles } from './js/particles.js';
+  import { showLoader, hideLoader } from './js/theme.js';
+  import { SessionManager, secureLogout } from './js/security.js';
+
+  window.toast = toast;
 
   const user = requireAdmin();
   if (!user) throw new Error('Not authorized');
@@ -722,6 +759,40 @@
     else if (view === 'topics') loadTopics();
   };
 
+  // ── Mobile Drawer ──────────────────────────────────────────────────────────
+  const hamburgerBtn = document.getElementById('hamburger-btn');
+  const drawerOverlay = document.getElementById('drawer-overlay');
+  const drawerClose = document.getElementById('drawer-close');
+  const drawer = document.getElementById('mobile-drawer');
+  const drawerLogoutBtn = document.getElementById('drawer-logout-btn');
+
+  function openDrawer() {
+    drawer?.classList.add('open');
+    drawerOverlay?.classList.add('open');
+    hamburgerBtn?.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeDrawer() {
+    drawer?.classList.remove('open');
+    drawerOverlay?.classList.remove('open');
+    hamburgerBtn?.setAttribute('aria-expanded', 'false');
+  }
+
+  hamburgerBtn?.addEventListener('click', openDrawer);
+  drawerOverlay?.addEventListener('click', closeDrawer);
+  drawerClose?.addEventListener('click', closeDrawer);
+  drawerLogoutBtn?.addEventListener('click', logout);
+
+  document.querySelectorAll('[data-drawer-view]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const v = btn.dataset.drawerView;
+      document.querySelectorAll('[data-drawer-view]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      switchAdminView(v);
+      closeDrawer();
+    });
+  });
+
   document.querySelectorAll('.sidebar-item').forEach(btn => {
     btn.addEventListener('click', () => switchAdminView(btn.dataset.view));
   });
@@ -735,6 +806,7 @@
     navigator.clipboard.writeText(text).then(() => {
       const orig = btnEl.textContent;
       btnEl.textContent = '✓ Copied!';
+      if (window.toast) toast.success('Copied to clipboard');
       setTimeout(() => { btnEl.textContent = orig; }, 2000);
     });
   };
@@ -747,6 +819,7 @@
     navigator.clipboard.writeText(text).then(() => {
       const orig = btn.textContent;
       btn.textContent = '✓ Login Credentials Copied to Clipboard!';
+      if (window.toast) toast.magic('📜 Credentials copied to clipboard!');
       setTimeout(() => {
         btn.textContent = orig;
       }, 2500);
@@ -755,10 +828,16 @@
 
   function showAlert(msg, type = 'success') {
     const el = document.getElementById('admin-alert');
-    el.className = `alert alert-${type}`;
-    el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span><span>${escHtml(msg)}</span>`;
-    el.classList.remove('alert-hidden');
-    setTimeout(() => el.classList.add('alert-hidden'), 4500);
+    if (el) {
+      el.className = `alert alert-${type}`;
+      el.innerHTML = `<span>${type === 'error' ? '⚠️' : '✅'}</span><span>${escHtml(msg)}</span>`;
+      el.classList.remove('alert-hidden');
+      setTimeout(() => el.classList.add('alert-hidden'), 4500);
+    }
+    if (window.toast) {
+      if (type === 'error') toast.error(msg);
+      else toast.success(msg);
+    }
   }
 
   function escHtml(str) {
@@ -987,7 +1066,8 @@
       `;
       openModal('modal-view-team');
     } catch (e) {
-      alert(e.message);
+      if (window.toast) toast.error(e.message);
+      else showAlert(e.message, 'error');
     }
   };
 
@@ -1013,7 +1093,8 @@
       document.getElementById('modal-edit-team-alert').classList.add('alert-hidden');
       openModal('modal-edit-team');
     } catch (e) {
-      alert(e.message);
+      if (window.toast) toast.error(e.message);
+      else showAlert(e.message, 'error');
     }
   };
 
@@ -1282,7 +1363,8 @@
 
       openModal('modal-review-project');
     } catch (e) {
-      alert(e.message);
+      if (window.toast) toast.error(e.message);
+      else showAlert(e.message, 'error');
     }
   };
 
@@ -1431,6 +1513,18 @@
       showAlert(e.message, 'error');
     }
   };
+
+  // ── Particles & Session Security ──────────────────────────────────────────
+  initParticles({ count: window.innerWidth < 768 ? 20 : 45, opacity: 0.35 });
+
+  const sessionMgr = new SessionManager(
+    () => {
+      secureLogout(true);
+      window.location.href = 'index.html?expired=1';
+    },
+    () => {}
+  );
+  sessionMgr.start();
 
   // Initial load
   loadDashboard();
