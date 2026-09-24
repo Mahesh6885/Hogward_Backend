@@ -30,6 +30,41 @@
 <div class="stars-layer" aria-hidden="true"></div>
 <canvas id="particles-canvas" class="particles-bg" aria-hidden="true"></canvas>
 
+<!-- Fog layer -->
+<div class="fog-layer" aria-hidden="true"></div>
+
+<!-- Flying owl -->
+<svg class="flying-owl" aria-hidden="true" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="32" cy="22" rx="14" ry="12" fill="#D4AF37" opacity="0.7"/>
+  <ellipse cx="22" cy="14" rx="9" ry="7" fill="#D4AF37" opacity="0.75"/>
+  <ellipse cx="42" cy="14" rx="9" ry="7" fill="#D4AF37" opacity="0.75"/>
+  <circle cx="26" cy="12" r="3" fill="#fff" opacity="0.9"/>
+  <circle cx="38" cy="12" r="3" fill="#fff" opacity="0.9"/>
+  <circle cx="26.5" cy="12.5" r="1.5" fill="#222"/>
+  <circle cx="38.5" cy="12.5" r="1.5" fill="#222"/>
+  <polygon points="32,17 29,22 35,22" fill="#9B7D20"/>
+  <path d="M4 28 Q16 10 22 18" stroke="#D4AF37" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M60 28 Q48 10 42 18" stroke="#D4AF37" stroke-width="2" fill="none" opacity="0.6"/>
+</svg>
+
+<!-- Inactivity Warning Modal -->
+<div class="inactivity-overlay" id="inactivity-overlay" role="alertdialog" aria-modal="true" aria-labelledby="inactivity-title">
+  <div class="inactivity-card">
+    <div class="inactivity-icon">🕯️</div>
+    <div class="inactivity-title" id="inactivity-title">Session Expiring Soon</div>
+    <div class="inactivity-msg">Your admin session will expire due to inactivity. You will be signed out in:</div>
+    <div class="inactivity-timer-val" id="inactivity-countdown">60</div>
+    <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-primary" id="inactivity-stay-btn" onclick="window.__hwSessionExtend && window.__hwSessionExtend()">
+        ✨ Stay Signed In
+      </button>
+      <button class="btn btn-ghost" id="inactivity-logout-btn">
+        🚪 Sign Out Now
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Mobile Drawer Overlay -->
 <div class="mobile-drawer-overlay" id="drawer-overlay" aria-hidden="true"></div>
 
@@ -60,6 +95,36 @@
     </div>
   </a>
   <div class="navbar-actions">
+    <!-- Session Timer -->
+    <div class="nav-session-timer" id="nav-session-timer" aria-label="Session timer" title="Admin session remaining">
+      <span class="timer-dot"></span>
+      <span id="session-timer-val">30:00</span>
+    </div>
+
+    <!-- Notification Bell -->
+    <div class="nav-notification-wrap" id="notif-wrap">
+      <button class="nav-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" onclick="toggleAdminNotificationDropdown()">
+        🔔
+        <span class="nav-bell-badge hidden" id="notif-badge">0</span>
+      </button>
+      <div class="notification-dropdown" id="notif-dropdown" role="menu">
+        <div class="notification-header">
+          <span>📬 Admin Alerts</span>
+          <button style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem" onclick="clearAdminNotifications()">Clear All</button>
+        </div>
+        <div class="notification-list" id="notif-list">
+          <div class="notification-item">
+            <span class="notif-icon">⚡</span>
+            <div>
+              <div class="notif-title">Arbiter Console Ready</div>
+              <div class="notif-time">Just now</div>
+            </div>
+          </div>
+        </div>
+        <div class="notification-footer"><span style="color:var(--text-muted);font-size:0.75rem">Ministry of Magic · Admin Portal</span></div>
+      </div>
+    </div>
+
     <div class="navbar-user">
       <div class="navbar-avatar" id="nav-avatar" style="background: var(--gold-gradient); color: #0a0703; font-weight:700">A</div>
       <div>
@@ -1667,6 +1732,107 @@
     () => {}
   );
   sessionMgr.start();
+
+  // ── Admin Session Timer & Inactivity Manager ───────────────────────────────
+  (function initAdminSessionManager() {
+    const SESSION_DURATION_MS = 30 * 60 * 1000;
+    const WARN_AT_MS          = 60 * 1000;
+    let sessionStart = Date.now();
+    let inactivityWarningShown = false;
+    let warningCountdown = null;
+
+    const timerEl    = document.getElementById('session-timer-val');
+    const timerWrap  = document.getElementById('nav-session-timer');
+    const overlay    = document.getElementById('inactivity-overlay');
+    const countdownEl = document.getElementById('inactivity-countdown');
+
+    function formatTime(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(total / 60), s = total % 60;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function resetSessionTimer() {
+      sessionStart = Date.now();
+      inactivityWarningShown = false;
+      if (overlay) overlay.classList.remove('open');
+      if (warningCountdown) { clearInterval(warningCountdown); warningCountdown = null; }
+      if (timerWrap) { timerWrap.style.borderColor = ''; timerWrap.style.color = ''; }
+    }
+    window.__hwSessionExtend = resetSessionTimer;
+
+    ['mousemove','keydown','click','scroll','touchstart'].forEach(ev => {
+      document.addEventListener(ev, resetSessionTimer, { passive: true });
+    });
+
+    const logoutInactBtn = document.getElementById('inactivity-logout-btn');
+    if (logoutInactBtn) {
+      logoutInactBtn.addEventListener('click', () => {
+        secureLogout && secureLogout();
+        window.location.href = 'index.html';
+      });
+    }
+
+    function showInactivityWarning() {
+      inactivityWarningShown = true;
+      if (overlay) overlay.classList.add('open');
+      let remaining = 60;
+      if (countdownEl) countdownEl.textContent = remaining;
+      if (timerWrap) timerWrap.style.borderColor = 'rgba(239,68,68,0.7)';
+      warningCountdown = setInterval(() => {
+        remaining--;
+        if (countdownEl) countdownEl.textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(warningCountdown);
+          secureLogout && secureLogout(true);
+          window.location.href = 'index.html?expired=1';
+        }
+      }, 1000);
+    }
+
+    setInterval(() => {
+      const elapsed = Date.now() - sessionStart;
+      const remaining = SESSION_DURATION_MS - elapsed;
+      if (timerEl) timerEl.textContent = formatTime(remaining);
+      if (timerWrap && !inactivityWarningShown) {
+        if (remaining < 5 * 60 * 1000) {
+          timerWrap.style.color = '#ef4444'; timerWrap.style.borderColor = 'rgba(239,68,68,0.5)';
+        } else if (remaining < 10 * 60 * 1000) {
+          timerWrap.style.color = '#eab308'; timerWrap.style.borderColor = 'rgba(234,179,8,0.4)';
+        } else { timerWrap.style.color = ''; timerWrap.style.borderColor = ''; }
+      }
+      if (remaining <= WARN_AT_MS && !inactivityWarningShown) showInactivityWarning();
+    }, 1000);
+  })();
+
+  // ── Admin Notification Centre ─────────────────────────────────────────────
+  const _adminNotifications = [
+    { icon: '⚡', title: 'Arbiter Console Ready', time: 'Just now' }
+  ];
+
+  function toggleAdminNotificationDropdown() {
+    const dropdown = document.getElementById('notif-dropdown');
+    const bell = document.getElementById('notif-bell-btn');
+    if (!dropdown) return;
+    const isOpen = dropdown.classList.toggle('open');
+    if (bell) bell.setAttribute('aria-expanded', isOpen);
+    if (isOpen) document.getElementById('notif-badge')?.classList.add('hidden');
+  }
+
+  function clearAdminNotifications() {
+    _adminNotifications.length = 0;
+    const list = document.getElementById('notif-list');
+    if (list) list.innerHTML = '<div class="notification-item"><span class="notif-icon">🕯️</span><div><div class="notif-title" style="color:var(--text-muted)">No new alerts</div></div></div>';
+    document.getElementById('notif-badge')?.classList.add('hidden');
+  }
+
+  document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('notif-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('notif-dropdown')?.classList.remove('open');
+      document.getElementById('notif-bell-btn')?.setAttribute('aria-expanded', 'false');
+    }
+  });
 
   // Initial load
   loadDashboard();
