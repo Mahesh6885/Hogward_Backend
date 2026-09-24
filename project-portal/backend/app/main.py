@@ -82,6 +82,17 @@ async def generic_exception_handler(request: Request, exc: Exception):
         content={"success": False, "message": "Internal server error", "error_code": "INTERNAL_ERROR"},
     )
 
+# ─── Startup Event ────────────────────────────────────────────────────────────
+@app.on_event("startup")
+def on_startup():
+    from app.database.database import engine
+    from app.database.migration import auto_migrate_schema
+    try:
+        auto_migrate_schema(engine)
+    except Exception as e:
+        import logging
+        logging.error("Failed to auto migrate schema on startup: %s", e)
+
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(users.router)

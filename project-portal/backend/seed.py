@@ -459,11 +459,12 @@ def main():
     print("\n Starting database initialization and seed process...")
     from app.database.database import engine
     from app.database.base import Base
+    from app.database.migration import auto_migrate_schema
     import app.models  # noqa: F401
 
-    print("\n[0/4] Ensuring all database tables exist...")
-    Base.metadata.create_all(bind=engine)
-    print("  [OK] Database schema initialized.")
+    print("\n[0/4] Ensuring database schema and columns are up to date...")
+    auto_migrate_schema(engine)
+    print("  [OK] Database schema initialized and migrated.")
 
     db = SessionLocal()
     try:
