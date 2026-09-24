@@ -25,9 +25,27 @@ def get_domain_by_name(db: Session, domain_name: DomainName) -> Domain:
 
 def create_user(db: Session, data: UserCreate, created_by: User) -> User:
     """Admin creates a new team/user account."""
+    import re
     domain = get_domain_by_name(db, data.domain)
 
-    existing_username = db.query(User).filter(User.username == data.username).first()
+    team_name = (data.team_name or data.name or "Hogwarts Team").strip()
+    team_leader = (data.team_leader or data.name or team_name).strip()
+    college = (data.college_name or data.organization or "").strip() or None
+
+    # Auto-generate username if not provided
+    username = data.username.strip().lower() if data.username else None
+    if not username:
+        clean_name = re.sub(r"[^a-z0-9_]+", "", team_name.lower().replace(" ", "_"))
+        if not clean_name:
+            clean_name = "team"
+        candidate = f"team_{clean_name}"[:35]
+        cnt = 1
+        username = candidate
+        while db.query(User).filter(User.username == username).first():
+            username = f"{candidate}_{cnt}"
+            cnt += 1
+
+    existing_username = db.query(User).filter(User.username == username).first()
     if existing_username:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -41,9 +59,17 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             detail={"success": False, "message": "Email already exists", "error_code": "EMAIL_EXISTS"},
         )
 
-    team_name = (data.team_name or data.name or f"Team {data.username}").strip()
-    team_leader = (data.team_leader or data.name or data.username).strip()
-    college = (data.college_name or data.organization or "").strip() or None
+    # Validate team member count for USER role:
+    # 2 to 4 members + 1 leader = 3 to 5 total participants
+    if data.role == UserRole.USER and (data.member_one is not None or data.member_two is not None):
+        members = [m.strip() for m in [data.member_one, data.member_two, data.member_three, data.member_four] if m and m.strip()]
+        if len(members) < 2 or len(members) > 4:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"success": False, "message": f"Team must have between 2 and 4 members (total 3 to 5 participants including leader). Current count: {len(members) + 1}", "error_code": "INVALID_MEMBER_COUNT"},
+            )
+
+    raw_pass = (data.password or "hogwarts-legacy").strip() or "hogwarts-legacy"
 
     user = User(
         name=team_name,
@@ -57,13 +83,15 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
         organization=college,
         department=data.department.strip() if data.department else None,
         academic_year=data.academic_year.strip() if data.academic_year else None,
-        username=data.username,
+        username=username,
         email=str(data.email),
-        password_hash=hash_password(data.password),
+        password_hash=hash_password(raw_pass),
         phone=data.phone.strip() if data.phone else None,
         domain_id=domain.id,
         role=data.role,
         status=data.status,
+        edit_permission=False,
+        password_reset_required=False,
     )
     db.add(user)
 
@@ -312,3 +340,99 @@ def delete_user(db: Session, user_id: int, admin: User) -> None:
     db.add(log)
     db.delete(user)
     db.commit()
+
+
+def set_team_edit_permission(db: Session, user_id: int, data, admin: User) -> User:
+    from datetime import datetime, timezone
+    # Accept both schema object and raw args
+    edit_permission = data.edit_permission if hasattr(data, 'edit_permission') else data
+    reason = data.reason if hasattr(data, 'reason') else None
+    user = get_user_by_id(db, user_id)
+    user.edit_permission = edit_permission
+    user.edit_permission_reason = reason.strip() if reason else None
+    user.edit_permission_granted_at = datetime.now(timezone.utc) if edit_permission else None
+
+    action = "editing_permission_granted" if edit_permission else "editing_permission_revoked"
+    desc = f"Admin {admin.name} ({admin.username}) {'granted' if edit_permission else 'revoked'} editing permission for team '{user.team_name}'."
+    if reason:
+        desc += f" Reason: {reason.strip()}"
+    log = AuditLog(
+        admin_id=admin.id,
+        action=action,
+        target_type="team",
+        target_id=user.id,
+        description=desc,
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def reset_team_password_default(db: Session, user_id: int, admin: User) -> User:
+    user = get_user_by_id(db, user_id)
+    default_pass = "hogwarts-legacy"
+    user.password_hash = hash_password(default_pass)
+    user.password_reset_required = False
+
+    log = AuditLog(
+        admin_id=admin.id,
+        action="password_reset",
+        target_type="team",
+        target_id=user.id,
+        description=f"Admin {admin.name} ({admin.username}) reset password for team '{user.team_name}' to default.",
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def bulk_set_edit_permission(db: Session, data, admin: User) -> list:
+    from datetime import datetime, timezone
+    team_ids = data.team_ids if hasattr(data, 'team_ids') else data
+    edit_permission = data.edit_permission if hasattr(data, 'edit_permission') else True
+    reason = data.reason if hasattr(data, 'reason') else None
+    users = db.query(User).filter(User.id.in_(team_ids)).all()
+    now = datetime.now(timezone.utc) if edit_permission else None
+    r_clean = reason.strip() if reason else None
+    action = "editing_permission_granted" if edit_permission else "editing_permission_revoked"
+
+    for u in users:
+        u.edit_permission = edit_permission
+        u.edit_permission_reason = r_clean
+        u.edit_permission_granted_at = now
+        log = AuditLog(
+            admin_id=admin.id,
+            action=action,
+            target_type="team",
+            target_id=u.id,
+            description=f"Bulk action: Admin {admin.username} {'granted' if edit_permission else 'revoked'} editing permission.",
+        )
+        db.add(log)
+    db.commit()
+    for u in users:
+        db.refresh(u)
+    return users
+
+
+def bulk_reset_password(db: Session, data, admin: User) -> list:
+    team_ids = data.team_ids if hasattr(data, 'team_ids') else data
+    default_pass = "hogwarts-legacy"
+    h = hash_password(default_pass)
+    users = db.query(User).filter(User.id.in_(team_ids)).all()
+    for u in users:
+        u.password_hash = h
+        u.password_reset_required = False
+        log = AuditLog(
+            admin_id=admin.id,
+            action="password_reset",
+            target_type="team",
+            target_id=u.id,
+            description=f"Bulk password reset for team '{u.team_name}' by admin {admin.username}.",
+        )
+        db.add(log)
+    db.commit()
+    for u in users:
+        db.refresh(u)
+    return users

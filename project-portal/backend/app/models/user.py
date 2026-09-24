@@ -2,7 +2,7 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import String, DateTime, ForeignKey, Enum as SAEnum, Integer
+from sqlalchemy import String, Text, DateTime, ForeignKey, Enum as SAEnum, Integer, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -46,6 +46,12 @@ class User(Base):
     status: Mapped[str] = mapped_column(
         SAEnum(UserStatus, name="user_status_enum"), nullable=False, default=UserStatus.ACTIVE
     )
+    edit_permission: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    edit_permission_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    edit_permission_granted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    session_last_active: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_reset_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )

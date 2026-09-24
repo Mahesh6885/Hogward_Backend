@@ -10,11 +10,12 @@ from app.models.domain import Domain, DomainName
 from app.models.project import Project, ProjectStatus
 from app.models.user import User, UserStatus, UserRole
 from app.models.audit_log import AuditLog
-from app.schemas.user import UserCreate, UserUpdate, UserStatusUpdate, UserPasswordReset
+from app.schemas.user import UserCreate, UserUpdate, UserStatusUpdate, UserPasswordReset, TeamEditPermissionRequest, BulkEditPermissionRequest, BulkPasswordResetRequest
 from app.schemas.review import ReviewCreate, ReviewUpdate
 from app.services.user_service import (
     create_user, list_users, get_user_by_id,
     update_user, update_user_status, reset_user_password, delete_user,
+    set_team_edit_permission, reset_team_password_default, bulk_set_edit_permission, bulk_reset_password,
 )
 from app.schemas.project import AdminProjectUpdateRequest, AdminGithubUpdateRequest, AdminDomainUpdateRequest
 from app.services.project_service import list_projects_admin, get_project_by_id, admin_update_project
@@ -255,6 +256,87 @@ def admin_delete_user(
     return {"success": True, "message": "Team deleted", "data": None}
 
 
+# ─── Edit Permission & Password Reset ────────────────────────────────────────
+
+@router.patch("/teams/{user_id}/edit-permission", status_code=200)
+def admin_set_edit_permission(
+    user_id: int,
+    data: TeamEditPermissionRequest,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Grant or revoke editing permission for a submitted project."""
+    user = set_team_edit_permission(db, user_id, data, admin)
+    return {"success": True, "message": "Edit permission updated", "data": _user_dict(user)}
+
+
+@router.post("/teams/{user_id}/reset-password", status_code=200)
+def admin_reset_team_password_default(
+    user_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Reset a team password to the default 'hogwarts-legacy'."""
+    user = reset_team_password_default(db, user_id, admin)
+    return {"success": True, "message": "Password reset to default successfully", "data": {"id": user.id, "username": user.username}}
+
+
+@router.post("/bulk/edit-permission", status_code=200)
+def admin_bulk_edit_permission(
+    data: BulkEditPermissionRequest,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Set edit permission for multiple teams at once."""
+    results = bulk_set_edit_permission(db, data, admin)
+    return {"success": True, "message": f"Edit permission updated for {len(results)} teams", "data": [_user_dict(u) for u in results]}
+
+
+@router.post("/bulk/reset-password", status_code=200)
+def admin_bulk_reset_password(
+    data: BulkPasswordResetRequest,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Reset passwords to default for multiple teams at once."""
+    results = bulk_reset_password(db, data, admin)
+    return {"success": True, "message": f"Passwords reset for {len(results)} teams", "data": [{"id": u.id, "username": u.username} for u in results]}
+
+
+@router.get("/export/teams", status_code=200)
+def admin_export_teams(
+    domain: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Export all teams as CSV."""
+    import io, csv
+    from fastapi.responses import StreamingResponse
+    items, _, _ = list_users(db, 1, 1000, domain, status, None)
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Team Name", "Leader", "Email", "Domain", "College", "Members", "Status", "Project Status", "Submitted At", "Edit Permission"])
+    for u in items:
+        domain_name = u.domain.name if u.domain else ""
+        project = u.projects[0] if u.projects else None
+        members = ", ".join(filter(None, [u.member_one, u.member_two, u.member_three, u.member_four]))
+        writer.writerow([
+            u.id, u.team_name or u.name, u.team_leader or u.name,
+            u.email, domain_name, u.college_name or u.organization,
+            members, u.status,
+            project.status if project else "",
+            project.submitted_at.isoformat() if project and project.submitted_at else "",
+            getattr(u, "edit_permission", False),
+        ])
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=teams_export.csv"}
+    )
+
+
 # ─── Project Management ──────────────────────────────────────────────────────
 
 @router.get("/projects", status_code=200)
@@ -488,6 +570,10 @@ def _user_dict(user: User) -> dict:
         "role": user.role,
         "status": user.status,
         "project": project_summary,
+        "edit_permission": getattr(user, "edit_permission", False),
+        "edit_permission_reason": getattr(user, "edit_permission_reason", None),
+        "edit_permission_granted_at": user.edit_permission_granted_at.isoformat() if getattr(user, "edit_permission_granted_at", None) else None,
+        "password_reset_required": getattr(user, "password_reset_required", False),
         "created_at": user.created_at.isoformat(),
         "updated_at": user.updated_at.isoformat(),
     }
@@ -566,6 +652,9 @@ def _project_dict(project: Project) -> dict:
         "draft_saved_at": project.draft_saved_at.isoformat() if project.draft_saved_at else None,
         "submitted_at": project.submitted_at.isoformat() if project.submitted_at else None,
         "updated_at": project.updated_at.isoformat(),
+        "edit_permission": getattr(u, "edit_permission", False),
+        "edit_permission_reason": getattr(u, "edit_permission_reason", None),
+        "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
     }
 
 

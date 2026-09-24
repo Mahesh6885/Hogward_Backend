@@ -19,6 +19,8 @@ class LoginResponseUser(BaseModel):
     username: str
     role: str
     domain: str | None
+    edit_permission: bool = False
+    edit_permission_reason: str | None = None
 
     model_config = {"from_attributes": True}
 

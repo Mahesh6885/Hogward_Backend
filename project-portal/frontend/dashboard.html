@@ -405,10 +405,29 @@
         <button class="btn btn-primary" onclick="switchView('home')">Go to Dashboard →</button>
       </div>
 
-      <!-- EDITABLE FORM BLOCKS (Active when DRAFT / Unsubmitted) -->
+      <!-- EDITABLE FORM BLOCKS (Active when DRAFT / Unsubmitted / Edit Permission Granted) -->
       <div id="project-editor" class="hidden">
+        <!-- Edit Permission Banner (Active when Admin granted edit permission on submitted project) -->
+        <div id="edit-permission-banner" class="alert hidden" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.5);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div style="display:flex;align-items:flex-start;gap:0.85rem">
+            <span style="font-size:1.75rem;line-height:1">🔓</span>
+            <div>
+              <div style="font-weight:700;color:var(--accent-gold);font-size:1.05rem">
+                Admin Edit Permission Active
+              </div>
+              <div class="text-sm" style="color:var(--text-secondary);margin-top:0.25rem" id="edit-permission-reason-text">
+                Your administrator has temporarily unlocked editing for your submitted project.
+              </div>
+              <div class="text-xs text-muted" style="margin-top:0.35rem">
+                ⚠️ Modifying and clicking <strong>Final Submit</strong> will resubmit your project and immediately re-lock it into read-only evaluation mode.
+              </div>
+            </div>
+          </div>
+          <span class="badge badge-yellow">EDIT GRANTED</span>
+        </div>
+
         <!-- Draft Status Banner -->
-        <div class="draft-banner">
+        <div class="draft-banner" id="draft-banner">
           <div style="display:flex;align-items:center;gap:0.75rem">
             <span style="font-size:1.5rem">📝</span>
             <div>
@@ -627,7 +646,21 @@
 
       <!-- READ-ONLY VIEW (Active when SUBMITTED) -->
       <div id="project-content" class="doc-shell hidden">
-        <div class="locked-banner">
+        <!-- Edit Permission Notice in Locked View -->
+        <div id="locked-edit-permission-banner" class="alert hidden" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <span style="font-size:1.6rem">🔓</span>
+            <div>
+              <div style="font-weight:700;color:var(--accent-gold);font-size:1.05rem">Admin Edit Permission Granted!</div>
+              <div class="text-xs text-secondary" id="locked-perm-reason">Administrator has granted permission to modify your project proposal.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary" onclick="switchToEditorMode()">
+            ✏️ Modify Project Submission →
+          </button>
+        </div>
+
+        <div class="locked-banner" id="project-locked-banner">
           <div style="display:flex;align-items:center;gap:0.75rem">
             <span style="font-size:1.5rem">🔒</span>
             <div>
@@ -1547,14 +1580,39 @@
       currentProblemTitle = p.project_title || p.custom_topic || p.topic?.title || 'Predefined Topic';
 
       const isSubmitted = p.is_submitted === true || (p.status && p.status !== 'DRAFT');
+      const hasEditPermission = Boolean(p.edit_permission || (cachedTeam && cachedTeam.edit_permission));
+      const editReason = p.edit_permission_reason || (cachedTeam && cachedTeam.edit_permission_reason) || '';
 
-      if (!isSubmitted) {
-        // Render EDITABLE DRAFT FORM
-        document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
-        document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
-        document.getElementById('prj-header-subtitle').textContent = 'Draft proposal mode. You can edit, save sections individually, and submit when ready.';
+      const editBanner = document.getElementById('edit-permission-banner');
+      const draftBanner = document.getElementById('draft-banner');
+      const lockedPermBanner = document.getElementById('locked-edit-permission-banner');
+      const finalSubmitBtn = document.getElementById('btn-final-submit');
 
-        document.getElementById('draft-problem-preview').textContent = currentProblemStatement;
+      const psPreviewText = currentProblemStatement.length > 180 ? currentProblemStatement.slice(0, 180) + '…' : currentProblemStatement;
+
+      if (!isSubmitted || hasEditPermission) {
+        // Render EDITABLE DRAFT OR RESUBMISSION FORM
+        if (hasEditPermission && isSubmitted) {
+          document.getElementById('prj-read-only-badge').textContent = 'EDIT PERMISSION GRANTED (Editable)';
+          document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+          document.getElementById('prj-header-subtitle').textContent = 'Admin has granted temporary edit permission. Update your proposal and resubmit to lock for review.';
+          if (editBanner) {
+            editBanner.classList.remove('hidden');
+            const reasonEl = document.getElementById('edit-permission-reason-text');
+            if (reasonEl) reasonEl.textContent = editReason ? `Admin reason: "${editReason}"` : 'Administrator has granted you temporary editing permission.';
+          }
+          if (draftBanner) draftBanner.classList.add('hidden');
+          if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Resubmit Project (Lock)';
+        } else {
+          document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
+          document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+          document.getElementById('prj-header-subtitle').textContent = 'Draft proposal mode. You can edit, save sections individually, and submit when ready.';
+          if (editBanner) editBanner.classList.add('hidden');
+          if (draftBanner) draftBanner.classList.remove('hidden');
+          if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Final Submit';
+        }
+
+        document.getElementById('draft-problem-preview').textContent = psPreviewText;
         document.getElementById('draft-abstract').value = p.abstract || '';
         document.getElementById('draft-objectives').value = p.objectives || '';
         document.getElementById('draft-solution').value = p.proposed_solution || '';
@@ -1625,6 +1683,10 @@
         // Description
         document.getElementById('doc-description').innerHTML = window.renderFormattedDescription(p.project_description);
 
+        if (lockedPermBanner) {
+          lockedPermBanner.classList.add('hidden');
+        }
+
         content.classList.remove('hidden');
       }
     } catch (e) {
@@ -1679,6 +1741,17 @@
       loading.classList.add('hidden');
     }
   }
+
+  // ── Switch from Read-Only to Editor (When Admin Edit Permission Granted) ──
+  window.switchToEditorMode = function() {
+    const editor = document.getElementById('project-editor');
+    const content = document.getElementById('project-content');
+    if (editor && content) {
+      content.classList.add('hidden');
+      editor.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   // ── Save Individual Block Draft ──────────────────────────────────────────
   window.saveFieldDraft = async function(fieldName, btnEl) {
@@ -1852,11 +1925,11 @@
       return;
     }
 
-    const confirmed = confirm(
-      "Are you sure you want to finalize and submit your project proposal?\n\n" +
-      "⚠️ WARNING: Once submitted, all fields will be locked and cannot be edited. " +
-      "Only the Administrator can make modifications after submission."
-    );
+    const hasEditPerm = Boolean(cachedProject?.edit_permission || (cachedTeam && cachedTeam.edit_permission));
+    const confirmMsg = hasEditPerm
+      ? "Resubmit your finalized project proposal?\n\n⚠️ NOTE: This will resubmit your updated proposal and immediately revoke the temporary edit permission, locking your project for evaluation."
+      : "Are you sure you want to finalize and submit your project proposal?\n\n⚠️ WARNING: Once submitted, all fields will be locked and cannot be edited. Only the Administrator can make modifications after submission.";
+    const confirmed = confirm(confirmMsg);
     if (!confirmed) return;
 
     const origText = btnEl.textContent;
@@ -2115,5 +2188,6 @@
   // ── Initial load ──
   initDashboard();
 </script>
+<script src="js/cursor.js" defer></script>
 </body>
 </html>

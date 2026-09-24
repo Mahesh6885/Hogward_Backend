@@ -29,9 +29,9 @@ class UserCreate(BaseModel):
     department: Optional[str] = None
     academic_year: Optional[str] = None
 
-    username: str
+    username: Optional[str] = None
     email: EmailStr
-    password: str
+    password: Optional[str] = "hogwarts-legacy"
     phone: Optional[str] = None
     domain: DomainName
     role: UserRole = UserRole.USER
@@ -39,7 +39,9 @@ class UserCreate(BaseModel):
 
     @field_validator("username")
     @classmethod
-    def username_valid(cls, v: str) -> str:
+    def username_valid(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
         v = v.strip().lower()
         if len(v) < 3 or len(v) > 50:
             raise ValueError("Username must be between 3 and 50 characters")
@@ -49,7 +51,9 @@ class UserCreate(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def password_strength(cls, v: str) -> str:
+    def password_strength(cls, v: Optional[str]) -> str:
+        if not v:
+            return "hogwarts-legacy"
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters")
         return v
@@ -68,6 +72,21 @@ class UserCreate(BaseModel):
 class TeamCreate(UserCreate):
     """Alias for team creation."""
     pass
+
+
+class TeamEditPermissionRequest(BaseModel):
+    edit_permission: bool
+    reason: Optional[str] = None
+
+
+class BulkEditPermissionRequest(BaseModel):
+    team_ids: list[int]
+    edit_permission: bool
+    reason: Optional[str] = None
+
+
+class BulkPasswordResetRequest(BaseModel):
+    team_ids: list[int]
 
 
 class UserUpdate(BaseModel):

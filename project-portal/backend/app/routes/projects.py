@@ -36,6 +36,9 @@ def _serialize_project(project) -> dict:
         "organization": u.organization or u.college_name,
         "department": u.department,
         "academic_year": u.academic_year,
+        "edit_permission": getattr(u, "edit_permission", False),
+        "edit_permission_reason": getattr(u, "edit_permission_reason", None),
+        "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
     }
     # Resolve effective technology_stack
     tech = project.technology_stack or project.technologies
@@ -45,6 +48,9 @@ def _serialize_project(project) -> dict:
         "project_code": project.project_code,
         "user_id": project.user_id,
         "user": user_data,
+        "edit_permission": getattr(u, "edit_permission", False),
+        "edit_permission_reason": getattr(u, "edit_permission_reason", None),
+        "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
         "domain_id": project.domain_id,
         "domain": {
             "id": project.domain.id,

@@ -160,8 +160,8 @@
         <p class="text-muted">Register and manage team accounts, member rosters, domain workflows, and credentials.</p>
       </div>
 
-      <div class="filters-bar">
-        <input type="text" id="search-team-name" placeholder="Search by team name or leader…" style="min-width:260px" />
+      <div class="filters-bar" style="flex-wrap:wrap;gap:0.75rem">
+        <input type="text" id="search-team-name" placeholder="🔍 Search by team name or leader…" style="min-width:220px" />
         <select id="filter-team-domain">
           <option value="">All Domains</option>
           <option value="AI">AI</option>
@@ -174,19 +174,30 @@
           <option value="INACTIVE">Inactive</option>
         </select>
         <button class="btn btn-ghost btn-sm" id="btn-refresh-teams">🔄 Refresh</button>
+        <button class="btn btn-ghost btn-sm" id="btn-export-csv" title="Export to CSV">⬇️ Export CSV</button>
+      </div>
+
+      <!-- Bulk Actions Bar (hidden until selection) -->
+      <div id="bulk-actions-bar" style="display:none;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:var(--radius-md);margin-bottom:1rem;flex-wrap:wrap">
+        <span class="text-sm" style="color:var(--gold-light);font-weight:600"><span id="bulk-selected-count">0</span> teams selected</span>
+        <button class="btn btn-sm" style="background:rgba(34,197,94,0.2);border:1px solid rgba(34,197,94,0.4);color:var(--accent-green)" id="btn-bulk-grant-edit">✏️ Grant Edit Permission</button>
+        <button class="btn btn-sm" style="background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.4);color:var(--accent-red)" id="btn-bulk-revoke-edit">🔒 Revoke Edit Permission</button>
+        <button class="btn btn-sm btn-ghost" id="btn-bulk-reset-pwd">🔑 Reset Passwords to Default</button>
+        <button class="btn btn-sm btn-ghost" id="btn-bulk-clear">✕ Clear Selection</button>
       </div>
 
       <div class="table-wrapper">
         <table class="table">
           <thead>
             <tr>
+              <th style="width:2.5rem"><input type="checkbox" id="select-all-teams" title="Select all" /></th>
               <th>Team Name</th>
               <th>Team Leader</th>
               <th>Username</th>
               <th>Domain</th>
               <th>Project Status</th>
+              <th>Edit Perm</th>
               <th>Current Round</th>
-              <th>Created Date</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -320,12 +331,19 @@
 
       <div class="grid-2">
         <div class="form-group">
-          <label class="form-label" for="new-username">Account Username *</label>
-          <input class="form-input" type="text" id="new-username" required placeholder="e.g. team_alpha" />
+          <label class="form-label" for="new-username">Username <span class="text-xs text-muted">(auto-generated from team name)</span></label>
+          <input class="form-input" type="text" id="new-username" placeholder="Auto-generated" readonly style="opacity:0.7;cursor:not-allowed" />
         </div>
         <div class="form-group">
           <label class="form-label" for="new-email">Team Email *</label>
           <input class="form-input" type="email" id="new-email" required placeholder="e.g. alpha@college.edu" />
+        </div>
+      </div>
+
+      <div class="card mb-2" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);padding:0.75rem">
+        <div class="text-sm" style="color:var(--gold-light)">
+          🔑 <strong>Default Password:</strong> <code style="color:var(--accent-green);font-size:1rem">hogwarts-legacy</code>
+          <span class="text-muted text-xs"> — Teams can change this after first login.</span>
         </div>
       </div>
 
@@ -344,65 +362,63 @@
         </div>
       </div>
 
-      <div class="grid-3">
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="new-phone">Phone Number</label>
+          <input class="form-input" type="text" id="new-phone" placeholder="+1-555-0100" />
+        </div>
         <div class="form-group">
           <label class="form-label" for="new-college">College / Organization *</label>
-          <input class="form-input" type="text" id="new-college" required placeholder="e.g. Harvard University" />
+          <input class="form-input" type="text" id="new-college" required placeholder="e.g. Erode Sengunthar Engineering College" />
         </div>
+      </div>
+
+      <div class="grid-2">
         <div class="form-group">
           <label class="form-label" for="new-dept">Department</label>
           <input class="form-input" type="text" id="new-dept" placeholder="e.g. Computer Science" />
         </div>
         <div class="form-group">
-          <label class="form-label" for="new-year">Academic Year</label>
-          <input class="form-input" type="text" id="new-year" placeholder="e.g. 2025-2026" />
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label" for="new-domain">Domain (Dropdown) *</label>
+          <label class="form-label" for="new-domain">Domain *</label>
           <select class="form-input" id="new-domain" required>
             <option value="AI">AI</option>
             <option value="CYBERSECURITY">Cybersecurity</option>
             <option value="OPEN_INNOVATION">Open Innovation</option>
           </select>
-          <span class="text-xs text-muted">Controls whether 10 locked topics or custom topic form is shown.</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-status">Account Status *</label>
-          <select class="form-input" id="new-status" required>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="INACTIVE">INACTIVE</option>
-          </select>
         </div>
       </div>
 
-      <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">Team Members Roster</h4>
-      <div class="grid-2">
-        <div class="form-group">
-          <label class="form-label" for="new-member-1">Member 1</label>
-          <input class="form-input" type="text" id="new-member-1" placeholder="Full Name" />
+      <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">
+        👥 Team Members Roster
+        <span id="member-count-label" style="font-size:0.8rem;font-weight:400;color:var(--gold-light);margin-left:0.5rem">(2 of 2–4 required members filled)</span>
+      </h4>
+      <div id="members-container">
+        <div class="grid-2">
+          <div class="form-group member-field">
+            <label class="form-label" for="new-member-1">Member 1 * <span class="text-xs text-muted">(required, min 2)</span></label>
+            <input class="form-input" type="text" id="new-member-1" required placeholder="Full Name" oninput="updateMemberCount()" />
+          </div>
+          <div class="form-group member-field">
+            <label class="form-label" for="new-member-2">Member 2 * <span class="text-xs text-muted">(required, min 2)</span></label>
+            <input class="form-input" type="text" id="new-member-2" required placeholder="Full Name" oninput="updateMemberCount()" />
+          </div>
+          <div class="form-group member-field">
+            <label class="form-label" for="new-member-3">Member 3 <span class="text-xs text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="new-member-3" placeholder="Full Name (optional)" oninput="updateMemberCount()" />
+          </div>
+          <div class="form-group member-field">
+            <label class="form-label" for="new-member-4">Member 4 <span class="text-xs text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="new-member-4" placeholder="Full Name (optional)" oninput="updateMemberCount()" />
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="new-member-2">Member 2</label>
-          <input class="form-input" type="text" id="new-member-2" placeholder="Full Name" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-member-3">Member 3</label>
-          <input class="form-input" type="text" id="new-member-3" placeholder="Full Name" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-member-4">Member 4 (Optional)</label>
-          <input class="form-input" type="text" id="new-member-4" placeholder="Full Name (optional)" />
-        </div>
+        <p class="text-xs text-muted" style="margin-top:0.25rem">Total participants = Leader + 2 to 4 members (3–5 total). First 2 members are required.</p>
       </div>
 
       <div id="modal-team-alert" class="alert alert-hidden"></div>
 
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-create-team')">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="btn-submit-create-team">Create Team Account</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-create-team">⚡ Register Team</button>
       </div>
     </form>
 
@@ -411,20 +427,20 @@
       <div style="text-align:center;margin-bottom:1.5rem">
         <div style="font-size:3rem;margin-bottom:0.5rem">✅</div>
         <h3 style="margin:0">Team Account Created Successfully!</h3>
-        <p class="text-muted text-sm mt-1">The team account has been registered and activated in PostgreSQL.</p>
+        <p class="text-muted text-sm mt-1">The team account has been registered. Share these credentials with the team leader.</p>
       </div>
       <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
         <div style="margin-bottom:0.75rem">
-          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">CREATED USERNAME</div>
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">GENERATED USERNAME</div>
           <div style="display:flex;align-items:center;gap:0.5rem">
             <code id="creds-username" style="font-size:1.15rem;color:var(--accent-blue);font-weight:700;flex:1">—</code>
             <button type="button" class="btn btn-ghost btn-sm" onclick="copyText('creds-username',this)">📋 Copy</button>
           </div>
         </div>
         <div style="margin-bottom:0.75rem">
-          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">INITIAL PASSWORD</div>
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">DEFAULT PASSWORD</div>
           <div style="display:flex;align-items:center;gap:0.5rem">
-            <code id="creds-password" style="font-size:1.15rem;color:var(--accent-green);font-weight:700;flex:1">—</code>
+            <code id="creds-password" style="font-size:1.15rem;color:var(--accent-green);font-weight:700;flex:1">hogwarts-legacy</code>
             <button type="button" class="btn btn-ghost btn-sm" onclick="copyText('creds-password',this)">📋 Copy</button>
           </div>
         </div>
@@ -437,7 +453,7 @@
         </button>
       </div>
       <div class="alert alert-info" style="font-size:0.8rem">
-        💡 <strong>Share With Team:</strong> Copy the username and password above and provide them to the team leader. They can log in immediately at <code>index.html</code>.
+        💡 <strong>Share With Team:</strong> The default password is <code>hogwarts-legacy</code>. Teams can reset it after logging in.
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="closeModal('modal-create-team')">Done</button>
@@ -929,23 +945,28 @@
         const currentRound = u.project ? `Round ${u.project.current_round}` : '—';
         const createdDate = new Date(u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
 
+      const editPermBadge = u.edit_permission
+        ? `<span class="badge badge-green" title="Edit granted: ${escHtml(u.edit_permission_reason||'')}">✓ Edit</span>`
+        : `<span class="badge badge-gray">Locked</span>`;
+
         return `
-          <tr>
+          <tr data-team-id="${u.id}">
+            <td><input type="checkbox" class="team-checkbox" data-id="${u.id}" onchange="updateBulkBar()" /></td>
             <td><strong>${escHtml(teamName)}</strong></td>
             <td>${escHtml(leader)}</td>
             <td><code>${escHtml(u.username)}</code></td>
             <td><span class="badge ${dBadge}">${escHtml(dName)}</span></td>
             <td>${prjStatus}</td>
+            <td>${editPermBadge}</td>
             <td>${currentRound}</td>
-            <td class="text-xs text-muted">${createdDate}</td>
             <td>
               <div class="table-actions">
                 <button class="btn btn-ghost btn-sm" onclick="viewTeamModal(${u.id})">View</button>
                 <button class="btn btn-ghost btn-sm" onclick="editTeamModal(${u.id})">Edit</button>
-                <button class="btn btn-ghost btn-sm" onclick="promptResetPassword(${u.id}, '${escHtml(u.username)}')">Reset Pwd</button>
-                <button class="btn btn-ghost btn-sm" onclick="toggleTeamStatus(${u.id}, '${u.status}')">
-                  ${u.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                <button class="btn btn-sm" style="${u.edit_permission ? 'color:var(--accent-red)' : 'color:var(--accent-green)'}" onclick="toggleEditPermission(${u.id}, ${u.edit_permission})">
+                  ${u.edit_permission ? '🔒 Lock' : '✏️ Unlock'}
                 </button>
+                <button class="btn btn-ghost btn-sm" onclick="resetTeamPasswordDefault(${u.id}, '${escHtml(u.username)}')">🔑 Pwd</button>
                 <button class="btn btn-ghost btn-sm text-danger" onclick="deleteTeam(${u.id}, '${escHtml(teamName)}')">Delete</button>
               </div>
             </td>
@@ -953,7 +974,7 @@
         `;
       }).join('');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
     }
   }
 
@@ -967,6 +988,119 @@
   document.getElementById('filter-team-domain').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
   document.getElementById('filter-team-status').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
   document.getElementById('btn-refresh-teams').addEventListener('click', loadTeams);
+
+  // Select all checkbox
+  document.getElementById('select-all-teams').addEventListener('change', function() {
+    document.querySelectorAll('.team-checkbox').forEach(cb => { cb.checked = this.checked; });
+    updateBulkBar();
+  });
+
+  function updateBulkBar() {
+    const selected = document.querySelectorAll('.team-checkbox:checked');
+    const bar = document.getElementById('bulk-actions-bar');
+    document.getElementById('bulk-selected-count').textContent = selected.length;
+    bar.style.display = selected.length > 0 ? 'flex' : 'none';
+  }
+
+  function getSelectedIds() {
+    return Array.from(document.querySelectorAll('.team-checkbox:checked')).map(cb => parseInt(cb.dataset.id));
+  }
+
+  document.getElementById('btn-bulk-grant-edit').addEventListener('click', async () => {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    const reason = prompt('Optional reason for granting edit permission (or leave blank):');
+    try {
+      await api.post('/api/admin/bulk/edit-permission', { team_ids: ids, edit_permission: true, reason: reason || null });
+      toast.success(`Edit permission granted for ${ids.length} teams`);
+      loadTeams();
+    } catch (e) { toast.error(e.message); }
+  });
+
+  document.getElementById('btn-bulk-revoke-edit').addEventListener('click', async () => {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    if (!confirm(`Revoke edit permission for ${ids.length} teams?`)) return;
+    try {
+      await api.post('/api/admin/bulk/edit-permission', { team_ids: ids, edit_permission: false });
+      toast.success(`Edit permission revoked for ${ids.length} teams`);
+      loadTeams();
+    } catch (e) { toast.error(e.message); }
+  });
+
+  document.getElementById('btn-bulk-reset-pwd').addEventListener('click', async () => {
+    const ids = getSelectedIds();
+    if (!ids.length) return;
+    if (!confirm(`Reset passwords to 'hogwarts-legacy' for ${ids.length} teams?`)) return;
+    try {
+      await api.post('/api/admin/bulk/reset-password', { team_ids: ids });
+      toast.success(`Passwords reset for ${ids.length} teams`);
+    } catch (e) { toast.error(e.message); }
+  });
+
+  document.getElementById('btn-bulk-clear').addEventListener('click', () => {
+    document.querySelectorAll('.team-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('select-all-teams').checked = false;
+    updateBulkBar();
+  });
+
+  // CSV Export
+  document.getElementById('btn-export-csv').addEventListener('click', async () => {
+    const domain = document.getElementById('filter-team-domain').value;
+    const status = document.getElementById('filter-team-status').value;
+    let url = '/api/admin/export/teams';
+    const params = [];
+    if (domain) params.push(`domain=${domain}`);
+    if (status) params.push(`status=${status}`);
+    if (params.length) url += '?' + params.join('&');
+    try {
+      const token = localStorage.getItem('hw_token');
+      const resp = await fetch(`http://127.0.0.1:8000${url}`, { headers: { Authorization: `Bearer ${token}` } });
+      const blob = await resp.blob();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'teams_export.csv'; a.click();
+      toast.success('CSV exported successfully');
+    } catch(e) { toast.error('Export failed: ' + e.message); }
+  });
+
+  // Toggle edit permission for individual team
+  window.toggleEditPermission = async function(userId, currentPerm) {
+    const newPerm = !currentPerm;
+    let reason = null;
+    if (newPerm) {
+      reason = prompt('Optional: Enter reason for granting edit permission:');
+    } else {
+      if (!confirm('Revoke editing permission for this team?')) return;
+    }
+    try {
+      await api.patch(`/api/admin/teams/${userId}/edit-permission`, { edit_permission: newPerm, reason: reason || null });
+      toast.success(newPerm ? '✏️ Edit permission granted!' : '🔒 Edit permission revoked');
+      loadTeams();
+    } catch (e) { toast.error(e.message); }
+  };
+
+  // Reset team password to default
+  window.resetTeamPasswordDefault = async function(userId, username) {
+    if (!confirm(`Reset password for '${username}' to 'hogwarts-legacy'?`)) return;
+    try {
+      await api.post(`/api/admin/teams/${userId}/reset-password`, {});
+      toast.success(`Password reset to 'hogwarts-legacy' for ${username}`);
+    } catch (e) { toast.error(e.message); }
+  };
+
+  // Member count updater
+  window.updateMemberCount = function() {
+    const filled = ['new-member-1','new-member-2','new-member-3','new-member-4']
+      .filter(id => document.getElementById(id)?.value.trim()).length;
+    const label = document.getElementById('member-count-label');
+    if (label) label.textContent = `(${filled} of 2–4 member slots filled)`;
+  };
+
+  // Auto-generate username from team name
+  document.getElementById('new-team-name').addEventListener('input', function() {
+    const slug = this.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    const el = document.getElementById('new-username');
+    if (el) el.value = slug || '';
+  });
 
   // Create Team Modal
   document.getElementById('btn-open-create-team').addEventListener('click', () => {
@@ -987,28 +1121,36 @@
     const payload = {
       team_name: document.getElementById('new-team-name').value.trim(),
       team_leader: document.getElementById('new-team-leader').value.trim(),
-      username: document.getElementById('new-username').value.trim(),
+      username: document.getElementById('new-username').value.trim() || undefined,
       email: document.getElementById('new-email').value.trim(),
-      password: document.getElementById('new-password').value,
       phone: document.getElementById('new-phone').value.trim() || null,
       college_name: document.getElementById('new-college').value.trim(),
       organization: document.getElementById('new-college').value.trim(),
       department: document.getElementById('new-dept').value.trim() || null,
-      academic_year: document.getElementById('new-year').value.trim() || null,
       domain: document.getElementById('new-domain').value,
-      status: document.getElementById('new-status').value,
+      status: 'ACTIVE',
       member_one: document.getElementById('new-member-1').value.trim() || null,
       member_two: document.getElementById('new-member-2').value.trim() || null,
       member_three: document.getElementById('new-member-3').value.trim() || null,
       member_four: document.getElementById('new-member-4').value.trim() || null,
     };
 
+    // Validate at least 2 members
+    if (!payload.member_one || !payload.member_two) {
+      const alertEl = document.getElementById('modal-team-alert');
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = '<span>⚠️</span><span>At least 2 members are required (3–5 total participants).</span>';
+      alertEl.classList.remove('alert-hidden');
+      btn.disabled = false; btn.innerHTML = '⚡ Register Team';
+      return;
+    }
+
     try {
       const resp = await api.post('/api/admin/teams', payload);
       document.getElementById('form-create-team').classList.add('hidden');
-      const createdUsername = resp?.data?.username || payload.username.trim().toLowerCase();
+      const createdUsername = resp?.data?.username || payload.team_name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
       document.getElementById('creds-username').textContent = createdUsername;
-      document.getElementById('creds-password').textContent = payload.password;
+      document.getElementById('creds-password').textContent = 'hogwarts-legacy';
       document.getElementById('creds-team-name').textContent = payload.team_name;
       document.getElementById('create-team-success-step').classList.remove('hidden');
       showAlert(`Team '${payload.team_name}' registered successfully!`);
@@ -1019,7 +1161,7 @@
       alertEl.classList.remove('alert-hidden');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Create Team Account';
+      btn.innerHTML = '⚡ Register Team';
     }
   });
 
@@ -1529,5 +1671,6 @@
   // Initial load
   loadDashboard();
 </script>
+<script src="js/cursor.js" defer></script>
 </body>
 </html>

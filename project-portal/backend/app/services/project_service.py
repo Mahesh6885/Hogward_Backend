@@ -88,10 +88,10 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
     domain_name = user.domain.name
     existing = get_user_project(db, user)
 
-    if existing and existing.is_submitted:
+    if existing and existing.is_submitted and not getattr(user, "edit_permission", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"success": False, "message": "Project already submitted. Only admin can modify it.", "error_code": "ALREADY_SUBMITTED"},
+            detail={"success": False, "message": "Submitted projects cannot be edited unless editing permission is granted by the Administrator.", "error_code": "ALREADY_SUBMITTED"},
         )
 
     tech_stack = _normalize_list_or_str(data.technology_stack or data.technologies)
@@ -212,10 +212,10 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
     domain_name = user.domain.name
     existing = get_user_project(db, user)
 
-    if existing and existing.is_submitted:
+    if existing and existing.is_submitted and not getattr(user, "edit_permission", False):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"success": False, "message": "You already have a project", "error_code": "PROJECT_EXISTS"},
+            detail={"success": False, "message": "You already have a submitted project. Editing requires admin permission.", "error_code": "PROJECT_EXISTS"},
         )
 
     tech_stack = _normalize_list_or_str(data.technology_stack or data.technologies)
@@ -333,6 +333,18 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
         existing.is_submitted = True
         existing.submitted_at = now
         project = existing
+
+    # Revoke editing permission automatically and record audit log
+    if getattr(user, "edit_permission", False):
+        user.edit_permission = False
+        user.edit_permission_reason = None
+        db.add(AuditLog(
+            action="PROJECT_RESUBMITTED",
+            admin_id=None,
+            target_type="project",
+            target_id=project.id,
+            description=f"Team '{user.team_name}' resubmitted project {project.project_code}. Edit permission revoked automatically."
+        ))
 
     db.flush()
 

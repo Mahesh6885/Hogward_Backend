@@ -160,13 +160,17 @@
               </svg>
             </button>
           </div>
+          <!-- Caps Lock Detection Warning -->
+          <div id="caps-lock-warning" style="display:none;color:var(--accent-gold);font-size:0.75rem;margin-top:0.4rem;align-items:center;gap:0.35rem">
+            <span>⬆️</span> <strong>Caps Lock is ON</strong>
+          </div>
         </div>
 
-        <!-- Remember Me -->
+        <!-- Remember Me / 5-Hour Session -->
         <div class="login-options">
           <label class="remember-me" for="remember-me">
-            <input type="checkbox" id="remember-me" name="remember-me" />
-            <span>Remember Me</span>
+            <input type="checkbox" id="remember-me" name="remember-me" checked />
+            <span>Keep me signed in for 5 hours</span>
           </label>
         </div>
 
@@ -249,6 +253,21 @@
   pwToggle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pwToggle.click(); }
   });
+
+  // ── Caps Lock Detection ──
+  const capsWarning = document.getElementById('caps-lock-warning');
+  if (pwInput && capsWarning) {
+    const checkCaps = (e) => {
+      if (e.getModifierState && e.getModifierState('CapsLock')) {
+        capsWarning.style.display = 'flex';
+      } else {
+        capsWarning.style.display = 'none';
+      }
+    };
+    pwInput.addEventListener('keydown', checkCaps);
+    pwInput.addEventListener('keyup', checkCaps);
+    pwInput.addEventListener('blur', () => { capsWarning.style.display = 'none'; });
+  }
 
   // ── Alert helpers ──
   function showError(msg) {
@@ -372,6 +391,6 @@
     window.updateLoaderMessage = updateLoaderMessage;
   });
 </script>
-
+<script src="js/cursor.js" defer></script>
 </body>
 </html>
