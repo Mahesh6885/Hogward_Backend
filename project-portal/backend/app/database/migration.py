@@ -72,6 +72,13 @@ def auto_migrate_schema(engine: Engine) -> None:
                             END IF;
                         END $$;
                     """))
+                    conn.execute(text("""
+                        DO $$ BEGIN
+                            IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'domain_name_enum') THEN
+                                ALTER TYPE domain_name_enum ADD VALUE IF NOT EXISTS 'OPEN_INNOVATION';
+                            END IF;
+                        END $$;
+                    """))
                 except Exception as ex:
                     print(f"  [MIGRATION] ENUM creation notice: {ex}")
 
@@ -153,6 +160,20 @@ def auto_migrate_schema(engine: Engine) -> None:
                 conn.execute(text("UPDATE users SET password_reset_required = FALSE WHERE password_reset_required IS NULL;"))
             except Exception:
                 pass
+
+            # Ensure all 3 domains exist in domains table
+            for d_name, d_desc in [
+                ("AI", "Artificial Intelligence — covers machine learning, deep learning, NLP, computer vision, and more."),
+                ("CYBERSECURITY", "Cybersecurity — covers network security, ethical hacking, cryptography, forensics, and more."),
+                ("OPEN_INNOVATION", "Open Innovation — open track for creative, cross-disciplinary technical solutions."),
+            ]:
+                try:
+                    exists = conn.execute(text("SELECT id FROM domains WHERE name = :name LIMIT 1;"), {"name": d_name}).fetchone()
+                    if not exists:
+                        conn.execute(text("INSERT INTO domains (name, description, created_at) VALUES (:name, :desc, CURRENT_TIMESTAMP);"), {"name": d_name, "desc": d_desc})
+                        print(f"  [MIGRATION] Seeded domain {d_name}")
+                except Exception as dex:
+                    print(f"  [MIGRATION] Domain {d_name} notice: {dex}")
 
             trans.commit()
             print("  [MIGRATION] PostgreSQL schema successfully synchronized and verified.")

@@ -31,25 +31,32 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
     from app.models.problem_statement import ProblemStatement, RealmEnum
     from app.models.project import Project, ProjectStatus
 
-    # Determine realm: must be AI or CYBERSECURITY
+    # Determine realm or domain: AI, CYBERSECURITY, or OPEN_INNOVATION
     chosen_realm = None
-    if data.realm:
-        realm_str = data.realm.strip().upper()
-        if realm_str in (RealmEnum.AI.value, RealmEnum.CYBERSECURITY.value):
-            chosen_realm = RealmEnum(realm_str)
-    elif data.domain:
-        if data.domain.value in (RealmEnum.AI.value, RealmEnum.CYBERSECURITY.value):
-            chosen_realm = RealmEnum(data.domain.value)
+    is_open_innovation = False
 
-    if not chosen_realm and data.role == UserRole.USER:
+    domain_val = None
+    if data.domain:
+        domain_val = data.domain.value if hasattr(data.domain, "value") else str(data.domain).strip().upper()
+
+    realm_candidate = (data.realm.strip().upper() if data.realm else None) or domain_val
+
+    if realm_candidate in (RealmEnum.AI.value, "AI"):
+        chosen_realm = RealmEnum.AI
+    elif realm_candidate in (RealmEnum.CYBERSECURITY.value, "CYBERSECURITY"):
+        chosen_realm = RealmEnum.CYBERSECURITY
+    elif realm_candidate in (DomainName.OPEN_INNOVATION.value, "OPEN_INNOVATION", "OPEN INNOVATION", "OI"):
+        is_open_innovation = True
+
+    if not chosen_realm and not is_open_innovation and data.role == UserRole.USER:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"success": False, "message": "A valid realm (AI or CYBERSECURITY) must be selected.", "error_code": "REALM_REQUIRED"},
+            detail={"success": False, "message": "A valid domain (AI, CYBERSECURITY, or OPEN_INNOVATION) must be selected.", "error_code": "DOMAIN_REQUIRED"},
         )
 
-    # Problem statement assignment for USER role
+    # Problem statement assignment for USER role (only for AI / CYBERSECURITY)
     ps = None
-    if data.role == UserRole.USER:
+    if data.role == UserRole.USER and not is_open_innovation:
         if data.problem_statement_id and str(data.problem_statement_id).strip():
             try:
                 ps_uuid = uuid.UUID(str(data.problem_statement_id).strip())
@@ -65,7 +72,7 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
                     detail={"success": False, "message": f"Realm mismatch: Problem statement '{ps.problem_code}' is in realm '{ps.realm}', but '{chosen_realm.value}' was selected.", "error_code": "REALM_MISMATCH"},
                 )
 
-        if not ps:
+        if not ps and chosen_realm:
             # Automatic fair balanced rotation assignment from chosen realm!
             from app.services.problem_statement_service import assign_balanced_problem_statement
             ps = assign_balanced_problem_statement(db, chosen_realm)
@@ -73,6 +80,19 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
     domain = None
     if chosen_realm:
         domain = db.query(Domain).filter(Domain.name == chosen_realm.value).first()
+        if not domain:
+            domain = Domain(name=chosen_realm.value, description=f"{chosen_realm.value} domain")
+            db.add(domain)
+            db.flush()
+    elif is_open_innovation:
+        domain = db.query(Domain).filter(Domain.name == DomainName.OPEN_INNOVATION.value).first()
+        if not domain:
+            domain = Domain(
+                name=DomainName.OPEN_INNOVATION.value,
+                description="Open Innovation — open track for creative, cross-disciplinary technical solutions."
+            )
+            db.add(domain)
+            db.flush()
     elif data.domain:
         domain = get_domain_by_name(db, data.domain)
     else:

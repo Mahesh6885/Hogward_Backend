@@ -79,10 +79,19 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
             github_url = raw_github
 
     if existing is None:
-        # Determine realm from domain or default
-        realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
-        ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
-        prefix = "AI" if realm == RealmEnum.AI else "CY"
+        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
+        if is_oi:
+            realm = None
+            ps = None
+            prefix = "OI"
+            p_title = (data.project_title or "Open Innovation Project").strip()
+            p_desc = (data.problem_statement or "").strip()
+        else:
+            realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
+            ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
+            prefix = "AI" if realm == RealmEnum.AI else "CY"
+            p_title = data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project")
+            p_desc = ps.description if ps else (data.problem_statement or None)
 
         project = Project(
             project_code=f"PRJ-{prefix}-{user.id:04d}",
@@ -91,9 +100,9 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
             problem_statement_id=ps.id if ps else None,
             problem_code=ps.problem_code if ps else None,
             realm=ps.realm if ps else realm,
-            project_title=data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project"),
+            project_title=p_title,
             abstract=data.abstract.strip() if data.abstract else None,
-            problem_statement=ps.description if ps else (data.problem_statement or None),
+            problem_statement=p_desc,
             objectives=objectives_str,
             proposed_solution=data.proposed_solution.strip() if data.proposed_solution else None,
             technologies=tech_stack,
@@ -111,8 +120,11 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
         db.add(project)
     else:
         # Update existing draft
+        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
         if data.project_title is not None:
             existing.project_title = data.project_title.strip()
+        if data.problem_statement is not None and (is_oi or not existing.problem_statement_id):
+            existing.problem_statement = data.problem_statement.strip()
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:
@@ -170,9 +182,19 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
     now = datetime.now(timezone.utc)
 
     if existing is None:
-        realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
-        ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
-        prefix = "AI" if realm == RealmEnum.AI else "CY"
+        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
+        if is_oi:
+            realm = None
+            ps = None
+            prefix = "OI"
+            p_title = (data.project_title or "Open Innovation Project").strip()
+            p_desc = (data.problem_statement or "").strip()
+        else:
+            realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
+            ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
+            prefix = "AI" if realm == RealmEnum.AI else "CY"
+            p_title = data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project")
+            p_desc = ps.description if ps else (data.problem_statement or None)
 
         project = Project(
             project_code=f"PRJ-{prefix}-{user.id:04d}",
@@ -181,9 +203,9 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
             problem_statement_id=ps.id if ps else None,
             problem_code=ps.problem_code if ps else None,
             realm=ps.realm if ps else realm,
-            project_title=data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project"),
+            project_title=p_title,
             abstract=data.abstract.strip() if data.abstract else None,
-            problem_statement=ps.description if ps else (data.problem_statement or None),
+            problem_statement=p_desc,
             objectives=objectives_str,
             proposed_solution=data.proposed_solution.strip() if data.proposed_solution else None,
             technologies=tech_stack,
@@ -199,8 +221,11 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
         )
         db.add(project)
     else:
+        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
         if data.project_title:
             existing.project_title = data.project_title.strip()
+        if data.problem_statement and (is_oi or not existing.problem_statement_id):
+            existing.problem_statement = data.problem_statement.strip()
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:

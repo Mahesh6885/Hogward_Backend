@@ -34,6 +34,10 @@ DOMAINS = [
         "name": DomainName.CYBERSECURITY.value,
         "description": "Cybersecurity — covers network security, ethical hacking, cryptography, forensics, and more.",
     },
+    {
+        "name": DomainName.OPEN_INNOVATION.value,
+        "description": "Open Innovation — open track for creative, cross-disciplinary technical solutions.",
+    },
 ]
 
 OFFICIAL_PROBLEM_STATEMENTS = [

@@ -470,20 +470,21 @@
           <input class="form-input" type="text" id="new-dept" placeholder="e.g. Computer Science" />
         </div>
         <div class="form-group">
-          <label class="form-label" for="new-realm">Hackathon Realm *</label>
+          <label class="form-label" for="new-realm">Hackathon Domain / Track *</label>
           <select class="form-input" id="new-realm" required onchange="onRegistrationRealmChange()">
             <option value="AI">AI Realm (10 Problem Statements)</option>
             <option value="CYBERSECURITY">Cybersecurity Realm (10 Problem Statements)</option>
+            <option value="OPEN_INNOVATION">Open Innovation (Self-Defined Problem Statement)</option>
           </select>
         </div>
       </div>
 
-      <div class="form-group mb-2" style="background:rgba(212,175,55,0.07);border:1px dashed rgba(212,175,55,0.45);border-radius:var(--radius-sm);padding:0.85rem">
+      <div class="form-group mb-2" id="ps-assignment-banner" style="background:rgba(212,175,55,0.07);border:1px dashed rgba(212,175,55,0.45);border-radius:var(--radius-sm);padding:0.85rem">
         <div style="display:flex;align-items:center;gap:0.6rem">
-          <span style="font-size:1.3rem">⚡</span>
+          <span id="ps-assignment-icon" style="font-size:1.3rem">⚡</span>
           <div>
-            <div style="font-size:0.875rem;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">Automatic Problem Statement Assignment</div>
-            <div class="text-xs text-muted" style="margin-top:0.2rem">An official problem statement will be automatically and fairly assigned from the selected Realm upon registration via the balanced Hogwarts rotation system. No manual selection required.</div>
+            <div id="ps-assignment-title" style="font-size:0.875rem;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">Automatic Problem Statement Assignment</div>
+            <div id="ps-assignment-desc" class="text-xs text-muted" style="margin-top:0.2rem">An official problem statement will be automatically and fairly assigned from the selected Realm upon registration via the balanced Hogwarts rotation system. No manual selection required.</div>
           </div>
         </div>
       </div>
@@ -1280,8 +1281,34 @@
     document.getElementById('modal-team-alert').classList.add('alert-hidden');
     document.getElementById('form-create-team').classList.remove('hidden');
     document.getElementById('create-team-success-step').classList.add('hidden');
+    if (typeof onRegistrationRealmChange === 'function') onRegistrationRealmChange();
     openModal('modal-create-team');
   });
+
+  window.onRegistrationRealmChange = function() {
+    const realm = document.getElementById('new-realm')?.value || 'AI';
+    const icon = document.getElementById('ps-assignment-icon');
+    const title = document.getElementById('ps-assignment-title');
+    const desc = document.getElementById('ps-assignment-desc');
+    const submitBtn = document.getElementById('btn-submit-create-team');
+
+    if (realm === 'OPEN_INNOVATION') {
+      if (icon) icon.textContent = '💡';
+      if (title) title.textContent = 'Open Innovation Track (Self-Defined)';
+      if (desc) desc.textContent = 'Teams in Open Innovation define and submit their own innovative project proposal and problem statement during hackathon onboarding. No pre-assigned statement is forced.';
+      if (submitBtn) submitBtn.innerHTML = '💡 Register Team';
+    } else if (realm === 'CYBERSECURITY') {
+      if (icon) icon.textContent = '🛡️';
+      if (title) title.textContent = 'Automatic Problem Statement Assignment (Cybersecurity)';
+      if (desc) desc.textContent = 'An official problem statement from the Cybersecurity Realm (PDF verbatim) will be automatically and fairly assigned via balanced rotation.';
+      if (submitBtn) submitBtn.innerHTML = '⚡ Register Team';
+    } else {
+      if (icon) icon.textContent = '⚡';
+      if (title) title.textContent = 'Automatic Problem Statement Assignment (AI)';
+      if (desc) desc.textContent = 'An official problem statement from the AI Realm will be automatically and fairly assigned via the balanced Hogwarts rotation system.';
+      if (submitBtn) submitBtn.innerHTML = '⚡ Register Team';
+    }
+  };
 
   document.getElementById('form-create-team').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1318,22 +1345,25 @@
     }
 
     try {
+      const isOI = chosenRealm === 'OPEN_INNOVATION';
       const resp = await api.post('/api/admin/teams', payload);
       document.getElementById('form-create-team').classList.add('hidden');
       const createdUsername = resp?.data?.username || payload.team_name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
-      const assignedCode = resp?.data?.assigned_problem_code || resp?.data?.project?.problem_code || '—';
-      const assignedTitle = resp?.data?.assigned_problem_title || resp?.data?.project?.project_title || 'Official Challenge';
-      const assignedRealm = resp?.data?.assigned_realm || chosenRealm;
+      const assignedCode = resp?.data?.assigned_problem_code || resp?.data?.project?.problem_code || (isOI ? 'SELF-DEFINED' : '—');
+      const assignedTitle = resp?.data?.assigned_problem_title || resp?.data?.project?.project_title || (isOI ? 'Open Innovation (Custom Proposal)' : 'Official Challenge');
+      const assignedRealm = resp?.data?.assigned_realm || (isOI ? 'OPEN_INNOVATION' : chosenRealm);
 
       document.getElementById('creds-username').textContent = createdUsername;
       document.getElementById('creds-password').textContent = 'hogwarts-legacy';
       document.getElementById('creds-team-name').textContent = payload.team_name;
       document.getElementById('creds-problem-code').textContent = assignedCode;
       document.getElementById('creds-problem-title').textContent = assignedTitle;
-      document.getElementById('creds-realm').textContent = assignedRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity';
+      document.getElementById('creds-realm').textContent = isOI ? '💡 Open Innovation' : (assignedRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity');
       document.getElementById('create-team-success-step').classList.remove('hidden');
 
-      const successMsg = `Team '${payload.team_name}' registered successfully! Assigned Problem Statement: ${assignedCode} — ${assignedTitle}`;
+      const successMsg = isOI
+        ? `Team '${payload.team_name}' registered successfully in Open Innovation Track!`
+        : `Team '${payload.team_name}' registered successfully! Assigned Problem Statement: ${assignedCode} — ${assignedTitle}`;
       if (window.toast) toast.success(successMsg);
       else showAlert(successMsg);
       loadTeams();
