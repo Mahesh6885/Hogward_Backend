@@ -87,7 +87,6 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
         college_name=college,
         organization=college,
         department=data.department.strip() if data.department else None,
-        academic_year=data.academic_year.strip() if data.academic_year else None,
         username=username,
         email=str(data.email),
         password_hash=hash_password(raw_pass),
@@ -169,23 +168,31 @@ def list_users(
     domain_name: Optional[str] = None,
     status_filter: Optional[str] = None,
     search: Optional[str] = None,
+    round_filter: Optional[int] = None,
 ):
+    from app.models.project import Project
     query = db.query(User).filter(User.role == UserRole.USER)
     if domain_name:
-        query = query.join(Domain).filter(Domain.name == domain_name)
+        query = query.join(Domain, User.domain_id == Domain.id).filter(Domain.name == domain_name)
     if status_filter:
         query = query.filter(User.status == status_filter)
+    if round_filter is not None:
+        query = query.join(Project, User.id == Project.user_id).filter(Project.current_round == round_filter)
     if search:
         search_pattern = f"%{search.strip()}%"
+        # Join projects to allow searching by project_code
+        if round_filter is None:
+            query = query.outerjoin(Project, User.id == Project.user_id)
         query = query.filter(
             or_(
                 User.team_name.ilike(search_pattern),
                 User.team_leader.ilike(search_pattern),
                 User.username.ilike(search_pattern),
                 User.name.ilike(search_pattern),
+                Project.project_code.ilike(search_pattern),
             )
         )
-    query = query.order_by(User.created_at.desc())
+    query = query.distinct().order_by(User.created_at.desc())
     return paginate(query, page, page_size)
 
 
@@ -228,8 +235,6 @@ def update_user(db: Session, user_id: int, data: UserUpdate, admin: User) -> Use
 
     if data.department is not None:
         user.department = data.department.strip() if data.department else None
-    if data.academic_year is not None:
-        user.academic_year = data.academic_year.strip() if data.academic_year else None
 
     if data.email is not None:
         existing = db.query(User).filter(User.email == str(data.email), User.id != user_id).first()

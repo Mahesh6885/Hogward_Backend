@@ -153,7 +153,6 @@ class TeamUserBasic(BaseModel):
     college_name: Optional[str] = None
     organization: Optional[str] = None
     department: Optional[str] = None
-    academic_year: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

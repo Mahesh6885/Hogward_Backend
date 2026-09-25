@@ -30,7 +30,6 @@ class User(Base):
     organization: Mapped[str | None] = mapped_column(String(255), nullable=True)
     college_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     department: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    academic_year: Mapped[str | None] = mapped_column(String(50), nullable=True)
     team_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     team_leader: Mapped[str | None] = mapped_column(String(255), nullable=True)
     member_one: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -27,7 +27,6 @@ def run_e2e():
             "member_three": "Marcus Wright",
             "college_name": "SkyNet Defense Academy",
             "department": "Artificial Intelligence",
-            "academic_year": "2025-2026",
             "username": "team_titan",
             "email": "titan@skynet.edu",
             "password": "TitanSecret2026!",

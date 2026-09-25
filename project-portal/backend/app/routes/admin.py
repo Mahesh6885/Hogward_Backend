@@ -88,11 +88,12 @@ def _handle_list_teams(
     search: Optional[str],
     domain: Optional[str],
     status: Optional[str],
+    round_filter: Optional[int],
     page: int,
     page_size: int,
     db: Session,
 ):
-    items, total, total_pages = list_users(db, page, page_size, domain, status, search)
+    items, total, total_pages = list_users(db, page, page_size, domain, status, search, round_filter)
     return {
         "success": True,
         "message": "Teams retrieved",
@@ -109,12 +110,13 @@ def admin_list_teams(
     search: Optional[str] = Query(None),
     domain: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    round: Optional[int] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return _handle_list_teams(search, domain, status, page, page_size, db)
+    return _handle_list_teams(search, domain, status, round, page, page_size, db)
 
 
 @router.get("/users", status_code=200)
@@ -122,12 +124,13 @@ def admin_list_users(
     search: Optional[str] = Query(None),
     domain: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    round: Optional[int] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    return _handle_list_teams(search, domain, status, page, page_size, db)
+    return _handle_list_teams(search, domain, status, round, page, page_size, db)
 
 
 @router.post("/teams", status_code=201)
@@ -305,35 +308,83 @@ def admin_bulk_reset_password(
 
 @router.get("/export/teams", status_code=200)
 def admin_export_teams(
+    search: Optional[str] = Query(None),
     domain: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
+    round: Optional[int] = Query(None),
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Export all teams as CSV."""
+    """Export all registered teams respecting active search and filters as CSV."""
     import io, csv
+    from datetime import date
     from fastapi.responses import StreamingResponse
-    items, _, _ = list_users(db, 1, 1000, domain, status, None)
+
+    items, _, _ = list_users(db, 1, 10000, domain, status, search, round)
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["ID", "Team Name", "Leader", "Email", "Domain", "College", "Members", "Status", "Project Status", "Submitted At", "Edit Permission"])
+
+    # Columns: Project Code, Team Name, Team Leader, Username, Domain, Assigned Problem Statement ID, Project Title, Project Status, Current Review Round, GitHub Repository, Submission Date, Edit Permission (Enabled / Disabled)
+    writer.writerow([
+        "Project Code",
+        "Team Name",
+        "Team Leader",
+        "Username",
+        "Domain",
+        "Assigned Problem Statement ID",
+        "Project Title",
+        "Project Status",
+        "Current Review Round",
+        "GitHub Repository",
+        "Submission Date",
+        "Edit Permission",
+    ])
+
     for u in items:
         domain_name = u.domain.name if u.domain else ""
         project = u.projects[0] if u.projects else None
-        members = ", ".join(filter(None, [u.member_one, u.member_two, u.member_three]))
+
+        prj_code = project.project_code if project else "—"
+        ps_code = ""
+        if project and project.assigned_problem_statement:
+            ps_code = project.assigned_problem_statement.problem_code
+        elif project and project.assigned_problem_statement_id:
+            ps_code = str(project.assigned_problem_statement_id)
+        else:
+            ps_code = "—"
+
+        prj_title = project.project_title or project.custom_topic or (project.topic.title if project and project.topic else "—") if project else "—"
+        prj_status = project.status if project else "NOT_SUBMITTED"
+        cur_round = str(project.current_round) if project else "—"
+        github = project.github_url or "—" if project else "—"
+        sub_date = project.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if (project and project.submitted_at) else "—"
+        edit_perm = "Enabled" if getattr(u, "edit_permission", False) else "Disabled"
+
         writer.writerow([
-            u.id, u.team_name or u.name, u.team_leader or u.name,
-            u.email, domain_name, u.college_name or u.organization,
-            members, u.status,
-            project.status if project else "",
-            project.submitted_at.isoformat() if project and project.submitted_at else "",
-            getattr(u, "edit_permission", False),
+            prj_code,
+            u.team_name or u.name,
+            u.team_leader or u.name,
+            u.username,
+            domain_name,
+            ps_code,
+            prj_title,
+            prj_status,
+            cur_round,
+            github,
+            sub_date,
+            edit_perm,
         ])
+
+    today_str = date.today().strftime("%Y-%m-%d")
+    filename = f"hogwarts_legacy_teams_{today_str}.csv"
     output.seek(0)
+    # Prefix with UTF-8 BOM so Excel opens with UTF-8 encoding seamlessly
+    csv_bytes = ("\ufeff" + output.getvalue()).encode("utf-8")
+
     return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=teams_export.csv"}
+        iter([csv_bytes]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
 
 
@@ -560,7 +611,6 @@ def _user_dict(user: User) -> dict:
         "college_name": user.college_name or user.organization,
         "organization": user.organization or user.college_name,
         "department": user.department,
-        "academic_year": user.academic_year,
         "username": user.username,
         "email": user.email,
         "phone": user.phone,
@@ -595,7 +645,6 @@ def _project_dict(project: Project) -> dict:
         "college_name": u.college_name or u.organization,
         "organization": u.organization or u.college_name,
         "department": u.department,
-        "academic_year": u.academic_year,
     }
     p_code = project.assigned_problem_statement.problem_code if project.assigned_problem_statement else None
     return {

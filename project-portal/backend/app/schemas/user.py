@@ -26,7 +26,6 @@ class UserCreate(BaseModel):
     college_name: Optional[str] = None
     organization: Optional[str] = None
     department: Optional[str] = None
-    academic_year: Optional[str] = None
 
     username: Optional[str] = None
     email: EmailStr
@@ -97,7 +96,6 @@ class UserUpdate(BaseModel):
     member_three: Optional[str] = None
     college_name: Optional[str] = None
     department: Optional[str] = None
-    academic_year: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     organization: Optional[str] = None
@@ -136,7 +134,6 @@ class TeamResponse(BaseModel):
     college_name: Optional[str]
     organization: Optional[str]
     department: Optional[str]
-    academic_year: Optional[str]
     username: str
     email: str
     phone: Optional[str]
@@ -160,7 +157,6 @@ class UserResponse(BaseModel):
     member_three: Optional[str] = None
     college_name: Optional[str] = None
     department: Optional[str] = None
-    academic_year: Optional[str] = None
     username: str
     email: str
     phone: Optional[str]

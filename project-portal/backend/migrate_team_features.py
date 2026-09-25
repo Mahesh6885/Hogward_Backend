@@ -22,7 +22,6 @@ def run_migration():
                 ("member_three", "VARCHAR(255)"),
                 ("college_name", "VARCHAR(255)"),
                 ("department", "VARCHAR(255)"),
-                ("academic_year", "VARCHAR(50)"),
             ]
             for col_name, col_type in user_columns:
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type};"))

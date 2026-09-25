@@ -34,7 +34,6 @@ def _serialize_project(project) -> dict:
         "college_name": u.college_name or u.organization,
         "organization": u.organization or u.college_name,
         "department": u.department,
-        "academic_year": u.academic_year,
         "edit_permission": getattr(u, "edit_permission", False),
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,

@@ -237,6 +237,12 @@
           <option value="ACTIVE">Active</option>
           <option value="INACTIVE">Inactive</option>
         </select>
+        <select id="filter-team-round">
+          <option value="">All Rounds</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+        </select>
         <button class="btn btn-ghost btn-sm" id="btn-refresh-teams">🔄 Refresh</button>
         <button class="btn btn-ghost btn-sm" id="btn-export-csv" title="Export to CSV">⬇️ Export CSV</button>
       </div>
@@ -538,7 +544,7 @@
         </div>
       </div>
 
-      <div class="grid-3">
+      <div class="grid-2">
         <div class="form-group">
           <label class="form-label" for="edit-team-college">College / Organization</label>
           <input class="form-input" type="text" id="edit-team-college" />
@@ -546,10 +552,6 @@
         <div class="form-group">
           <label class="form-label" for="edit-team-dept">Department</label>
           <input class="form-input" type="text" id="edit-team-dept" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="edit-team-year">Academic Year</label>
-          <input class="form-input" type="text" id="edit-team-year" />
         </div>
       </div>
 
@@ -958,11 +960,13 @@
     const search = document.getElementById('search-team-name').value.trim();
     const domain = document.getElementById('filter-team-domain').value;
     const status = document.getElementById('filter-team-status').value;
+    const round = document.getElementById('filter-team-round')?.value || '';
 
     let query = `/api/admin/teams?page=${teamsPage}&page_size=15`;
     if (search) query += `&search=${encodeURIComponent(search)}`;
     if (domain) query += `&domain=${domain}`;
     if (status) query += `&status=${status}`;
+    if (round) query += `&round=${round}`;
 
     try {
       const resp = await api.get(query);
@@ -1028,6 +1032,7 @@
   document.getElementById('search-team-name').addEventListener('input', () => { teamsPage = 1; loadTeams(); });
   document.getElementById('filter-team-domain').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
   document.getElementById('filter-team-status').addEventListener('change', () => { teamsPage = 1; loadTeams(); });
+  document.getElementById('filter-team-round')?.addEventListener('change', () => { teamsPage = 1; loadTeams(); });
   document.getElementById('btn-refresh-teams').addEventListener('click', loadTeams);
 
   // Select all checkbox
@@ -1087,20 +1092,59 @@
 
   // CSV Export
   document.getElementById('btn-export-csv').addEventListener('click', async () => {
+    const search = document.getElementById('search-team-name').value.trim();
     const domain = document.getElementById('filter-team-domain').value;
     const status = document.getElementById('filter-team-status').value;
+    const round = document.getElementById('filter-team-round')?.value || '';
+
     let url = '/api/admin/export/teams';
     const params = [];
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
     if (domain) params.push(`domain=${domain}`);
     if (status) params.push(`status=${status}`);
+    if (round) params.push(`round=${round}`);
     if (params.length) url += '?' + params.join('&');
+
     try {
-      const token = localStorage.getItem('hw_token');
-      const resp = await fetch(`http://127.0.0.1:8000${url}`, { headers: { Authorization: `Bearer ${token}` } });
+      const token = getToken();
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const apiBase = isDev ? 'http://localhost:8000' : window.location.origin;
+
+      const resp = await fetch(`${apiBase}${url}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Export request failed (${resp.status})`);
+      }
+
+      // Extract filename from Content-Disposition header if available
+      let filename = `hogwarts_legacy_teams_${new Date().toISOString().split('T')[0]}.csv`;
+      const disposition = resp.headers.get('Content-Disposition');
+      if (disposition && disposition.indexOf('filename=') !== -1) {
+        const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+        if (matches != null && matches[1]) {
+          filename = matches[1].replace(/['"]/g, '');
+        }
+      }
+
       const blob = await resp.blob();
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'teams_export.csv'; a.click();
-      toast.success('CSV exported successfully');
-    } catch(e) { toast.error('Export failed: ' + e.message); }
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(blobUrl);
+      a.remove();
+
+      if (window.toast) toast.success(`Exported ${filename}`);
+      else showAlert(`CSV exported: ${filename}`);
+    } catch(e) {
+      if (window.toast) toast.error('Export failed: ' + e.message);
+      else showAlert('Export failed: ' + e.message, 'error');
+    }
   });
 
   // Toggle edit permission for individual team
@@ -1233,7 +1277,6 @@
             <div class="doc-meta-item"><span class="doc-meta-label">Username</span><span class="doc-meta-value font-mono">${escHtml(t.username)}</span></div>
             <div class="doc-meta-item"><span class="doc-meta-label">College</span><span class="doc-meta-value">${escHtml(t.college_name || t.organization || '—')}</span></div>
             <div class="doc-meta-item"><span class="doc-meta-label">Department</span><span class="doc-meta-value">${escHtml(t.department || '—')}</span></div>
-            <div class="doc-meta-item"><span class="doc-meta-label">Academic Year</span><span class="doc-meta-value">${escHtml(t.academic_year || '—')}</span></div>
             <div class="doc-meta-item"><span class="doc-meta-label">Email</span><span class="doc-meta-value font-mono">${escHtml(t.email)}</span></div>
             <div class="doc-meta-item"><span class="doc-meta-label">Phone</span><span class="doc-meta-value font-mono">${escHtml(t.phone || '—')}</span></div>
           </div>
@@ -1273,7 +1316,6 @@
       document.getElementById('edit-team-phone').value = t.phone || '';
       document.getElementById('edit-team-college').value = t.college_name || t.organization || '';
       document.getElementById('edit-team-dept').value = t.department || '';
-      document.getElementById('edit-team-year').value = t.academic_year || '';
       document.getElementById('edit-team-domain').value = t.domain?.name || 'AI';
       document.getElementById('edit-team-status').value = t.status || 'ACTIVE';
       document.getElementById('edit-member-1').value = t.member_one || '';
@@ -1299,7 +1341,6 @@
       college_name: document.getElementById('edit-team-college').value.trim() || null,
       organization: document.getElementById('edit-team-college').value.trim() || null,
       department: document.getElementById('edit-team-dept').value.trim() || null,
-      academic_year: document.getElementById('edit-team-year').value.trim() || null,
       domain: document.getElementById('edit-team-domain').value,
       status: document.getElementById('edit-team-status').value,
       member_one: document.getElementById('edit-member-1').value.trim() || null,

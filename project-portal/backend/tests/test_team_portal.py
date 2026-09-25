@@ -14,7 +14,6 @@ class TestTeamPortalFeatures:
             "member_three": "Diana Prince",
             "college_name": "MIT Institute",
             "department": "Computer Science",
-            "academic_year": "2025-2026",
             "username": "team_alpha",
             "email": "alpha@example.com",
             "password": "AlphaPassword123!",
@@ -30,7 +29,6 @@ class TestTeamPortalFeatures:
         assert data["member_three"] == "Diana Prince"
         assert data["college_name"] == "MIT Institute"
         assert data["department"] == "Computer Science"
-        assert data["academic_year"] == "2025-2026"
         assert data["domain"]["name"] == "AI"
 
     def test_team_login_and_get_team_details(self, client, admin_user, domains):
@@ -46,7 +44,6 @@ class TestTeamPortalFeatures:
                 "member_three": "Jill Doe",
                 "college_name": "Tech University",
                 "department": "Cybersecurity",
-                "academic_year": "Year 3",
                 "username": "cyber_guardians",
                 "email": "guardians@example.com",
                 "password": "GuardPassword123!",

@@ -1,4 +1,4 @@
-﻿"""
+"""
 seed_bulk_users.py — Adds 40 test users to the database.
 
 Idempotent: skips users that already exist (by username).
@@ -106,7 +106,7 @@ def main():
                 team_name=team_name, team_leader=leader,
                 member_one=m1, member_two=m2, member_three=m3,
                 college_name=college, organization=college,
-                department=dept, academic_year=yr,
+                department=dept,
             )
             db.add(user)
             db.flush()

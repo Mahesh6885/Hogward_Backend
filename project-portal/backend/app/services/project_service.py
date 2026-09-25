@@ -215,8 +215,13 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
     if existing and existing.is_submitted and not getattr(user, "edit_permission", False):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={"success": False, "message": "You already have a submitted project. Editing requires admin permission.", "error_code": "PROJECT_EXISTS"},
+            detail={"success": False, "message": "You already have a project for this user. Multiple projects are not allowed. Editing requires admin permission.", "error_code": "PROJECT_EXISTS"},
         )
+
+    topic_id = None
+    if getattr(data, "topic_id", None):
+        topic = _validate_topic_for_domain(db, user, data.topic_id)
+        topic_id = topic.id
 
     tech_stack = _normalize_list_or_str(data.technology_stack or data.technologies)
     objectives_str = _normalize_list_or_str(data.objectives)
@@ -284,6 +289,7 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
             project_code=f"PRJ-{prefix}-{user.id:04d}",
             user_id=user.id,
             domain_id=user.domain_id,
+            topic_id=topic_id,
             assigned_problem_statement_id=assigned_ps_id,
             custom_topic=custom_topic,
             project_title=project_title,
@@ -305,6 +311,8 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
         db.add(project)
     else:
         # Update draft project with final submission data
+        if topic_id is not None:
+            existing.topic_id = topic_id
         if assigned_ps_id is not None:
             existing.assigned_problem_statement_id = assigned_ps_id
         if custom_topic is not None:

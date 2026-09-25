@@ -314,7 +314,6 @@ def seed_sample_users(db, domain_map: dict) -> None:
                 college_name=org,
                 organization=org,
                 department=dept,
-                academic_year=yr,
                 username=uname,
                 email=email,
                 password_hash=hash_password("UserPassword123!"),
@@ -335,7 +334,6 @@ def seed_sample_users(db, domain_map: dict) -> None:
                 user.member_three = m3
                 user.college_name = org
                 user.department = dept
-                user.academic_year = yr
 
         # Check or create project with assigned problem statement
         project = db.query(Project).filter(Project.user_id == user.id).first()
@@ -447,7 +445,7 @@ def seed_bulk_users_inline(db, domain_map: dict) -> None:
             team_name=name, team_leader=leader,
             member_one=m1, member_two=m2, member_three=m3,
             college_name=college, organization=college,
-            department=dept, academic_year=yr,
+            department=dept,
         )
         db.add(user)
         db.flush()

@@ -31,7 +31,6 @@ def _user_dict(user: User) -> dict:
         "college_name": user.college_name or user.organization,
         "organization": user.organization or user.college_name,
         "department": user.department,
-        "academic_year": user.academic_year,
         "username": user.username,
         "email": user.email,
         "phone": user.phone,

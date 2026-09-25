@@ -191,6 +191,8 @@
     }
   }, { passive: true });
 
+  let isRunning = false;
+
   function render() {
     ctx.clearRect(0, 0, width, height);
 
@@ -216,8 +218,31 @@
       }
     }
 
-    requestAnimationFrame(render);
+    if (ripples.length > 0 || particles.length > 0) {
+      requestAnimationFrame(render);
+    } else {
+      isRunning = false;
+    }
   }
 
-  render();
+  function scheduleRender() {
+    if (!isRunning) {
+      isRunning = true;
+      requestAnimationFrame(render);
+    }
+  }
+
+  // Hook into additions
+  const origPushSparkle = particles.push.bind(particles);
+  particles.push = function(...items) {
+    const res = origPushSparkle(...items);
+    scheduleRender();
+    return res;
+  };
+  const origPushRipple = ripples.push.bind(ripples);
+  ripples.push = function(...items) {
+    const res = origPushRipple(...items);
+    scheduleRender();
+    return res;
+  };
 })();

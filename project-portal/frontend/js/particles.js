@@ -4,12 +4,16 @@
  */
 
 export function initParticles(options = {}) {
+  // Detect admin page for lower density
+  const isAdmin = window.location.pathname.includes('admin') || document.body.dataset.page === 'admin';
+  const defaultCount = window.innerWidth < 768 ? 16 : (isAdmin ? 24 : 45);
+
   const {
-    count = window.innerWidth < 768 ? 30 : 60,
+    count = defaultCount,
     color = '#D4AF37',
-    opacity = 0.6,
-    speed = 0.4,
-    size = { min: 1, max: 3 },
+    opacity = 0.5,
+    speed = 0.35,
+    size = { min: 1, max: 2.5 },
   } = options;
 
   const canvas = document.createElement('canvas');
@@ -17,18 +21,21 @@ export function initParticles(options = {}) {
   canvas.style.cssText = `
     position: fixed;
     top: 0; left: 0;
-    width: 100%; height: 100%;
+    width: 100vw; height: 100vh;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.7;
+    opacity: 0.65;
+    will-change: transform;
+    transform: translateZ(0);
   `;
   document.body.prepend(canvas);
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
   let W = 0, H = 0;
   let particles = [];
   let animId;
   let paused = false;
+  let scrollTimeout = null;
 
   function resize() {
     W = canvas.width  = window.innerWidth;
@@ -58,7 +65,7 @@ export function initParticles(options = {}) {
       this.life = 0;
       this.maxLife = Math.random() * 200 + 100;
       // Occasional sparkle
-      this.sparkle = Math.random() < 0.15;
+      this.sparkle = Math.random() < 0.12;
       this.sparkleAngle = 0;
     }
 
@@ -67,7 +74,7 @@ export function initParticles(options = {}) {
       this.y += this.vy;
       this.a += this.da;
       this.life++;
-      this.sparkleAngle += 0.05;
+      this.sparkleAngle += 0.04;
 
       if (this.a <= 0) this.da *= -1;
       if (this.a > opacity) this.da *= -1;
@@ -77,20 +84,17 @@ export function initParticles(options = {}) {
     draw() {
       ctx.save();
       if (this.sparkle) {
-        // Draw small star shape
         ctx.translate(this.x, this.y);
         ctx.rotate(this.sparkleAngle);
         ctx.globalAlpha = this.a;
         ctx.fillStyle = `rgba(${rgb},1)`;
-        drawStar(ctx, 0, 0, this.r * 2.5, this.r * 1, 4);
+        drawStar(ctx, 0, 0, this.r * 2.2, this.r * 0.9, 4);
         ctx.fill();
       } else {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
         ctx.globalAlpha = this.a;
         ctx.fillStyle = `rgba(${rgb},1)`;
-        ctx.shadowBlur = 6;
-        ctx.shadowColor = `rgba(${rgb},0.8)`;
         ctx.fill();
       }
       ctx.restore();
@@ -126,11 +130,24 @@ export function initParticles(options = {}) {
 
   window.addEventListener('resize', () => {
     resize();
-    // Re-clamp positions
     for (const p of particles) {
       if (p.x > W) p.x = Math.random() * W;
     }
-  });
+  }, { passive: true });
+
+  // Pause particle loop during fast scrolling to eliminate lag
+  const scrollTarget = document.querySelector('.main-content') || window;
+  scrollTarget.addEventListener('scroll', () => {
+    if (!paused) {
+      paused = true;
+      cancelAnimationFrame(animId);
+    }
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+      paused = false;
+      animId = requestAnimationFrame(animate);
+    }, 120);
+  }, { passive: true });
 
   // Pause when tab is hidden (performance)
   document.addEventListener('visibilitychange', () => {
