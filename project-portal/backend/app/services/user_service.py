@@ -108,45 +108,6 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             detail={"success": False, "message": "Username or email already exists", "error_code": "DUPLICATE"},
         )
 
-    # Automatic Random Problem Statement Assignment on Team Creation
-    import random
-    from app.models.problem_statement import ProblemStatement
-    from app.models.project import Project, ProjectStatus
-
-    if data.role == UserRole.USER:
-        if domain.name in (DomainName.AI.value, DomainName.CYBERSECURITY.value):
-            statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == domain.id).all()
-            if statements:
-                chosen = random.choice(statements)
-                chosen.is_assigned = True
-                chosen.assigned_team_id = user.id
-                prefix = "AI" if domain.name == DomainName.AI.value else "CY"
-                project_code = f"PRJ-{prefix}-{user.id:04d}"
-                project = Project(
-                    project_code=project_code,
-                    user_id=user.id,
-                    domain_id=domain.id,
-                    assigned_problem_statement_id=chosen.id,
-                    project_title=f"{chosen.problem_code} Solution Project",
-                    problem_statement=chosen.detailed_description,
-                    status=ProjectStatus.DRAFT,
-                    is_submitted=False,
-                )
-                db.add(project)
-        elif domain.name == DomainName.OPEN_INNOVATION.value:
-            project_code = f"PRJ-OI-{user.id:04d}"
-            project = Project(
-                project_code=project_code,
-                user_id=user.id,
-                domain_id=domain.id,
-                assigned_problem_statement_id=None,
-                project_title=None,
-                problem_statement=None,
-                status=ProjectStatus.DRAFT,
-                is_submitted=False,
-            )
-            db.add(project)
-
     # Audit log
     log = AuditLog(
         admin_id=created_by.id,
