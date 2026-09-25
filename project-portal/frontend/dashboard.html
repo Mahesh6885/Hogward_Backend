@@ -352,6 +352,34 @@
         </div>
       </div>
 
+      <!-- Assigned Official Problem Statement Card (Home Dashboard) -->
+      <div id="home-ps-card" class="enchanted-parchment-card mb-3 hidden">
+        <div class="ps-card-header">
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+            <span class="ps-code-pill font-mono" id="home-ps-code">AI-PS-01</span>
+            <span class="badge" id="home-ps-realm-badge">⚡ AI Realm</span>
+            <span class="badge" id="home-ps-diff-badge">INTERMEDIATE</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-view-home-problem-modal" onclick="openProblemStatementModal()">
+              🔍 [ View ] Full Problem Statement
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchView('project')">
+              📁 My Project →
+            </button>
+          </div>
+        </div>
+        <div class="ps-title-text" id="home-ps-title" style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--gold-light);margin:0.75rem 0 0.5rem 0">
+          Loading Official Problem Statement…
+        </div>
+        <div class="ps-description-box" id="home-problem-preview" style="max-height:240px;overflow-y:auto;white-space:pre-wrap;line-height:1.65;font-size:0.875rem;color:var(--text-secondary);background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem">
+          Loading official problem statement scope and requirements…
+        </div>
+        <p class="text-xs text-muted" style="margin:0.5rem 0 0 0">
+          📜 <em>Official Hogwarts Legacy 5.0 Challenge. Assigned to your team for Hackathon evaluation.</em>
+        </p>
+      </div>
+
       <!-- State: AI / Cybersecurity — Assigned Problem Statement Banner -->
       <div id="state-ps-assigned" class="hidden">
         <div id="domain-header" class="domain-header domain-header-ai mb-3">
@@ -1169,7 +1197,11 @@
     const isEditorActive = !document.getElementById('project-editor')?.classList.contains('hidden');
 
     if (fieldKey === 'problem_statement') {
-      content = currentProblemStatement || cachedProject?.problem_statement || (cachedProject?.problem_statement_rel ? cachedProject.problem_statement_rel.description : '') || 'Official problem statement.';
+      const psObj = cachedProject?.problem_statement;
+      const psDesc = (typeof psObj === 'object' && psObj !== null)
+        ? (psObj.description || psObj.detailed_description || psObj.problem_statement || '')
+        : (typeof psObj === 'string' ? psObj : '');
+      content = currentProblemStatement || psDesc || cachedProject?.problem_description || cachedProject?.problem_statement_description || 'Official problem statement.';
     } else if (fieldKey === 'abstract') {
       content = (isEditorActive ? document.getElementById('draft-abstract')?.value : cachedProject?.abstract) || '';
     } else if (fieldKey === 'proposed_solution') {
@@ -1190,6 +1222,8 @@
     const bodyEl = document.getElementById('section-modal-body');
     if (!content || !content.trim()) {
       bodyEl.innerHTML = `<div class="text-muted text-center py-4" style="font-style:italic">No content provided yet for this section.</div>`;
+    } else if (fieldKey === 'problem_statement') {
+      bodyEl.innerHTML = `<div style="white-space:pre-wrap;word-break:break-word;line-height:1.75;font-size:0.95rem;color:var(--text-primary)">${escHtml(content)}</div>`;
     } else if (fieldKey === 'project_description') {
       bodyEl.innerHTML = window.renderFormattedDescription(content);
     } else if (fieldKey === 'technologies' && content.includes(',')) {
@@ -1458,11 +1492,88 @@
         updateSummaryCard(null);
         handleNotSubmittedFlow();
       }
+      // 3. Populate Home problem statement card
+      await populateHomeProblemStatement(cachedProject, cachedTeam);
     } catch (e) {
       showAlert('home-alert', 'error', e.message);
       showState(null);
     } finally {
       hideLoader(300);
+    }
+  }
+
+  async function populateHomeProblemStatement(prj, team) {
+    const card = document.getElementById('home-ps-card');
+    if (!card) return;
+
+    const domainName = team?.domain?.name || prj?.realm || '';
+    if (domainName === 'OPEN_INNOVATION' || domainName === 'Open Innovation') {
+      card.classList.add('hidden');
+      return;
+    }
+
+    try {
+      let ps = null;
+      if (prj && prj.problem_statement && typeof prj.problem_statement === 'object' && prj.problem_statement.description) {
+        ps = prj.problem_statement;
+      }
+
+      if (!ps || !ps.description) {
+        try {
+          const res = await api.get('/api/problem-statements/assigned');
+          if (res && res.data) {
+            ps = res.data;
+          }
+        } catch (_) {}
+      }
+
+      if (!ps || !ps.description) {
+        try {
+          const res2 = await api.get('/api/projects/me/problem-statement');
+          if (res2 && res2.data) {
+            ps = res2.data;
+          }
+        } catch (_) {}
+      }
+
+      const psCode = (ps && ps.problem_code) || prj?.problem_code || (domainName.toUpperCase().includes('CYBER') ? 'CY-PS-01' : 'AI-PS-01');
+      const psRealm = (ps && ps.realm) || prj?.realm || (domainName.toUpperCase().includes('CYBER') ? 'CYBERSECURITY' : 'AI');
+      const isCyber = psRealm === 'CYBERSECURITY' || psRealm.includes('CYBER');
+      const psTitle = (ps && ps.title) || prj?.problem_statement_title || prj?.project_title || 'Official Challenge';
+      const psDiff = (ps && ps.difficulty) || 'INTERMEDIATE';
+      const psDesc = (ps && (ps.description || ps.detailed_description || ps.problem_statement)) ||
+                     prj?.problem_description || prj?.problem_statement_description ||
+                     (typeof prj?.problem_statement === 'string' ? prj.problem_statement : '') ||
+                     'Official Hogwarts Legacy 5.0 challenge.';
+
+      currentProblemStatement = psDesc;
+      currentProblemTitle = `${psCode}: ${psTitle}`;
+
+      const codeEl = document.getElementById('home-ps-code');
+      if (codeEl) codeEl.textContent = psCode;
+
+      const titleEl = document.getElementById('home-ps-title');
+      if (titleEl) titleEl.textContent = `${psCode} — ${psTitle}`;
+
+      const prevEl = document.getElementById('home-problem-preview');
+      if (prevEl) prevEl.textContent = psDesc;
+
+      const realmBadge = document.getElementById('home-ps-realm-badge');
+      if (realmBadge) {
+        realmBadge.className = `badge ${isCyber ? 'badge-realm-cyber' : 'badge-realm-ai'}`;
+        realmBadge.textContent = isCyber ? '🛡️ Cybersecurity Realm' : '⚡ AI Realm';
+      }
+
+      const diffBadge = document.getElementById('home-ps-diff-badge');
+      if (diffBadge) {
+        const diffClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+        diffBadge.className = `badge ${diffClass}`;
+        diffBadge.textContent = psDiff;
+      }
+
+      card.classList.remove('hidden');
+    } catch (err) {
+      console.warn('Error populating home problem statement card:', err);
     }
   }
 
@@ -1580,8 +1691,8 @@
         document.getElementById('domain-title').textContent = `Your ${isAI ? 'AI' : 'Cybersecurity'} Problem Statement Has Been Assigned`;
         document.getElementById('domain-description').textContent = 'Your team has been assigned a predefined problem statement. It is read-only. Begin drafting in My Project.';
 
-        currentProblemStatement = ps.detailed_description || ps.problem_statement || '';
-        currentProblemTitle = ps.problem_code || ps.title || 'Assigned Problem Statement';
+        currentProblemStatement = ps.description || ps.detailed_description || ps.problem_statement || '';
+        currentProblemTitle = ps.problem_code ? `${ps.problem_code}: ${ps.title}` : (ps.title || 'Assigned Problem Statement');
 
         document.getElementById('ps-assigned-code').textContent = ps.problem_code ? `Problem Code: ${ps.problem_code}` : 'Assigned Problem Statement';
         document.getElementById('ps-assigned-preview').textContent = currentProblemStatement || 'No description available.';
@@ -1662,9 +1773,62 @@
       const p = res.data;
       cachedProject = p;
 
-      // Store problem statement for modal popup
-      currentProblemStatement = p.problem_statement || (p.problem_statement_rel ? p.problem_statement_rel.description : '') || (p.problem_statement ? p.problem_statement.description : '') || 'Official problem statement.';
-      currentProblemTitle = p.problem_statement_title || p.project_title || (p.problem_statement ? p.problem_statement.title : '') || 'Official Problem Statement';
+      // Store problem statement for modal popup and cards
+      let psObj = p.problem_statement;
+      if (!psObj || typeof psObj !== 'object' || !psObj.description) {
+        try {
+          const assignedRes = await api.get('/api/problem-statements/assigned');
+          if (assignedRes && assignedRes.data) {
+            psObj = assignedRes.data;
+          }
+        } catch (_) {}
+      }
+
+      const psCode = p.problem_code || (psObj && typeof psObj === 'object' ? psObj.problem_code : '') || (p.realm === 'CYBERSECURITY' ? 'CY-PS-01' : 'AI-PS-01');
+      const psRealm = p.realm || (psObj && typeof psObj === 'object' ? psObj.realm : '') || (cachedTeam?.domain?.name || 'AI');
+      const isCyber = psRealm === 'CYBERSECURITY' || psRealm.includes('CYBER');
+      const psTitle = p.problem_statement_title || (psObj && typeof psObj === 'object' ? psObj.title : '') || p.project_title || 'Official Challenge';
+      const psDiff = (psObj && typeof psObj === 'object' && psObj.difficulty) || 'INTERMEDIATE';
+      const psDesc = (psObj && typeof psObj === 'object' ? (psObj.description || psObj.detailed_description || psObj.problem_statement) : '') ||
+                     p.problem_description || p.problem_statement_description ||
+                     (typeof p.problem_statement === 'string' ? p.problem_statement : '') || '';
+
+      currentProblemStatement = psDesc || 'Official problem statement.';
+      currentProblemTitle = `${psCode}: ${psTitle}`;
+
+      const realmBadgeClass = isCyber ? 'badge-realm-cyber' : 'badge-realm-ai';
+      const realmBadgeText = isCyber ? '🛡️ Cybersecurity Realm' : '⚡ AI Realm';
+      const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+
+      // Populate draft problem statement card elements
+      if (document.getElementById('draft-ps-code')) document.getElementById('draft-ps-code').textContent = psCode;
+      if (document.getElementById('draft-ps-title')) document.getElementById('draft-ps-title').textContent = `${psCode} — ${psTitle}`;
+      if (document.getElementById('draft-problem-preview')) document.getElementById('draft-problem-preview').textContent = psDesc || 'Loading official problem statement scope and requirements…';
+      if (document.getElementById('draft-ps-realm-badge')) {
+        const rEl = document.getElementById('draft-ps-realm-badge');
+        rEl.className = `badge ${realmBadgeClass}`;
+        rEl.textContent = realmBadgeText;
+      }
+      if (document.getElementById('draft-ps-diff-badge')) {
+        const dEl = document.getElementById('draft-ps-diff-badge');
+        dEl.className = `badge ${diffBadgeClass}`;
+        dEl.textContent = psDiff;
+      }
+
+      // Populate read-only problem statement card elements
+      if (document.getElementById('doc-ps-code')) document.getElementById('doc-ps-code').textContent = psCode;
+      if (document.getElementById('doc-ps-title')) document.getElementById('doc-ps-title').textContent = `${psCode} — ${psTitle}`;
+      if (document.getElementById('doc-problem')) document.getElementById('doc-problem').textContent = psDesc || '—';
+      if (document.getElementById('doc-ps-realm-badge')) {
+        const rEl = document.getElementById('doc-ps-realm-badge');
+        rEl.className = `badge ${realmBadgeClass}`;
+        rEl.textContent = realmBadgeText;
+      }
+      if (document.getElementById('doc-ps-diff-badge')) {
+        const dEl = document.getElementById('doc-ps-diff-badge');
+        dEl.className = `badge ${diffBadgeClass}`;
+        dEl.textContent = psDiff;
+      }
 
       const isSubmitted = p.is_submitted === true || (p.status && p.status !== 'DRAFT');
       const hasEditPermission = Boolean(p.edit_permission || (cachedTeam && cachedTeam.edit_permission));
@@ -1697,47 +1861,6 @@
           if (editBanner) editBanner.classList.add('hidden');
           if (draftBanner) draftBanner.classList.remove('hidden');
           if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Final Submit';
-        }
-
-        // Populate Problem Statement Card elements
-        const psObj = p.problem_statement;
-        const psCode = p.problem_code || (psObj ? psObj.problem_code : 'AI-PS-01');
-        const psRealm = p.realm || (psObj ? psObj.realm : 'AI');
-        const psTitle = p.project_title || (psObj ? psObj.title : 'Official Challenge');
-        const psDiff = (psObj && psObj.difficulty) || 'INTERMEDIATE';
-        const psDesc = (psObj && psObj.description) || p.problem_description || p.problem_statement || '';
-
-        const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
-        const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
-
-        // Set draft card
-        if (document.getElementById('draft-ps-code')) document.getElementById('draft-ps-code').textContent = psCode;
-        if (document.getElementById('draft-ps-title')) document.getElementById('draft-ps-title').textContent = psTitle;
-        if (document.getElementById('draft-problem-preview')) document.getElementById('draft-problem-preview').textContent = psDesc;
-        if (document.getElementById('draft-ps-realm-badge')) {
-          const rEl = document.getElementById('draft-ps-realm-badge');
-          rEl.className = `badge ${realmBadgeClass}`;
-          rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
-        }
-        if (document.getElementById('draft-ps-diff-badge')) {
-          const dEl = document.getElementById('draft-ps-diff-badge');
-          dEl.className = `badge ${diffBadgeClass}`;
-          dEl.textContent = psDiff;
-        }
-
-        // Set submitted read-only card
-        if (document.getElementById('doc-ps-code')) document.getElementById('doc-ps-code').textContent = psCode;
-        if (document.getElementById('doc-ps-title')) document.getElementById('doc-ps-title').textContent = psTitle;
-        if (document.getElementById('doc-problem')) document.getElementById('doc-problem').textContent = psDesc;
-        if (document.getElementById('doc-ps-realm-badge')) {
-          const rEl = document.getElementById('doc-ps-realm-badge');
-          rEl.className = `badge ${realmBadgeClass}`;
-          rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
-        }
-        if (document.getElementById('doc-ps-diff-badge')) {
-          const dEl = document.getElementById('doc-ps-diff-badge');
-          dEl.className = `badge ${diffBadgeClass}`;
-          dEl.textContent = psDiff;
         }
 
         document.getElementById('draft-abstract').value = p.abstract || '';
@@ -2291,32 +2414,37 @@
         } catch (_) {}
 
         if (!ps && cachedProject) {
-          ps = cachedProject.problem_statement || {
+          ps = (typeof cachedProject.problem_statement === 'object' && cachedProject.problem_statement) || {
             problem_code: cachedProject.problem_code,
             realm: cachedProject.realm,
-            title: cachedProject.project_title,
-            description: cachedProject.problem_statement,
+            title: cachedProject.problem_statement_title || cachedProject.project_title,
+            description: cachedProject.problem_description || cachedProject.problem_statement_description || cachedProject.problem_statement,
             difficulty: 'INTERMEDIATE',
           };
         }
 
         if (ps) {
-          const psRealm = ps.realm || 'AI';
-          const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
-          const diffBadgeClass = ps.difficulty === 'ADVANCED' ? 'badge-diff-advanced' : (ps.difficulty === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+          const psCode = ps.problem_code || cachedProject?.problem_code || '—';
+          const psRealm = ps.realm || cachedProject?.realm || (cachedTeam?.domain?.name || 'AI');
+          const isCyber = psRealm === 'CYBERSECURITY' || psRealm.includes('CYBER');
+          const realmBadgeClass = isCyber ? 'badge-realm-cyber' : 'badge-realm-ai';
+          const psDiff = ps.difficulty || 'INTERMEDIATE';
+          const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+          const psTitle = ps.title || cachedProject?.problem_statement_title || cachedProject?.project_title || 'Official Challenge';
+          const psDesc = ps.description || ps.detailed_description || ps.problem_statement || cachedProject?.problem_description || cachedProject?.problem_statement_description || '—';
 
-          if (document.getElementById('team-ps-code')) document.getElementById('team-ps-code').textContent = ps.problem_code || '—';
-          if (document.getElementById('team-ps-title')) document.getElementById('team-ps-title').textContent = ps.title || 'Official Challenge';
-          if (document.getElementById('team-ps-desc')) document.getElementById('team-ps-desc').textContent = ps.description || '—';
+          if (document.getElementById('team-ps-code')) document.getElementById('team-ps-code').textContent = psCode;
+          if (document.getElementById('team-ps-title')) document.getElementById('team-ps-title').textContent = `${psCode} — ${psTitle}`;
+          if (document.getElementById('team-ps-desc')) document.getElementById('team-ps-desc').textContent = psDesc;
           if (document.getElementById('team-ps-realm-badge')) {
             const rEl = document.getElementById('team-ps-realm-badge');
             rEl.className = `badge ${realmBadgeClass}`;
-            rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
+            rEl.textContent = isCyber ? '🛡️ Cybersecurity Realm' : '⚡ AI Realm';
           }
           if (document.getElementById('team-ps-diff-badge')) {
             const dEl = document.getElementById('team-ps-diff-badge');
             dEl.className = `badge ${diffBadgeClass}`;
-            dEl.textContent = ps.difficulty || 'INTERMEDIATE';
+            dEl.textContent = psDiff;
           }
         }
       } catch (err) {

@@ -317,38 +317,56 @@ def admin_update_project(
 def get_project_problem_statement(db: Session, user: User) -> dict:
     """Retrieve the problem statement for the current user's project."""
     project = get_user_project(db, user)
-    if project and project.problem_statement_rel:
+    ps = None
+    if project:
         ps = project.problem_statement_rel
+        if not ps and project.problem_statement_id:
+            ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.problem_statement_id).first()
+        if not ps and project.problem_code:
+            ps = db.query(ProblemStatement).filter(ProblemStatement.problem_code == project.problem_code).first()
+
+    # If project doesn't have an assigned statement yet, auto-assign from the user's realm
+    if not ps and project and not project.problem_statement_id:
+        realm_str = project.realm or (user.domain.name if user.domain else "AI")
+        if realm_str in ("AI", "CYBERSECURITY"):
+            from app.services.problem_statement_service import assign_balanced_problem_statement
+            try:
+                assigned_ps = assign_balanced_problem_statement(db, RealmEnum(realm_str))
+                if assigned_ps:
+                    project.problem_statement_id = assigned_ps.id
+                    project.problem_code = assigned_ps.problem_code
+                    project.realm = assigned_ps.realm
+                    if not project.project_title or project.project_title == "Project":
+                        project.project_title = assigned_ps.title
+                    if not project.problem_statement:
+                        project.problem_statement = assigned_ps.description
+                    db.commit()
+                    ps = assigned_ps
+            except Exception:
+                pass
+
+    if ps:
         return {
             "id": str(ps.id),
             "problem_code": ps.problem_code,
             "realm": ps.realm,
             "title": ps.title,
             "description": ps.description,
+            "detailed_description": ps.description,
+            "problem_statement": ps.description,
             "difficulty": ps.difficulty,
             "status": ps.status,
             "source": "official",
         }
-    if project and project.problem_statement_id:
-        ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.problem_statement_id).first()
-        if ps:
-            return {
-                "id": str(ps.id),
-                "problem_code": ps.problem_code,
-                "realm": ps.realm,
-                "title": ps.title,
-                "description": ps.description,
-                "difficulty": ps.difficulty,
-                "status": ps.status,
-                "source": "official",
-            }
 
     return {
-        "id": None,
-        "problem_code": project.problem_code if project else None,
-        "realm": project.realm if project else "AI",
+        "id": str(project.problem_statement_id) if (project and project.problem_statement_id) else None,
+        "problem_code": project.problem_code if project else "—",
+        "realm": project.realm if project else (user.domain.name if user.domain else "AI"),
         "title": project.project_title if project else "Hogwarts Legacy 5.0 Challenge",
-        "description": project.problem_statement if project else "Awaiting assignment.",
+        "description": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
+        "detailed_description": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
+        "problem_statement": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
         "difficulty": "INTERMEDIATE",
         "status": True,
         "source": "assigned",

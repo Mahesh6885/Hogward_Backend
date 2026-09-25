@@ -92,29 +92,55 @@ def get_assigned_problem_statement(
     ps = project.problem_statement_rel
     if not ps and project.problem_statement_id:
         ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.problem_statement_id).first()
+    if not ps and project.problem_code:
+        ps = db.query(ProblemStatement).filter(ProblemStatement.problem_code == project.problem_code).first()
 
-    if not ps:
+    # If team domain is AI or CYBERSECURITY and project has no problem statement linked, auto-assign one
+    if not ps and not project.problem_statement_id:
+        realm_str = project.realm or (current_user.domain.name if current_user.domain else "AI")
+        if realm_str in ("AI", "CYBERSECURITY"):
+            from app.services.problem_statement_service import assign_balanced_problem_statement
+            try:
+                assigned_ps = assign_balanced_problem_statement(db, RealmEnum(realm_str))
+                if assigned_ps:
+                    project.problem_statement_id = assigned_ps.id
+                    project.problem_code = assigned_ps.problem_code
+                    project.realm = assigned_ps.realm
+                    if not project.project_title or project.project_title == "Project":
+                        project.project_title = assigned_ps.title
+                    if not project.problem_statement:
+                        project.problem_statement = assigned_ps.description
+                    db.commit()
+                    ps = assigned_ps
+            except Exception:
+                pass
+
+    if ps:
+        data = _ps_dict(ps)
+        data["detailed_description"] = ps.description
+        data["problem_statement"] = ps.description
+        data["assigned_at"] = project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None
         return {
             "success": True,
-            "message": "Assigned problem statement details retrieved",
-            "data": {
-                "id": str(project.problem_statement_id) if project.problem_statement_id else None,
-                "problem_code": project.problem_code or "—",
-                "realm": project.realm or (current_user.domain.name if current_user.domain else "AI"),
-                "title": project.project_title or "—",
-                "description": project.problem_statement or "—",
-                "difficulty": "INTERMEDIATE",
-                "status": True,
-                "assigned_at": project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None,
-            },
+            "message": "Assigned problem statement retrieved successfully",
+            "data": data,
         }
 
-    data = _ps_dict(ps)
-    data["assigned_at"] = project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None
     return {
         "success": True,
-        "message": "Assigned problem statement retrieved successfully",
-        "data": data,
+        "message": "Assigned problem statement details retrieved",
+        "data": {
+            "id": str(project.problem_statement_id) if project.problem_statement_id else None,
+            "problem_code": project.problem_code or "—",
+            "realm": project.realm or (current_user.domain.name if current_user.domain else "AI"),
+            "title": project.project_title or "Official Problem Statement",
+            "description": project.problem_statement or "—",
+            "detailed_description": project.problem_statement or "—",
+            "problem_statement": project.problem_statement or "—",
+            "difficulty": "INTERMEDIATE",
+            "status": True,
+            "assigned_at": project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None,
+        },
     }
 
 

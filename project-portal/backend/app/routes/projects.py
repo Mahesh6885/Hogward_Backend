@@ -64,15 +64,33 @@ def _serialize_project(project) -> dict:
                 "realm": project.problem_statement_rel.realm,
                 "title": project.problem_statement_rel.title,
                 "description": project.problem_statement_rel.description,
+                "detailed_description": project.problem_statement_rel.description,
                 "difficulty": project.problem_statement_rel.difficulty,
             }
             if project.problem_statement_rel
-            else None
+            else (
+                {
+                    "id": str(project.problem_statement_id) if project.problem_statement_id else None,
+                    "problem_code": project.problem_code or "—",
+                    "realm": project.realm or (project.domain.name if project.domain else "AI"),
+                    "title": project.project_title or "Official Problem Statement",
+                    "description": project.problem_statement or "",
+                    "detailed_description": project.problem_statement or "",
+                    "difficulty": "INTERMEDIATE",
+                }
+                if (project.problem_statement or project.problem_code)
+                else None
+            )
         ),
         "problem_code": (
             project.problem_statement_rel.problem_code
             if project.problem_statement_rel
-            else project.problem_code
+            else (project.problem_code or "—")
+        ),
+        "problem_statement_title": (
+            project.problem_statement_rel.title
+            if project.problem_statement_rel
+            else (project.project_title or "Official Problem Statement")
         ),
         "project_title": (
             project.project_title
@@ -83,7 +101,12 @@ def _serialize_project(project) -> dict:
         "problem_description": (
             project.problem_statement_rel.description
             if project.problem_statement_rel
-            else project.problem_statement
+            else (project.problem_statement or "")
+        ),
+        "problem_statement_description": (
+            project.problem_statement_rel.description
+            if project.problem_statement_rel
+            else (project.problem_statement or "")
         ),
         "objectives": project.objectives,
         "proposed_solution": project.proposed_solution,

@@ -261,219 +261,251 @@ OFFICIAL_AI_STATEMENTS = [
     },
 ]
 
-# 10 Official Cybersecurity Problem Statements for Hogwarts Legacy 5.0
+# 10 Official Cybersecurity Problem Statements (Verbatim from Hogwarts Legacy 2.0 Cybersecurity PDF)
 OFFICIAL_CYBER_STATEMENTS = [
     {
         "problem_code": "CY-PS-01",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Automated Zero-Day Vulnerability Discovery and Exploit Mitigation Engine for Cloud-Native Binaries",
+        "title": "Adaptive Phishing Detection & Response",
         "description": (
-            "Scenario:\n"
-            "Cloud-native microservices and compiled binaries frequently harbor undiscovered memory safety and logic vulnerabilities.\n\n"
-            "Objective:\n"
-            "Build an automated vulnerability discovery engine combining fuzzing and symbolic execution with automated mitigation.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Binary Analysis: Ingest and parse compiled ELF and PE binaries in isolated sandbox environments.\n"
-            "2. Coverage-Guided Fuzzing: Mutate inputs dynamically to trigger crashes, memory leaks, and buffer overflows.\n"
-            "3. Crash Triaging & Classification: Group crashes by exploitability (CWE-119, CWE-416, CWE-190).\n"
-            "4. Exploitability Verification: Generate reproducible crash proofs and verify payload execution boundaries.\n"
-            "5. Virtual Patching: Generate eBPF filtering rules and runtime intrusion detection signatures.\n"
-            "6. Live Dashboard: Display active fuzzing sessions, crash counts, coverage maps, and remediation status.\n\n"
+            "Scenario\n"
+            "Employees receive suspicious links through emails, messaging apps, and social media. "
+            "Attackers create fake websites that look like real banking, company, or government websites to steal user information.\n\n"
+            "Objective\n"
+            "Identify phishing websites, assess risk, and warn users before they interact with malicious content.\n\n"
+            "Functionalities to Implement\n"
+            "1. URL Scanner: Accept URLs; inspect suspicious characters, misleading subdomains, shortened links, and redirects.\n"
+            "2. Domain Analysis: Check domain age and registration details where available; compare domain reputation against threat-intelligence sources.\n"
+            "3. Website Content Analysis: Inspect webpage content for suspicious login forms, impersonation indicators, and misleading links.\n"
+            "4. Phishing Detection Engine: Use rules or a machine-learning model to classify sites as Safe, Suspicious, or Phishing.\n"
+            "5. Risk Scoring: Generate a 0–100 risk score and explain the factors contributing to it.\n"
+            "6. User Warning System: Warn users about suspicious or malicious sites and explain why they were flagged.\n"
+            "7. Threat Dashboard: Show scanned URLs, scores, results, and scan history.\n"
+            "8. Security Report: Export URL, findings, score, and recommended actions.\n\n"
             "Expected Demo:\n"
-            "Upload binary → initiate automated fuzzing → detect buffer overflow crash → generate eBPF live patch."
-        ),
-        "difficulty": DifficultyEnum.ADVANCED,
-    },
-    {
-        "problem_code": "CY-PS-02",
-        "realm": RealmEnum.CYBERSECURITY,
-        "title": "Enterprise Zero Trust Network Access (ZTNA) with Continuous Behavioral Risk Scoring",
-        "description": (
-            "Scenario:\n"
-            "Perimeter-based corporate networks cannot effectively prevent lateral movement once an attacker compromises valid credentials.\n\n"
-            "Objective:\n"
-            "Implement a Zero Trust Network Access architecture that continuously verifies user identity, device posture, and session context.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Identity & Device Posture Check: Verify user credentials, device certificates, and OS security patch compliance.\n"
-            "2. Dynamic Micro-Segmentation: Enforce least-privilege resource access policies via mutual TLS.\n"
-            "3. Behavioral Risk Engine: Evaluate typing cadence, anomalous geo-velocity, and unusual resource access.\n"
-            "4. Dynamic Session Step-Up: Require MFA or downgrade privileges instantly when risk score breaches threshold.\n"
-            "5. Access Policy Manager: Granular rule definition for services, IP CIDRs, and sensitive internal endpoints.\n"
-            "6. Security Audit Log: Real-time telemetry visualization of access attempts, step-up prompts, and isolations.\n\n"
-            "Expected Demo:\n"
-            "User logs in from trusted device → access granted → simulate anomalous IP shift → trigger immediate session step-up."
+            "Enter a suspicious URL → analyze it → show score and reasons → display a warning and generate a report."
         ),
         "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
+        "problem_code": "CY-PS-02",
+        "realm": RealmEnum.CYBERSECURITY,
+        "title": "Intelligent SOC Alert Correlation & Attack-Chain Reconstruction",
+        "description": (
+            "Scenario\n"
+            "A Security Operations Center receives thousands of alerts from firewalls, servers, endpoints, DNS, and authentication systems. "
+            "Some alerts look harmless individually but may actually be different steps of the same cyberattack.\n\n"
+            "Objective\n"
+            "Correlate security alerts from different sources and reconstruct the sequence of a potential cyberattack.\n\n"
+            "Functionalities to Implement\n"
+            "1. Log Ingestion: Import firewall, server, endpoint, DNS, and authentication logs from CSV or JSON samples.\n"
+            "2. Log Normalization: Convert logs to a common structure with timestamps, IPs, usernames, event types, and severity.\n"
+            "3. Alert Correlation: Link alerts using shared IPs, accounts, devices, and time windows; group them into incidents.\n"
+            "4. Attack Pattern Detection: Identify sequences such as repeated failed logins followed by a successful login.\n"
+            "5. Timeline Reconstruction: Arrange related events chronologically from initial activity to potential impact.\n"
+            "6. MITRE ATT&CK Mapping: Map detected activity to relevant tactics and techniques.\n"
+            "7. Incident Risk Scoring: Prioritize incidents using severity, affected assets, and correlated activity.\n"
+            "8. SOC Dashboard & Report: Show incidents, alerts, severity, timeline, affected assets, and recommended actions.\n\n"
+            "Expected Demo:\n"
+            "Upload logs → correlate related alerts → reconstruct the attack timeline → display severity and an investigation report."
+        ),
+        "difficulty": DifficultyEnum.ADVANCED,
+    },
+    {
         "problem_code": "CY-PS-03",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "AI-Powered Autonomous Extended Detection and Response (XDR) with Threat Hunting Playbooks",
+        "title": "Ransomware Early-Warning & Automated Containment",
         "description": (
-            "Scenario:\n"
-            "Security operations centers (SOC) are overwhelmed by millions of alerts across disparate cloud, host, and network logs.\n\n"
-            "Objective:\n"
-            "Correlate multi-source telemetry to identify active multi-stage attack chains and execute automated containment.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Telemetry Ingestion: Stream and normalize Sysmon, CloudTrail, Zeek, and authentication events.\n"
-            "2. Threat Correlation Graph: Link anomalous events into an end-to-end MITRE ATT&CK attack chain.\n"
-            "3. AI Threat Hunter: Identify stealthy persistence, privilege escalation, and credential dumping.\n"
-            "4. Automated Playbook Execution: Isolate compromised host, revoke OAuth tokens, and block malicious IPs.\n"
-            "5. Incident Timeline: Visualize chronological progression from initial phishing lure to data exfiltration.\n"
-            "6. Analyst Investigation Console: Provide interactive query tools and forensic artifact downloads.\n\n"
+            "Scenario\n"
+            "An employee's computer suddenly starts opening and modifying hundreds of files. Antivirus does not recognize the process, "
+            "and within minutes many documents become unreadable.\n\n"
+            "Objective\n"
+            "Detect ransomware-like behavior by monitoring file and process activity and demonstrate a safe response.\n\n"
+            "Functionalities to Implement\n"
+            "1. File Activity Monitoring: Monitor file creation, modification, renaming, and deletion in a designated test directory.\n"
+            "2. Process Monitoring: Observe processes accessing files and flag suspicious activity.\n"
+            "3. Behavior Detection: Identify rapid file changes, suspicious extensions, and unusual access patterns.\n"
+            "4. Early Warning: Score behavior and trigger alerts when a defined threshold is crossed.\n"
+            "5. Safe Containment: Demonstrate suspending a simulated process or restricting the test environment; include manual confirmation.\n"
+            "6. Recovery Support: Use backups or snapshots to demonstrate recovery of test files.\n"
+            "7. Evidence Collection: Record process details, file activity, and timestamps.\n"
+            "8. Dashboard & Report: Show monitored files, alerts, containment status, affected files, and response actions.\n\n"
             "Expected Demo:\n"
-            "Ingest synthetic attack log stream → AI correlates kill chain → triggers automated network isolation of compromised VM."
+            "Run a harmless behavior simulation in a test directory → detect abnormal changes → alert → demonstrate containment and recovery."
         ),
         "difficulty": DifficultyEnum.ADVANCED,
     },
     {
         "problem_code": "CY-PS-04",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Post-Quantum Cryptographic Migration and Hybrid Key Exchange Protocol Engine",
+        "title": "API Abuse Detection & Dynamic Security Gateway",
         "description": (
-            "Scenario:\n"
-            "Advancements in quantum computing threaten current RSA and ECC asymmetric public-key cryptography.\n\n"
-            "Objective:\n"
-            "Implement a hybrid cryptographic engine that pairs classical TLS algorithms with NIST post-quantum standards.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Hybrid Key Exchange: Combine Kyber (ML-KEM) lattice key encapsulation with classical ECDH.\n"
-            "2. Post-Quantum Digital Signatures: Implement Dilithium (ML-DSA) and Falcon signature verification.\n"
-            "3. Protocol Negotiation: Gracefully negotiate quantum-safe cipher suites with backwards compatibility.\n"
-            "4. Performance Benchmarking: Measure handshake latency, CPU cycles, and packet size overheads.\n"
-            "5. Certificate Authority Simulator: Issue and validate quantum-safe X.509 certificate chains.\n"
-            "6. Migration Auditor: Scan existing applications and report cryptographic vulnerabilities to harvest-now-decrypt-later.\n\n"
+            "Scenario\n"
+            "A financial application provides APIs for login, payments, and account information. Attackers start sending abnormal requests "
+            "to guess accounts, abuse APIs, manipulate parameters, and perform automated attacks.\n\n"
+            "Objective\n"
+            "Monitor API traffic, detect suspicious requests, and apply appropriate security controls.\n\n"
+            "Functionalities to Implement\n"
+            "1. API Gateway: Route requests to backend APIs and support authentication and validation.\n"
+            "2. Request Monitoring: Capture endpoints, methods, timestamps, frequency, and request/response metadata.\n"
+            "3. Rate-Limit Detection: Detect excessive requests, repeated login attempts, and request bursts.\n"
+            "4. Abuse Detection: Flag suspicious parameter manipulation, abnormal patterns, and common injection indicators in a safe test setup.\n"
+            "5. Behavioral Analysis: Establish normal client patterns and identify deviations.\n"
+            "6. Risk Scoring: Score requests or sessions and categorize risk.\n"
+            "7. Dynamic Controls: Apply rate limits, temporary blocks, and administrator-configurable rules.\n"
+            "8. Dashboard & Audit Logs: Show traffic, suspicious clients, blocked requests, detected patterns, and actions taken.\n\n"
             "Expected Demo:\n"
-            "Establish secure channel using hybrid Kyber/ECDH → benchmark against standard RSA → demonstrate quantum resilience."
+            "Send normal and suspicious API requests → detect abnormal behavior → apply rate limiting or blocking → review security events."
         ),
-        "difficulty": DifficultyEnum.ADVANCED,
+        "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-05",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Hardware-Assisted Side-Channel Attack Detection and Firmware Integrity Verification for Critical IoT",
+        "title": "Cloud Security Posture & Attack-Surface Analyzer",
         "description": (
-            "Scenario:\n"
-            "Embedded devices and critical IoT infrastructure are susceptible to physical power analysis and firmware tampering.\n\n"
-            "Objective:\n"
-            "Detect physical side-channel anomalies and verify cryptographically sealed firmware execution on constrained IoT systems.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Power & Electromagnetic Trace Analysis: Monitor power consumption curves during cryptographic operations.\n"
-            "2. Side-Channel Leakage Detection: Use Test Vector Leakage Assessment (TVLA) to detect differential power analysis.\n"
-            "3. Secure Boot & Remote Attestation: Cryptographically verify firmware hashes against TPM / secure hardware baseline.\n"
-            "4. Tamper Detection & Zeroization: Wipe private keys and halt execution when unauthorized firmware modifications occur.\n"
-            "5. Telemetry & Fleet Monitor: Remote dashboard displaying health, attestation status, and anomaly alerts.\n"
-            "6. Forensic Dump: Export memory register dumps upon confirmed hardware intrusion.\n\n"
+            "Scenario\n"
+            "A company has moved many systems to the cloud. Over time, some storage, servers, databases, permissions, and network services "
+            "have accidentally become exposed or overly accessible.\n\n"
+            "Objective\n"
+            "Identify insecure cloud configurations, exposed resources, and excessive permissions.\n\n"
+            "Functionalities to Implement\n"
+            "1. Asset Inventory: Import or register storage, virtual machines, databases, and network services.\n"
+            "2. Configuration Scanner: Scan configuration files or a sample environment for public exposure and insecure settings.\n"
+            "3. Permission Analysis: Flag overly broad roles, access policies, and unnecessary administrative privileges.\n"
+            "4. Network Exposure Analysis: Identify exposed ports and unrestricted inbound rules.\n"
+            "5. Misconfiguration Detection: Detect public storage, missing encryption, and other insecure configurations.\n"
+            "6. Risk Prioritization: Assign severity based on exposure and potential impact.\n"
+            "7. Remediation Guidance: Provide concrete corrective actions for each finding.\n"
+            "8. Dashboard & Report: Show assets, findings, severity, risk distribution, and recommended fixes.\n\n"
             "Expected Demo:\n"
-            "Simulate power trace during AES encryption → detect side-channel leakage anomaly → trigger secure shutdown."
+            "Import a sample cloud configuration → scan it → display prioritized weaknesses → show remediation steps."
         ),
-        "difficulty": DifficultyEnum.ADVANCED,
+        "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-06",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Deception-Based Cyber Defense Platform with Dynamic Honeynets and Adversary Profiling",
+        "title": "Digital Evidence Integrity & Chain-of-Custody",
         "description": (
-            "Scenario:\n"
-            "Modern threat actors evade perimeter firewalls, remaining inside corporate networks undetected for months.\n\n"
-            "Objective:\n"
-            "Deploy realistic decoy services, breadcrumbs, and honeytokens that lure attackers, trap their activity, and profile TTPs.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Decoy Deployment: Spin up lightweight honeypot services mimicking databases, SSH servers, and web portals.\n"
-            "2. Honeytoken Injection: Place synthetic AWS keys, fake database credentials, and canary files on production assets.\n"
-            "3. Interaction Telemetry: Record attacker keystrokes, downloaded tools, lateral traversal attempts, and commands.\n"
-            "4. TTP Profiling: Map attacker actions automatically to MITRE ATT&CK techniques and threat actor signatures.\n"
-            "5. Silent Containment: Keep the adversary engaged in simulated infrastructure while alerting defenders.\n"
-            "6. Deception Management Console: Real-time map of decoy engagements, threat actor dossiers, and IoC exports.\n\n"
+            "Scenario\n"
+            "During a cybercrime investigation, investigators collect computers, mobile data, disk images, screenshots, and network captures. "
+            "The evidence is transferred between different authorized investigators during the investigation.\n\n"
+            "Objective\n"
+            "Maintain digital evidence integrity and record each custody transfer.\n\n"
+            "Functionalities to Implement\n"
+            "1. Evidence Registration: Upload files such as documents, screenshots, logs, or forensic images and assign a unique ID.\n"
+            "2. Cryptographic Hash: Generate a SHA-256 hash and preserve it as the integrity reference.\n"
+            "3. Metadata Management: Record evidence type, collection date, source, and investigator.\n"
+            "4. Custody Tracking: Record transfers with timestamps, sender, receiver, and purpose.\n"
+            "5. Role-Based Access: Separate investigator and administrator permissions.\n"
+            "6. Integrity Verification: Recalculate hashes and compare them with the original to detect changes.\n"
+            "7. Audit Trail: Log uploads, access, transfers, and verification actions chronologically.\n"
+            "8. Dashboard & Report: Show evidence, custody history, integrity status, hash, and access history.\n\n"
             "Expected Demo:\n"
-            "Attacker accesses fake honeytoken credential → decoy server logs command sequence → adversary profile generated."
+            "Upload evidence → generate its hash → transfer custody → alter a test copy → verify tampering and review custody history."
         ),
         "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-07",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Next-Generation Web Application and API Security Gateway (WAAP) with Real-Time AST and Bot Defense",
+        "title": "Insider Threat & User Behavior Analytics",
         "description": (
-            "Scenario:\n"
-            "Traditional regex-based WAFs produce frequent false positives and cannot detect sophisticated API-level business logic abuse.\n\n"
-            "Objective:\n"
-            "Build a high-performance WAAP gateway that parses payloads into Abstract Syntax Trees and detects automated bot traffic.\n\n"
-            "Functionalities to Implement:\n"
-            "1. AST Payload Parser: Parse incoming SQL, JSON, and GraphQL requests into syntax trees to detect injection attacks.\n"
-            "2. OWASP API Top 10 Mitigation: Protect against BOLA (Broken Object Level Authorization), mass assignment, and SSRF.\n"
-            "3. Advanced Bot Mitigation: Analyze TLS fingerprinting (JA4/JA3), browser entropy, and request velocity.\n"
-            "4. Dynamic Rate Limiting: Apply sliding-window token bucket quotas on sensitive API routes.\n"
-            "5. Traffic Inspector: Inspect live HTTP request/response streams with sub-millisecond overhead.\n"
-            "6. Gateway Dashboard: Display blocked requests, attack vectors, bot distribution, and rule tuning controls.\n\n"
+            "Scenario\n"
+            "An employee account suddenly accesses sensitive files at unusual times and transfers large amounts of data. "
+            "The account is valid and no obvious malware is detected.\n\n"
+            "Objective\n"
+            "Detect unusual user activity that may indicate an insider threat or compromised account while protecting privacy.\n\n"
+            "Functionalities to Implement\n"
+            "1. Activity Log Collection: Import login, file access, privilege-change, and data-transfer logs.\n"
+            "2. Behavior Baseline: Establish typical login times, resource access, and activity frequency.\n"
+            "3. Anomaly Detection: Flag unusual login times/locations, abnormal file access, excessive transfers, and privilege changes.\n"
+            "4. User Risk Scoring: Score deviations and categorize severity.\n"
+            "5. Alerting & Investigation: Explain suspicious activity and display the sequence of actions for investigation.\n"
+            "6. Privacy Controls: Use pseudonymous identifiers where possible and restrict access to sensitive records.\n"
+            "7. Dashboard: Show activity, anomalies, scores, and incident history.\n"
+            "8. Investigation Report: Summarize suspicious actions, risk indicators, and recommended follow-up.\n\n"
             "Expected Demo:\n"
-            "Send obfuscated SQL injection payload → AST engine flags syntax anomaly → request blocked with 403 Forbidden."
+            "Import activity logs → establish a baseline → detect unusual activity → generate a risk score and investigation report."
         ),
         "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-08",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Distributed Ransomware Early Warning and Immutable Storage Recovery Orchestrator",
+        "title": "Software Supply-Chain Threat Detection",
         "description": (
-            "Scenario:\n"
-            "Ransomware attacks rapidly encrypt entire corporate storage volumes, leaving victims with catastrophic downtime.\n\n"
-            "Objective:\n"
-            "Detect early encryption indicators at the filesystem level, kill malicious processes, and orchestrate instantaneous recovery.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Entropy Spike Monitor: Detect rapid changes in file Shannon entropy indicating mass encryption in progress.\n"
-            "2. Canary File Network: Monitor hidden tripwire files across shared network drives.\n"
-            "3. Process Tree Termination: Immediately freeze and kill rogue processes attempting mass file modifications.\n"
-            "4. Network Isolation: Sever infected machine network interfaces to stop lateral worm propagation.\n"
-            "5. Immutable Snapshot Rollback: Trigger copy-on-write storage snapshot restoration via AWS EBS or ZFS API.\n"
-            "6. Recovery Console: Display encryption progression velocity, affected shares, and one-click rollback controls.\n\n"
+            "Scenario\n"
+            "A development team installs a third-party software package during a routine update. "
+            "The package looks normal but secretly contains suspicious code and communicates with an unknown external server.\n\n"
+            "Objective\n"
+            "Analyze software dependencies to identify vulnerabilities, suspicious packages, and integrity issues.\n\n"
+            "Functionalities to Implement\n"
+            "1. Dependency Upload: Accept package.json, requirements.txt, or Maven pom.xml and extract package names and versions.\n"
+            "2. Dependency Inventory: List direct and, where supported, transitive dependencies.\n"
+            "3. Vulnerability Detection: Check packages against a vulnerability database and identify known issues.\n"
+            "4. Integrity Verification: Verify checksums or signatures where available and flag unexpected changes.\n"
+            "5. Suspicious Package Detection: Flag known malicious indicators or suspicious package metadata for review.\n"
+            "6. Risk Scoring: Score dependencies using vulnerability severity and integrity findings.\n"
+            "7. SBOM Generation: Generate a Software Bill of Materials with package names, versions, and dependency information.\n"
+            "8. Remediation & Report: Suggest safer versions or fixes and export findings, inventory, and SBOM.\n\n"
             "Expected Demo:\n"
-            "Execute simulated ransomware payload → entropy spike detected within 3 files → process killed → snapshot rolled back."
+            "Upload a dependency file → scan packages → identify vulnerabilities → generate an SBOM and remediation report."
         ),
-        "difficulty": DifficultyEnum.ADVANCED,
+        "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-09",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "AI-Powered Phishing and Social Engineering Defense Engine with Computer Vision and Intent Analysis",
+        "title": "IoT Behavioral Anomaly Detection",
         "description": (
-            "Scenario:\n"
-            "Spear-phishing and business email compromise (BEC) leverage generative AI to bypass traditional SPF/DKIM filters.\n\n"
-            "Objective:\n"
-            "Detect deceptive inbound communications using multimodal intent analysis, visual brand impersonation, and sender reputation.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Natural Language Intent Classifier: Detect urgency, credential harvesting requests, and executive impersonation.\n"
-            "2. Visual Logo Inspection: Use CNN to detect spoofed Microsoft, Google, or bank logos on login pages.\n"
-            "3. URL & Attachment Sandboxing: Follow redirects, inspect landing page DOMs, and detonate attachments in headless sandboxes.\n"
-            "4. QR-Code (Quishing) Scanner: Decode and evaluate embedded QR codes in email attachments and images.\n"
-            "5. Protective Rewriting: Rewrite outbound links with dynamic browser isolation redirection.\n"
-            "6. Security Operations Dashboard: Show phishing campaigns, targeted departments, and simulated training results.\n\n"
+            "Scenario\n"
+            "A smart facility has hundreds of cameras, sensors, controllers, and other IoT devices. "
+            "A normally isolated sensor suddenly starts communicating with an unknown external server and sends unusually high network traffic.\n\n"
+            "Objective\n"
+            "Learn normal IoT communication patterns and detect suspicious deviations.\n\n"
+            "Functionalities to Implement\n"
+            "1. Device Registration: Register devices with unique IDs, types, and expected communication behavior.\n"
+            "2. Traffic Collection: Import or simulate traffic; record source/destination IP, protocol, volume, and timestamp.\n"
+            "3. Behavior Baseline: Record expected destinations, protocols, and traffic levels for each device.\n"
+            "4. Anomaly Detection: Flag unknown destinations, traffic spikes, unexpected protocols, or unusual activity times.\n"
+            "5. Device Risk Scoring: Score anomalies and identify devices needing investigation.\n"
+            "6. Isolation Simulation: Demonstrate simulated network isolation of a suspicious device.\n"
+            "7. Alerts & Dashboard: Show device behavior, anomalies, risk, and alerts with reasons.\n"
+            "8. Incident Report: Summarize suspicious traffic and recommended containment.\n\n"
             "Expected Demo:\n"
-            "Submit AI-generated spear-phishing email with typosquatted link → system detects deceptive intent → email quarantined."
+            "Simulate normal device traffic → introduce unusual communication → detect and flag the device → demonstrate simulated isolation."
         ),
-        "difficulty": DifficultyEnum.BEGINNER,
+        "difficulty": DifficultyEnum.INTERMEDIATE,
     },
     {
         "problem_code": "CY-PS-10",
         "realm": RealmEnum.CYBERSECURITY,
-        "title": "Automated Cloud Security Posture Management (CSPM) and Infrastructure-as-Code (IaC) Compliance Engine",
+        "title": "Automated Cyber Incident Investigation & Response",
         "description": (
-            "Scenario:\n"
-            "Misconfigurations in multi-cloud infrastructure (AWS, Azure, GCP) represent the leading cause of massive data breaches.\n\n"
-            "Objective:\n"
-            "Continuously audit live cloud environments and Terraform/Kubernetes manifests to remediate security risks before deployment.\n\n"
-            "Functionalities to Implement:\n"
-            "1. Static IaC Scanning: Scan Terraform, Helm, and CloudFormation files for exposed ports, unencrypted storage, and permissive IAM.\n"
-            "2. Live Cloud Drift Detection: Query cloud APIs in real time to detect public S3 buckets and disabled audit logging.\n"
-            "3. Compliance Benchmarks: Map risks against CIS Benchmarks, SOC 2, HIPAA, and GDPR standards.\n"
-            "4. Attack Path Analysis: Calculate blast radius from internet-facing assets to high-value internal database assets.\n"
-            "5. One-Click Automated Remediation: Generate automated pull requests and CLI commands to fix misconfigurations.\n"
-            "6. Multi-Cloud Posture Dashboard: Visual compliance scoring, risk heatmaps, and remediation progress tracking.\n\n"
+            "Scenario\n"
+            "A company notices unusual login attempts, suspicious web requests, an unknown process on an employee computer, "
+            "and communication with an unfamiliar external IP. These events are recorded by different security systems.\n\n"
+            "Objective\n"
+            "Correlate security events, reconstruct attack activity, identify affected systems, and recommend response actions.\n\n"
+            "Functionalities to Implement\n"
+            "1. Event Collection: Import authentication, endpoint, firewall, and network logs.\n"
+            "2. Event Normalization: Convert records into a common event structure.\n"
+            "3. Incident Correlation: Group related events using timestamps, IPs, usernames, and device IDs.\n"
+            "4. Attack Timeline: Arrange events chronologically and identify a suspected sequence.\n"
+            "5. Affected Asset Identification: Identify potentially affected devices, accounts, and services.\n"
+            "6. Attack Classification: Map suspicious activity to relevant techniques and classify the incident.\n"
+            "7. Risk Scoring: Score severity using event sequence and affected assets.\n"
+            "8. Response Recommendations: Suggest actions such as disabling accounts or isolating endpoints; require authorization for real actions.\n"
+            "9. Dashboard & Report: Show incidents, timeline, affected assets, risk, and response plan.\n\n"
             "Expected Demo:\n"
-            "Upload Terraform template with public S3 bucket and wild-card IAM → engine flags violation → provides 1-click patch."
+            "Import multiple logs → correlate events → reconstruct the attack → identify assets → generate a response plan."
         ),
-        "difficulty": DifficultyEnum.INTERMEDIATE,
+        "difficulty": DifficultyEnum.ADVANCED,
     },
 ]
+
 
 
 def extract_problem_statements_from_pdf(pdf_path: str) -> List[Dict[str, Any]]:
