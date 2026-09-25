@@ -478,8 +478,9 @@ def main():
         print("\n[4/4] Seeding admin account...")
         seed_admin(db, domain_map)
 
-        print("\n[5/4] Seeding 40 bulk test users...")
-        seed_bulk_users_inline(db, domain_map)
+        # 40 bulk test users seeding is disabled so live Render deployments do not auto-populate 40 test teams
+        # To seed bulk users manually for local tests, run: python seed_bulk_users.py
+        # seed_bulk_users_inline(db, domain_map)
 
         db.commit()
         print("\n[SUCCESS] Seed completed successfully!\n")
