@@ -60,13 +60,19 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
         )
 
     # Validate team member count for USER role:
-    # 2 to 4 members + 1 leader = 3 to 5 total participants
-    if data.role == UserRole.USER and (data.member_one is not None or data.member_two is not None):
-        members = [m.strip() for m in [data.member_one, data.member_two, data.member_three, data.member_four] if m and m.strip()]
-        if len(members) < 2 or len(members) > 4:
+    # Team Leader (required) + Member 1 (required) + Member 2 (optional) + Member 3 (optional)
+    # Total team size = 2 to 4 members maximum, including Team Leader
+    if data.role == UserRole.USER and any(m is not None for m in [data.member_one, data.member_two, data.member_three]):
+        if not data.member_one or not data.member_one.strip():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"success": False, "message": f"Team must have between 2 and 4 members (total 3 to 5 participants including leader). Current count: {len(members) + 1}", "error_code": "INVALID_MEMBER_COUNT"},
+                detail={"success": False, "message": "Member 1 is required. Minimum team size is 2 (Leader + Member 1).", "error_code": "MEMBER_ONE_REQUIRED"},
+            )
+        members = [m.strip() for m in [data.member_one, data.member_two, data.member_three] if m and m.strip()]
+        if len(members) < 1 or len(members) > 3:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"success": False, "message": f"Total team size must be between 2 and 4 members including the leader. Current count: {len(members) + 1}", "error_code": "INVALID_MEMBER_COUNT"},
             )
 
     raw_pass = (data.password or "hogwarts-legacy").strip() or "hogwarts-legacy"
@@ -78,7 +84,6 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
         member_one=data.member_one.strip() if data.member_one else None,
         member_two=data.member_two.strip() if data.member_two else None,
         member_three=data.member_three.strip() if data.member_three else None,
-        member_four=data.member_four.strip() if data.member_four else None,
         college_name=college,
         organization=college,
         department=data.department.strip() if data.department else None,
@@ -213,8 +218,6 @@ def update_user(db: Session, user_id: int, data: UserUpdate, admin: User) -> Use
         user.member_two = data.member_two.strip() if data.member_two else None
     if data.member_three is not None:
         user.member_three = data.member_three.strip() if data.member_three else None
-    if data.member_four is not None:
-        user.member_four = data.member_four.strip() if data.member_four else None
 
     if data.college_name is not None:
         user.college_name = data.college_name.strip() if data.college_name else None

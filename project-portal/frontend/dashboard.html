@@ -2210,19 +2210,17 @@
         { role: 'Member 1', name: t.member_one },
         { role: 'Member 2', name: t.member_two },
         { role: 'Member 3', name: t.member_three },
-        { role: 'Member 4 (Optional)', name: t.member_four },
-      ];
+      ].filter(m => m.name && m.name.trim());
 
-      members.forEach((m, idx) => {
-        if (!m.name && idx > 0) return; // Skip empty optional members
+      members.forEach((m) => {
         const card = document.createElement('div');
         card.className = 'team-member-card';
-        const initial = (m.name ? m.name[0] : 'M').toUpperCase();
+        const initial = m.name[0].toUpperCase();
         card.innerHTML = `
           <div class="team-member-avatar">${initial}</div>
           <div class="team-member-info">
             <div class="team-member-role">${m.role}</div>
-            <div class="team-member-name">${m.name || 'Not assigned'}</div>
+            <div class="team-member-name">${escHtml(m.name)}</div>
           </div>
         `;
         rosterContainer.appendChild(card);

@@ -31,7 +31,6 @@ def _serialize_project(project) -> dict:
         "member_one": u.member_one,
         "member_two": u.member_two,
         "member_three": u.member_three,
-        "member_four": u.member_four,
         "college_name": u.college_name or u.organization,
         "organization": u.organization or u.college_name,
         "department": u.department,

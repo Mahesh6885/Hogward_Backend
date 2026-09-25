@@ -23,7 +23,6 @@ class UserCreate(BaseModel):
     member_one: Optional[str] = None
     member_two: Optional[str] = None
     member_three: Optional[str] = None
-    member_four: Optional[str] = None
     college_name: Optional[str] = None
     organization: Optional[str] = None
     department: Optional[str] = None
@@ -96,7 +95,6 @@ class UserUpdate(BaseModel):
     member_one: Optional[str] = None
     member_two: Optional[str] = None
     member_three: Optional[str] = None
-    member_four: Optional[str] = None
     college_name: Optional[str] = None
     department: Optional[str] = None
     academic_year: Optional[str] = None
@@ -135,7 +133,6 @@ class TeamResponse(BaseModel):
     member_one: Optional[str]
     member_two: Optional[str]
     member_three: Optional[str]
-    member_four: Optional[str]
     college_name: Optional[str]
     organization: Optional[str]
     department: Optional[str]
@@ -161,7 +158,6 @@ class UserResponse(BaseModel):
     member_one: Optional[str] = None
     member_two: Optional[str] = None
     member_three: Optional[str] = None
-    member_four: Optional[str] = None
     college_name: Optional[str] = None
     department: Optional[str] = None
     academic_year: Optional[str] = None

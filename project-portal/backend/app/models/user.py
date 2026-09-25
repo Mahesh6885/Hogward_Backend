@@ -36,7 +36,6 @@ class User(Base):
     member_one: Mapped[str | None] = mapped_column(String(255), nullable=True)
     member_two: Mapped[str | None] = mapped_column(String(255), nullable=True)
     member_three: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    member_four: Mapped[str | None] = mapped_column(String(255), nullable=True)
     domain_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("domains.id", ondelete="RESTRICT"), nullable=True, index=True
     )

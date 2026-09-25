@@ -150,7 +150,6 @@ class TeamUserBasic(BaseModel):
     member_one: Optional[str] = None
     member_two: Optional[str] = None
     member_three: Optional[str] = None
-    member_four: Optional[str] = None
     college_name: Optional[str] = None
     organization: Optional[str] = None
     department: Optional[str] = None

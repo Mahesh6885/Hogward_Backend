@@ -25,7 +25,6 @@ def run_e2e():
             "member_one": "John Connor",
             "member_two": "Kyle Reese",
             "member_three": "Marcus Wright",
-            "member_four": "Kate Brewster",
             "college_name": "SkyNet Defense Academy",
             "department": "Artificial Intelligence",
             "academic_year": "2025-2026",
@@ -71,8 +70,8 @@ def run_e2e():
         t_roster = me_team_resp.json()["data"]
         assert t_roster["team_name"] == "Team Titan"
         assert t_roster["member_one"] == "John Connor"
-        assert t_roster["member_four"] == "Kate Brewster"
-        print(f"  [PASS] Full roster retrieved: Leader={t_roster['team_leader']}, M1={t_roster['member_one']}, M4={t_roster['member_four']}")
+        assert t_roster["member_three"] == "Marcus Wright"
+        print(f"  [PASS] Full roster retrieved: Leader={t_roster['team_leader']}, M1={t_roster['member_one']}, M3={t_roster['member_three']}")
 
         # 6 & 7. Topic Locking Verification
         print("\n6 & 7. Testing Domain-based Topic Locking...")

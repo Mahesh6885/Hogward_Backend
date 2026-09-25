@@ -26,9 +26,8 @@
 </head>
 <body>
 
-<!-- Ambient Stars and Canvas -->
+<!-- Ambient Stars and Background Elements -->
 <div class="stars-layer" aria-hidden="true"></div>
-<canvas id="particles-canvas" class="particles-bg" aria-hidden="true"></canvas>
 
 <!-- Fog layer -->
 <div class="fog-layer" aria-hidden="true"></div>
@@ -414,21 +413,6 @@
 
       <div class="grid-2">
         <div class="form-group">
-          <label class="form-label" for="new-password">Password * (min 8 chars)</label>
-          <div style="position:relative">
-            <input class="form-input" type="password" id="new-password" required placeholder="••••••••" minlength="8" style="padding-right:3rem" />
-            <button type="button" onclick="var f=document.getElementById('new-password');f.type=f.type==='password'?'text':'password';this.textContent=f.type==='password'?'👁':'🙈'" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">👁</button>
-          </div>
-          <span class="text-xs text-muted">Passwords are hashed using bcrypt before storing.</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="new-phone">Phone Number</label>
-          <input class="form-input" type="text" id="new-phone" placeholder="+1-555-0100" />
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="form-group">
           <label class="form-label" for="new-phone">Phone Number</label>
           <input class="form-input" type="text" id="new-phone" placeholder="+1-555-0100" />
         </div>
@@ -455,28 +439,24 @@
 
       <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">
         👥 Team Members Roster
-        <span id="member-count-label" style="font-size:0.8rem;font-weight:400;color:var(--gold-light);margin-left:0.5rem">(2 of 2–4 required members filled)</span>
+        <span id="member-count-label" style="font-size:0.8rem;font-weight:400;color:var(--gold-light);margin-left:0.5rem">(Total: 4 members max — Leader + Member 1 required)</span>
       </h4>
       <div id="members-container">
         <div class="grid-2">
           <div class="form-group member-field">
-            <label class="form-label" for="new-member-1">Member 1 * <span class="text-xs text-muted">(required, min 2)</span></label>
+            <label class="form-label" for="new-member-1">Member 1 * <span class="text-xs text-muted">(required)</span></label>
             <input class="form-input" type="text" id="new-member-1" required placeholder="Full Name" oninput="updateMemberCount()" />
           </div>
           <div class="form-group member-field">
-            <label class="form-label" for="new-member-2">Member 2 * <span class="text-xs text-muted">(required, min 2)</span></label>
-            <input class="form-input" type="text" id="new-member-2" required placeholder="Full Name" oninput="updateMemberCount()" />
+            <label class="form-label" for="new-member-2">Member 2 <span class="text-xs text-muted">(optional)</span></label>
+            <input class="form-input" type="text" id="new-member-2" placeholder="Full Name (optional)" oninput="updateMemberCount()" />
           </div>
           <div class="form-group member-field">
             <label class="form-label" for="new-member-3">Member 3 <span class="text-xs text-muted">(optional)</span></label>
             <input class="form-input" type="text" id="new-member-3" placeholder="Full Name (optional)" oninput="updateMemberCount()" />
           </div>
-          <div class="form-group member-field">
-            <label class="form-label" for="new-member-4">Member 4 <span class="text-xs text-muted">(optional)</span></label>
-            <input class="form-input" type="text" id="new-member-4" placeholder="Full Name (optional)" oninput="updateMemberCount()" />
-          </div>
         </div>
-        <p class="text-xs text-muted" style="margin-top:0.25rem">Total participants = Leader + 2 to 4 members (3–5 total). First 2 members are required.</p>
+        <p class="text-xs text-muted" style="margin-top:0.25rem">Total team size = 4 members maximum (Leader + Member 1 required, Member 2 and 3 optional).</p>
       </div>
 
       <div id="modal-team-alert" class="alert alert-hidden"></div>
@@ -604,10 +584,6 @@
         <div class="form-group">
           <label class="form-label" for="edit-member-3">Member 3</label>
           <input class="form-input" type="text" id="edit-member-3" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="edit-member-4">Member 4 (Optional)</label>
-          <input class="form-input" type="text" id="edit-member-4" />
         </div>
       </div>
 
@@ -1154,11 +1130,14 @@
 
   // Member count updater
   window.updateMemberCount = function() {
-    const filled = ['new-member-1','new-member-2','new-member-3','new-member-4']
+    const leaderFilled = document.getElementById('new-team-leader')?.value.trim() ? 1 : 0;
+    const filled = ['new-member-1','new-member-2','new-member-3']
       .filter(id => document.getElementById(id)?.value.trim()).length;
+    const total = leaderFilled + filled;
     const label = document.getElementById('member-count-label');
-    if (label) label.textContent = `(${filled} of 2–4 member slots filled)`;
+    if (label) label.textContent = `(${total} of 4 max team members; min 2: Leader + Member 1)`;
   };
+  document.getElementById('new-team-leader')?.addEventListener('input', window.updateMemberCount);
 
   // Auto-generate username from team name
   document.getElementById('new-team-name').addEventListener('input', function() {
@@ -1197,14 +1176,13 @@
       member_one: document.getElementById('new-member-1').value.trim() || null,
       member_two: document.getElementById('new-member-2').value.trim() || null,
       member_three: document.getElementById('new-member-3').value.trim() || null,
-      member_four: document.getElementById('new-member-4').value.trim() || null,
     };
 
-    // Validate at least 2 members
-    if (!payload.member_one || !payload.member_two) {
+    // Validate Member 1 is required (Leader + Member 1 = min 2, max 4 total)
+    if (!payload.member_one) {
       const alertEl = document.getElementById('modal-team-alert');
       alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = '<span>⚠️</span><span>At least 2 members are required (3–5 total participants).</span>';
+      alertEl.innerHTML = '<span>⚠️</span><span>Member 1 is required (Minimum team size is 2: Leader + Member 1).</span>';
       alertEl.classList.remove('alert-hidden');
       btn.disabled = false; btn.innerHTML = '⚡ Register Team';
       return;
@@ -1236,7 +1214,14 @@
       const resp = await api.get(`/api/admin/teams/${id}`);
       const t = resp.data;
       const b = document.getElementById('view-team-modal-body');
-      b.innerHTML = `
+        const rosterMembers = [
+          { role: 'Leader', name: t.team_leader || t.name },
+          { role: 'Member 1', name: t.member_one },
+          { role: 'Member 2', name: t.member_two },
+          { role: 'Member 3', name: t.member_three },
+        ].filter(m => m.name && m.name.trim());
+
+        b.innerHTML = `
         <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
             <h3 style="font-size:1.3rem;font-weight:700">${escHtml(t.team_name || t.name)}</h3>
@@ -1255,12 +1240,10 @@
         </div>
 
         <h4 style="font-weight:700;margin-bottom:0.5rem">Team Members Roster</h4>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:0.5rem;margin-bottom:1rem">
-          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Leader:</span> <strong>${escHtml(t.team_leader || '—')}</strong></div>
-          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 1:</span> <strong>${escHtml(t.member_one || 'Not assigned')}</strong></div>
-          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 2:</span> <strong>${escHtml(t.member_two || 'Not assigned')}</strong></div>
-          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 3:</span> <strong>${escHtml(t.member_three || 'Not assigned')}</strong></div>
-          <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">Member 4:</span> <strong>${escHtml(t.member_four || 'Not assigned')}</strong></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.5rem;margin-bottom:1rem">
+          ${rosterMembers.map(m => `
+            <div class="card" style="padding:0.75rem"><span class="text-xs text-muted">${m.role}:</span> <strong>${escHtml(m.name)}</strong></div>
+          `).join('')}
         </div>
 
         <h4 style="font-weight:700;margin-bottom:0.5rem">Project Information</h4>
@@ -1296,7 +1279,6 @@
       document.getElementById('edit-member-1').value = t.member_one || '';
       document.getElementById('edit-member-2').value = t.member_two || '';
       document.getElementById('edit-member-3').value = t.member_three || '';
-      document.getElementById('edit-member-4').value = t.member_four || '';
       document.getElementById('modal-edit-team-alert').classList.add('alert-hidden');
       openModal('modal-edit-team');
     } catch (e) {
@@ -1323,7 +1305,6 @@
       member_one: document.getElementById('edit-member-1').value.trim() || null,
       member_two: document.getElementById('edit-member-2').value.trim() || null,
       member_three: document.getElementById('edit-member-3').value.trim() || null,
-      member_four: document.getElementById('edit-member-4').value.trim() || null,
     };
 
     try {
@@ -1481,7 +1462,6 @@
             ${team.member_one ? `<span class="badge badge-gray">M1: ${escHtml(team.member_one)}</span>` : ''}
             ${team.member_two ? `<span class="badge badge-gray">M2: ${escHtml(team.member_two)}</span>` : ''}
             ${team.member_three ? `<span class="badge badge-gray">M3: ${escHtml(team.member_three)}</span>` : ''}
-            ${team.member_four ? `<span class="badge badge-gray">M4: ${escHtml(team.member_four)}</span>` : ''}
           </div>
         </div>
 

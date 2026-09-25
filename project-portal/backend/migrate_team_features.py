@@ -20,7 +20,6 @@ def run_migration():
                 ("member_one", "VARCHAR(255)"),
                 ("member_two", "VARCHAR(255)"),
                 ("member_three", "VARCHAR(255)"),
-                ("member_four", "VARCHAR(255)"),
                 ("college_name", "VARCHAR(255)"),
                 ("department", "VARCHAR(255)"),
                 ("academic_year", "VARCHAR(50)"),

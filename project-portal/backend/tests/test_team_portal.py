@@ -12,7 +12,6 @@ class TestTeamPortalFeatures:
             "member_one": "Bob Smith",
             "member_two": "Charlie Brown",
             "member_three": "Diana Prince",
-            "member_four": "Evan Wright",
             "college_name": "MIT Institute",
             "department": "Computer Science",
             "academic_year": "2025-2026",
@@ -28,7 +27,7 @@ class TestTeamPortalFeatures:
         assert data["team_name"] == "Team Alpha"
         assert data["team_leader"] == "Alice Walker"
         assert data["member_one"] == "Bob Smith"
-        assert data["member_four"] == "Evan Wright"
+        assert data["member_three"] == "Diana Prince"
         assert data["college_name"] == "MIT Institute"
         assert data["department"] == "Computer Science"
         assert data["academic_year"] == "2025-2026"

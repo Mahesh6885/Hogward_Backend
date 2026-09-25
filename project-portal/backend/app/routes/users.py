@@ -28,7 +28,6 @@ def _user_dict(user: User) -> dict:
         "member_one": user.member_one,
         "member_two": user.member_two,
         "member_three": user.member_three,
-        "member_four": user.member_four,
         "college_name": user.college_name or user.organization,
         "organization": user.organization or user.college_name,
         "department": user.department,

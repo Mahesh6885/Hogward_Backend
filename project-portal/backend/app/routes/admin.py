@@ -320,7 +320,7 @@ def admin_export_teams(
     for u in items:
         domain_name = u.domain.name if u.domain else ""
         project = u.projects[0] if u.projects else None
-        members = ", ".join(filter(None, [u.member_one, u.member_two, u.member_three, u.member_four]))
+        members = ", ".join(filter(None, [u.member_one, u.member_two, u.member_three]))
         writer.writerow([
             u.id, u.team_name or u.name, u.team_leader or u.name,
             u.email, domain_name, u.college_name or u.organization,
@@ -557,7 +557,6 @@ def _user_dict(user: User) -> dict:
         "member_one": user.member_one,
         "member_two": user.member_two,
         "member_three": user.member_three,
-        "member_four": user.member_four,
         "college_name": user.college_name or user.organization,
         "organization": user.organization or user.college_name,
         "department": user.department,
@@ -593,7 +592,6 @@ def _project_dict(project: Project) -> dict:
         "member_one": u.member_one,
         "member_two": u.member_two,
         "member_three": u.member_three,
-        "member_four": u.member_four,
         "college_name": u.college_name or u.organization,
         "organization": u.organization or u.college_name,
         "department": u.department,
