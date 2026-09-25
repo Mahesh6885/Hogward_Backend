@@ -352,33 +352,10 @@ def seed_admin(db) -> None:
 
 
 def seed_problem_statements(db) -> None:
-    """Idempotently seed exactly 20 official Hogwarts Legacy 5.0 problem statements."""
-    for item in OFFICIAL_PROBLEM_STATEMENTS:
-        code = item["problem_code"]
-        existing = db.query(ProblemStatement).filter(ProblemStatement.problem_code == code).first()
-        if not existing:
-            ps = ProblemStatement(
-                problem_code=code,
-                realm=item["realm"],
-                title=item["title"],
-                description=item["description"],
-                difficulty=item["difficulty"],
-                status=True,
-            )
-            db.add(ps)
-            print(f"  [OK] Seeded problem statement: {code}")
-        else:
-            existing.realm = item["realm"]
-            existing.title = item["title"]
-            existing.description = item["description"]
-            existing.difficulty = item["difficulty"]
-            existing.status = True
-            print(f"  - Updated problem statement: {code}")
-
-    db.flush()
-    ai_count = db.query(ProblemStatement).filter(ProblemStatement.realm == RealmEnum.AI).count()
-    cy_count = db.query(ProblemStatement).filter(ProblemStatement.realm == RealmEnum.CYBERSECURITY).count()
-    print(f"  [OK] Total official problem statements: {ai_count + cy_count} (AI: {ai_count}, CY: {cy_count})")
+    """Idempotently seed exactly 20 official Hogwarts Legacy 5.0 problem statements from the official PDF."""
+    from app.services.pdf_import_service import import_official_statements
+    res = import_official_statements(db)
+    print(f"  [OK] Seeded official problem statements: Total={res['total']} (AI={res['ai_count']}, CY={res['cybersecurity_count']})")
 
 
 def main():

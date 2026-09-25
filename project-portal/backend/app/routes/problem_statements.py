@@ -1,13 +1,16 @@
-"""Problem Statements routes — public selection for teams, CRUD for admins."""
+import os
+import tempfile
 import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, Path
+from fastapi import APIRouter, Depends, Query, Path, UploadFile, File, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
-from app.core.dependencies import require_admin
+from app.core.dependencies import require_admin, get_current_user
 from app.models.user import User
-from app.models.problem_statement import RealmEnum, DifficultyEnum
+from app.models.project import Project
+from app.models.problem_statement import ProblemStatement, RealmEnum, DifficultyEnum
 from app.schemas.problem_statement import (
     ProblemStatementCreate,
     ProblemStatementUpdate,
@@ -21,9 +24,14 @@ from app.services.problem_statement_service import (
     create_problem_statement,
     update_problem_statement,
     delete_problem_statement,
+    toggle_problem_statement_status,
 )
 
 router = APIRouter(tags=["Problem Statements"])
+
+
+class ProblemStatementStatusBody(BaseModel):
+    status: bool
 
 
 def _ps_dict(ps, project_count: int = 0) -> dict:
@@ -41,7 +49,7 @@ def _ps_dict(ps, project_count: int = 0) -> dict:
     }
 
 
-# ─── Public APIs ─────────────────────────────────────────────────────────────
+# ─── Public & User APIs ──────────────────────────────────────────────────────
 
 @router.get("/api/problem-statements", status_code=200)
 def list_problem_statements(
@@ -63,6 +71,50 @@ def list_problem_statements(
         "success": True,
         "message": "Problem statements retrieved",
         "data": [_ps_dict(ps) for ps in statements],
+    }
+
+
+@router.get("/api/problem-statements/assigned", status_code=200)
+def get_assigned_problem_statement(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieve the official problem statement assigned to the current user's team.
+    """
+    project = db.query(Project).filter(Project.user_id == current_user.id).first()
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"success": False, "message": "No project registered for this team", "error_code": "NO_PROJECT"},
+        )
+
+    ps = project.problem_statement_rel
+    if not ps and project.problem_statement_id:
+        ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.problem_statement_id).first()
+
+    if not ps:
+        return {
+            "success": True,
+            "message": "Assigned problem statement details retrieved",
+            "data": {
+                "id": str(project.problem_statement_id) if project.problem_statement_id else None,
+                "problem_code": project.problem_code or "—",
+                "realm": project.realm or (current_user.domain.name if current_user.domain else "AI"),
+                "title": project.project_title or "—",
+                "description": project.problem_statement or "—",
+                "difficulty": "INTERMEDIATE",
+                "status": True,
+                "assigned_at": project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None,
+            },
+        }
+
+    data = _ps_dict(ps)
+    data["assigned_at"] = project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None
+    return {
+        "success": True,
+        "message": "Assigned problem statement retrieved successfully",
+        "data": data,
     }
 
 
@@ -127,6 +179,63 @@ def admin_update_problem_statement(
         "message": f"Problem statement '{ps.problem_code}' updated successfully",
         "data": _ps_dict(ps),
     }
+
+
+@router.patch("/api/problem-statements/{id}/status", status_code=200)
+@router.patch("/api/admin/problem-statements/{id}/status", status_code=200)
+def admin_patch_problem_statement_status(
+    id: uuid.UUID,
+    payload: Optional[ProblemStatementStatusBody] = None,
+    status_param: Optional[bool] = Query(None, alias="status"),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Admin API: Activate or deactivate a problem statement."""
+    new_status = payload.status if payload is not None else status_param
+    if new_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "message": "Field 'status' (boolean) is required in body or query", "error_code": "STATUS_REQUIRED"},
+        )
+    ps = toggle_problem_statement_status(db, id, new_status, admin)
+    return {
+        "success": True,
+        "message": f"Problem statement '{ps.problem_code}' status updated to {new_status}",
+        "data": _ps_dict(ps),
+    }
+
+
+@router.post("/api/problem-statements/import-pdf", status_code=200)
+@router.post("/api/admin/problem-statements/import-pdf", status_code=200)
+def admin_import_problem_statements_from_pdf(
+    file: Optional[UploadFile] = File(None),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Admin API: Parse official problem statements from PDF and update database idempotently."""
+    from app.services.pdf_import_service import import_official_statements, DEFAULT_PDF_PATH
+    temp_path = None
+    try:
+        if file and file.filename:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                tmp.write(file.file.read())
+                temp_path = tmp.name
+            path_to_use = temp_path
+        else:
+            path_to_use = DEFAULT_PDF_PATH
+
+        res = import_official_statements(db, pdf_path=path_to_use)
+        return {
+            "success": True,
+            "message": f"Successfully processed official statements: {res['inserted']} inserted, {res['updated']} updated, {res['total']} total.",
+            "data": res,
+        }
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass
 
 
 @router.delete("/api/problem-statements/{id}", status_code=200)

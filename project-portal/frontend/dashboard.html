@@ -377,18 +377,18 @@
         </div>
       </div>
 
-      <!-- State: Open Innovation — Custom Topic Form -->
+      <!-- State: Open Innovation — Proposal Form -->
       <div id="state-oi-form" class="hidden">
         <div class="domain-header domain-header-oi mb-3">
           <h2>Open Innovation Team Submission</h2>
-          <p class="mt-1">Propose your custom topic and complete project proposal below.</p>
+          <p class="mt-1">Propose your project details and complete project proposal below.</p>
         </div>
 
         <div class="card mb-3">
           <form id="form-oi-submission" class="modal-form">
             <div class="form-group">
-              <label class="form-label" for="oi-topic-title">Custom Topic Title *</label>
-              <input class="form-input" id="oi-topic-title" required placeholder="e.g. Autonomous Drone Swarm for Forest Fire Detection" />
+              <label class="form-label" for="oi-topic-title">Project Title *</label>
+              <input class="form-input" id="oi-topic-title" required placeholder="e.g. Autonomous Drone Swarm Solution" />
             </div>
 
             <div class="form-group">
@@ -954,8 +954,25 @@
           <!-- Populated by JS -->
         </div>
 
+        <!-- Assigned Official Problem Statement Card (Team Details) -->
+        <h3 class="mt-4" style="font-size:1.1rem;font-weight:700;font-family:'Cinzel',serif;color:var(--gold-light)">🎯 Assigned Official Problem Statement</h3>
+        <p class="text-xs text-muted">Official Hogwarts Legacy 5.0 challenge assigned to your team.</p>
+
+        <div class="enchanted-parchment-card mt-2 mb-3" id="team-ps-card">
+          <div class="ps-card-header">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <span class="ps-code-pill font-mono" id="team-ps-code">AI-PS-01</span>
+              <span class="badge" id="team-ps-realm-badge">⚡ AI Realm</span>
+              <span class="badge" id="team-ps-diff-badge">INTERMEDIATE</span>
+            </div>
+            <span class="text-xs text-muted" style="font-family:'Cinzel',serif">Official Challenge</span>
+          </div>
+          <div class="ps-title-text" id="team-ps-title" style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--gold-light);margin:0.75rem 0 0.5rem 0">—</div>
+          <div class="ps-description-box" id="team-ps-desc" style="max-height:260px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;font-size:0.875rem;color:var(--text-secondary);background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.85rem">—</div>
+        </div>
+
         <div class="alert alert-info mt-4">
-          ℹ️ <strong>Note:</strong> Team members are registered by the Administrator. Contact your admin if you need to update member information.
+          ℹ️ <strong>Note:</strong> Team members and official challenge are registered by the Administrator. Contact your admin if you need any adjustments.
         </div>
       </div>
     </div>
@@ -968,8 +985,8 @@
   <div class="modal" style="max-width:680px">
     <div class="modal-header">
       <div>
-        <span class="text-xs text-muted font-mono">PREDEFINED TOPIC PROBLEM STATEMENT</span>
-        <h3 class="modal-title mt-1" id="ps-modal-topic-title">Problem Statement</h3>
+        <span class="text-xs text-muted font-mono" style="font-family:'Cinzel',serif;color:var(--gold-light)">ASSIGNED OFFICIAL PROBLEM STATEMENT</span>
+        <h3 class="modal-title mt-1" id="ps-modal-topic-title">Official Problem Statement</h3>
       </div>
       <button class="modal-close" onclick="closeModal('modal-view-problem-statement')">&times;</button>
     </div>
@@ -1116,7 +1133,6 @@
 
   let cachedTeam = null;
   let cachedProject = null;
-  let selectedTopicId = null;
 
   // ── Tab Routing ──────────────────────────────────────────────────────────
   window.switchView = function(view) {
@@ -1153,7 +1169,7 @@
     const isEditorActive = !document.getElementById('project-editor')?.classList.contains('hidden');
 
     if (fieldKey === 'problem_statement') {
-      content = currentProblemStatement || cachedProject?.problem_statement || (cachedProject?.topic ? cachedProject.topic.description : '') || 'Predefined problem statement.';
+      content = currentProblemStatement || cachedProject?.problem_statement || (cachedProject?.problem_statement_rel ? cachedProject.problem_statement_rel.description : '') || 'Official problem statement.';
     } else if (fieldKey === 'abstract') {
       content = (isEditorActive ? document.getElementById('draft-abstract')?.value : cachedProject?.abstract) || '';
     } else if (fieldKey === 'proposed_solution') {
@@ -1169,7 +1185,7 @@
     }
 
     document.getElementById('section-modal-title').textContent = fieldTitle || 'Project Section Details';
-    document.getElementById('section-modal-category').textContent = categoryLabel || 'PROJECT TOPIC DETAILS';
+    document.getElementById('section-modal-category').textContent = categoryLabel || 'OFFICIAL PROBLEM STATEMENT';
 
     const bodyEl = document.getElementById('section-modal-body');
     if (!content || !content.trim()) {
@@ -1203,7 +1219,7 @@
   };
 
   window.openProblemStatementModal = function() {
-    viewSectionModal('problem_statement', currentProblemTitle ? `🎯 ${currentProblemTitle}` : '🎯 Problem Statement', 'PREDEFINED TOPIC');
+    viewSectionModal('problem_statement', currentProblemTitle ? `🎯 ${currentProblemTitle}` : '🎯 Problem Statement', 'OFFICIAL CHALLENGE');
   };
 
   window.renderFormattedDescription = function(rawText) {
@@ -1310,7 +1326,7 @@
   };
 
   window.openPreviewModal = function() {
-    const title = cachedProject?.project_title || cachedProject?.topic?.title || 'Project Proposal';
+    const title = cachedProject?.project_title || cachedProject?.problem_statement_title || (cachedProject?.problem_statement ? cachedProject.problem_statement.title : '') || 'Project Proposal';
     const abstract = document.getElementById('draft-abstract')?.value.trim() || '—';
     const objectives = document.getElementById('draft-objectives')?.value.trim() || '—';
     const solution = document.getElementById('draft-solution')?.value.trim() || '—';
@@ -1327,8 +1343,8 @@
         <div class="text-xs text-muted">Domain: <strong>${escHtml(cachedTeam?.domain?.display_name || cachedTeam?.domain?.name || '—')}</strong> · Team: <strong>${escHtml(cachedTeam?.team_name || cachedTeam?.name || '—')}</strong></div>
       </div>
       <div class="doc-section">
-        <div class="doc-section-title">🎯 Predefined Problem Statement</div>
-        <div class="doc-section-body">${escHtml(currentProblemStatement || 'Predefined by topic.')}</div>
+        <div class="doc-section-title">🎯 Assigned Official Problem Statement</div>
+        <div class="doc-section-body">${escHtml(currentProblemStatement || 'Official assigned problem statement.')}</div>
       </div>
       <div class="grid-2">
         <div class="doc-section"><div class="doc-section-title">📄 Abstract</div><div class="doc-section-body">${escHtml(abstract)}</div></div>
@@ -1480,7 +1496,7 @@
   function updateSummaryCard(prj) {
     if (prj) {
       document.getElementById('dash-code').textContent = prj.project_code || '—';
-      document.getElementById('dash-title').textContent = prj.project_title || prj.custom_topic || prj.topic?.title || '—';
+      document.getElementById('dash-title').textContent = prj.problem_statement_title || prj.project_title || (prj.problem_statement ? prj.problem_statement.title : '') || '—';
       document.getElementById('dash-domain').textContent = prj.domain?.display_name || prj.domain?.name || '—';
       document.getElementById('dash-submitted-date').textContent = prj.submitted_at 
         ? new Date(prj.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) 
@@ -1599,7 +1615,6 @@
   document.getElementById('form-oi-submission')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
-      custom_topic: document.getElementById('oi-topic-title').value.trim(),
       project_title: document.getElementById('oi-topic-title').value.trim(),
       abstract: document.getElementById('oi-abstract').value.trim(),
       problem_statement: document.getElementById('oi-problem').value.trim(),
@@ -1648,8 +1663,8 @@
       cachedProject = p;
 
       // Store problem statement for modal popup
-      currentProblemStatement = p.problem_statement || (p.topic ? p.topic.description : '') || 'Predefined problem statement.';
-      currentProblemTitle = p.project_title || p.custom_topic || p.topic?.title || 'Predefined Topic';
+      currentProblemStatement = p.problem_statement || (p.problem_statement_rel ? p.problem_statement_rel.description : '') || (p.problem_statement ? p.problem_statement.description : '') || 'Official problem statement.';
+      currentProblemTitle = p.problem_statement_title || p.project_title || (p.problem_statement ? p.problem_statement.title : '') || 'Official Problem Statement';
 
       const isSubmitted = p.is_submitted === true || (p.status && p.status !== 'DRAFT');
       const hasEditPermission = Boolean(p.edit_permission || (cachedTeam && cachedTeam.edit_permission));
@@ -2266,6 +2281,47 @@
         `;
         rosterContainer.appendChild(card);
       });
+
+      // Populate Assigned Problem Statement Card in Team Details
+      try {
+        let ps = null;
+        try {
+          const psResp = await api.get('/api/problem-statements/assigned');
+          ps = psResp?.data;
+        } catch (_) {}
+
+        if (!ps && cachedProject) {
+          ps = cachedProject.problem_statement || {
+            problem_code: cachedProject.problem_code,
+            realm: cachedProject.realm,
+            title: cachedProject.project_title,
+            description: cachedProject.problem_statement,
+            difficulty: 'INTERMEDIATE',
+          };
+        }
+
+        if (ps) {
+          const psRealm = ps.realm || 'AI';
+          const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
+          const diffBadgeClass = ps.difficulty === 'ADVANCED' ? 'badge-diff-advanced' : (ps.difficulty === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+
+          if (document.getElementById('team-ps-code')) document.getElementById('team-ps-code').textContent = ps.problem_code || '—';
+          if (document.getElementById('team-ps-title')) document.getElementById('team-ps-title').textContent = ps.title || 'Official Challenge';
+          if (document.getElementById('team-ps-desc')) document.getElementById('team-ps-desc').textContent = ps.description || '—';
+          if (document.getElementById('team-ps-realm-badge')) {
+            const rEl = document.getElementById('team-ps-realm-badge');
+            rEl.className = `badge ${realmBadgeClass}`;
+            rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
+          }
+          if (document.getElementById('team-ps-diff-badge')) {
+            const dEl = document.getElementById('team-ps-diff-badge');
+            dEl.className = `badge ${diffBadgeClass}`;
+            dEl.textContent = ps.difficulty || 'INTERMEDIATE';
+          }
+        }
+      } catch (err) {
+        console.warn('Could not populate team problem statement card:', err);
+      }
     } catch (e) {
       toast.error(`Failed to load team details: ${e.message}`);
     } finally {

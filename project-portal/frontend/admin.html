@@ -317,18 +317,19 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Code</th>
-              <th>Team</th>
+              <th>Project Code</th>
+              <th>Team Name</th>
               <th>Domain</th>
-              <th>Topic / Title</th>
-              <th>Round</th>
-              <th>Status</th>
-              <th>Submitted</th>
+              <th>Problem Code</th>
+              <th>Problem Statement Title</th>
+              <th>Review Round</th>
+              <th>Project Status</th>
+              <th>Submission Date</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="projects-table-body">
-            <tr><td colspan="8" class="text-center py-4 text-muted">Loading projects…</td></tr>
+            <tr><td colspan="9" class="text-center py-4 text-muted">Loading projects…</td></tr>
           </tbody>
         </table>
       </div>
@@ -475,12 +476,14 @@
         </div>
       </div>
 
-      <div class="form-group mb-2">
-        <label class="form-label" for="new-problem-statement">Official Problem Statement *</label>
-        <select class="form-input" id="new-problem-statement" required style="font-size:0.85rem">
-          <option value="">-- Select Problem Statement --</option>
-        </select>
-        <p class="text-xs text-muted mt-1">Teams must be assigned exactly one official problem statement corresponding to their chosen realm.</p>
+      <div class="form-group mb-2" style="background:rgba(212,175,55,0.07);border:1px dashed rgba(212,175,55,0.45);border-radius:var(--radius-sm);padding:0.85rem">
+        <div style="display:flex;align-items:center;gap:0.6rem">
+          <span style="font-size:1.3rem">⚡</span>
+          <div>
+            <div style="font-size:0.875rem;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">Automatic Problem Statement Assignment</div>
+            <div class="text-xs text-muted" style="margin-top:0.2rem">An official problem statement will be automatically and fairly assigned from the selected Realm upon registration via the balanced Hogwarts rotation system. No manual selection required.</div>
+          </div>
+        </div>
       </div>
 
       <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">
@@ -538,6 +541,14 @@
         <div style="margin-bottom:0.75rem">
           <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">TEAM NAME</div>
           <div id="creds-team-name" style="font-size:1rem;color:var(--text-primary);font-weight:600">—</div>
+        </div>
+        <div style="margin-bottom:0.75rem;padding-top:0.75rem;border-top:1px dashed var(--border)">
+          <div class="text-xs text-muted font-mono" style="margin-bottom:0.25rem">ASSIGNED OFFICIAL PROBLEM STATEMENT</div>
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem">
+            <code id="creds-problem-code" class="badge badge-gold" style="font-size:0.95rem;font-weight:700">—</code>
+            <span id="creds-realm" class="badge badge-blue text-xs">—</span>
+          </div>
+          <div id="creds-problem-title" style="font-size:0.925rem;color:var(--gold-light);font-weight:600;line-height:1.4">—</div>
         </div>
         <button type="button" class="btn btn-secondary btn-sm btn-full mt-1" id="btn-copy-all-creds" onclick="copyAllCredentials(this)">
           📋 Copy Login Credentials (Username &amp; Password)
@@ -1259,35 +1270,14 @@
     if (el) el.value = slug || '';
   });
 
-  // Create Team Modal & Realm-based Problem Statement Selection
-  let registrationStatements = [];
+  // Create Team Modal & Automatic Balanced Problem Statement Assignment
+  window.onRegistrationRealmChange = function() {};
 
-  window.onRegistrationRealmChange = function() {
-    const realm = document.getElementById('new-realm')?.value || 'AI';
-    const sel = document.getElementById('new-problem-statement');
-    if (!sel) return;
-
-    const filtered = registrationStatements.filter(ps => ps.realm === realm && ps.status !== false);
-    sel.innerHTML = '<option value="">-- Select Problem Statement --</option>' +
-      filtered.map(ps => `<option value="${ps.id}">${escHtml(ps.problem_code)} — ${escHtml(ps.title)}</option>`).join('');
-  };
-
-  async function loadRegistrationProblemStatements() {
-    try {
-      const resp = await api.get('/api/problem-statements');
-      registrationStatements = resp.data || [];
-      window.onRegistrationRealmChange();
-    } catch (e) {
-      console.warn('Could not load problem statements for registration:', e);
-    }
-  }
-
-  document.getElementById('btn-open-create-team').addEventListener('click', async () => {
+  document.getElementById('btn-open-create-team').addEventListener('click', () => {
     document.getElementById('form-create-team').reset();
     document.getElementById('modal-team-alert').classList.add('alert-hidden');
     document.getElementById('form-create-team').classList.remove('hidden');
     document.getElementById('create-team-success-step').classList.add('hidden');
-    await loadRegistrationProblemStatements();
     openModal('modal-create-team');
   });
 
@@ -1295,19 +1285,10 @@
     e.preventDefault();
     const btn = document.getElementById('btn-submit-create-team');
     btn.disabled = true;
-    btn.textContent = 'Creating Team Account…';
+    btn.textContent = 'Registering & Assigning Problem Statement…';
     const alertEl = document.getElementById('modal-team-alert');
 
     const chosenRealm = document.getElementById('new-realm').value;
-    const chosenPsId = document.getElementById('new-problem-statement').value;
-
-    if (!chosenPsId) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = '<span>⚠️</span><span>Please select an official Problem Statement for this team.</span>';
-      alertEl.classList.remove('alert-hidden');
-      btn.disabled = false; btn.innerHTML = '⚡ Register Team';
-      return;
-    }
 
     const payload = {
       team_name: document.getElementById('new-team-name').value.trim(),
@@ -1319,7 +1300,6 @@
       organization: document.getElementById('new-college').value.trim(),
       department: document.getElementById('new-dept').value.trim() || null,
       realm: chosenRealm,
-      problem_statement_id: chosenPsId,
       status: 'ACTIVE',
       member_one: document.getElementById('new-member-1').value.trim() || null,
       member_two: document.getElementById('new-member-2').value.trim() || null,
@@ -1339,11 +1319,21 @@
       const resp = await api.post('/api/admin/teams', payload);
       document.getElementById('form-create-team').classList.add('hidden');
       const createdUsername = resp?.data?.username || payload.team_name.toLowerCase().replace(/[^a-z0-9]+/g,'_');
+      const assignedCode = resp?.data?.assigned_problem_code || resp?.data?.project?.problem_code || '—';
+      const assignedTitle = resp?.data?.assigned_problem_title || resp?.data?.project?.project_title || 'Official Challenge';
+      const assignedRealm = resp?.data?.assigned_realm || chosenRealm;
+
       document.getElementById('creds-username').textContent = createdUsername;
       document.getElementById('creds-password').textContent = 'hogwarts-legacy';
       document.getElementById('creds-team-name').textContent = payload.team_name;
+      document.getElementById('creds-problem-code').textContent = assignedCode;
+      document.getElementById('creds-problem-title').textContent = assignedTitle;
+      document.getElementById('creds-realm').textContent = assignedRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity';
       document.getElementById('create-team-success-step').classList.remove('hidden');
-      showAlert(`Team '${payload.team_name}' registered successfully!`);
+
+      const successMsg = `Team '${payload.team_name}' registered successfully! Assigned Problem Statement: ${assignedCode} — ${assignedTitle}`;
+      if (window.toast) toast.success(successMsg);
+      else showAlert(successMsg);
       loadTeams();
     } catch (err) {
       alertEl.className = 'alert alert-error';
@@ -1526,25 +1516,31 @@
 
     try {
       const resp = await api.get(query);
-      if (!resp.data.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No projects found.</td></tr>`;
+      if (!resp.data || !resp.data.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No projects found.</td></tr>`;
         return;
       }
       tbody.innerHTML = resp.data.map(p => {
-        const title = p.project_title || (p.topic ? p.topic.title : p.custom_topic) || '—';
-        const teamName = p.user?.team_name || p.user?.name || '—';
-        const dBadge = domainColors[p.domain?.name] || 'badge-blue';
-        const sBadge = statusColors[p.status] || 'badge-gray';
-        const submittedDate = new Date(p.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
+        const teamName = p.team_name || p.user?.team_name || p.user?.name || '—';
+        const dName = p.domain?.display_name || p.domain?.name || p.realm || '—';
+        const dBadge = domainColors[p.domain?.name] || domainColors[p.realm] || 'badge-blue';
+        const pCode = p.problem_code || p.problem_statement?.problem_code || '—';
+        const psTitle = p.problem_statement_title || p.project_title || p.problem_statement?.title || '—';
+        const curRound = p.review_round || p.current_round || 1;
+        const prjStatus = p.project_status || p.status || 'DRAFT';
+        const sBadge = statusColors[prjStatus] || 'badge-gray';
+        const subDate = p.submission_date || p.submitted_at;
+        const submittedDate = subDate ? new Date(subDate).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) : '—';
 
         return `
           <tr>
             <td><code style="color:var(--accent-blue)">${escHtml(p.project_code)}</code></td>
             <td><strong>${escHtml(teamName)}</strong></td>
-            <td><span class="badge ${dBadge}">${escHtml(p.domain?.display_name || p.domain?.name)}</span></td>
-            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(title)}</td>
-            <td><span class="badge badge-purple">Round ${p.current_round}</span></td>
-            <td><span class="badge ${sBadge}">${p.status}</span></td>
+            <td><span class="badge ${dBadge}">${escHtml(dName)}</span></td>
+            <td><code class="badge badge-gold font-mono">${escHtml(pCode)}</code></td>
+            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(psTitle)}">${escHtml(psTitle)}</td>
+            <td><span class="badge badge-purple">Round ${curRound}</span></td>
+            <td><span class="badge ${sBadge}">${prjStatus}</span></td>
             <td class="text-xs text-muted">${submittedDate}</td>
             <td>
               <button class="btn btn-primary btn-sm" onclick="openReviewModal(${p.id})">
@@ -1555,7 +1551,7 @@
         `;
       }).join('');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
     }
   }
 
@@ -1579,7 +1575,7 @@
       const psObj = p.problem_statement;
       const psCode = p.problem_code || (psObj ? psObj.problem_code : '—');
       const psRealm = p.realm || (psObj ? psObj.realm : 'AI');
-      const psTitle = (psObj ? psObj.title : null) || p.project_title || 'Official Challenge';
+      const psTitle = p.problem_statement_title || (psObj ? psObj.title : null) || p.project_title || 'Official Challenge';
       const psDiff = (psObj && psObj.difficulty) || 'INTERMEDIATE';
       const psDesc = (psObj && psObj.description) || p.detailed_description || p.problem_statement || '—';
 
@@ -1591,7 +1587,7 @@
           <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
             <div>
               <span class="text-xs font-mono text-muted">PROJECT ${escHtml(p.project_code)}</span>
-              <h2 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin-top:0.25rem">${escHtml(p.project_title || p.custom_topic || p.topic?.title || 'Untitled')}</h2>
+              <h2 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin-top:0.25rem">${escHtml(psTitle)}</h2>
             </div>
             <div style="display:flex;gap:0.5rem">
               <span class="badge ${domainColors[p.domain?.name] || 'badge-blue'}">${escHtml(dName)}</span>
@@ -1619,18 +1615,18 @@
           </div>
         </div>
 
-        <!-- Official Problem Statement Card for Reviewer -->
+        <!-- Assigned Official Problem Statement Card for Reviewer -->
         <div class="enchanted-parchment-card mb-3">
           <div class="ps-card-header">
             <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
-              <span class="ps-code-pill">${escHtml(psCode)}</span>
+              <span class="ps-code-pill font-mono">${escHtml(psCode)}</span>
               <span class="badge ${realmBadgeClass}">${psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm'}</span>
               <span class="badge ${diffBadgeClass}">${escHtml(psDiff)}</span>
             </div>
-            <span class="text-xs text-muted">Official Challenge</span>
+            <span class="text-xs text-muted" style="font-family:'Cinzel',serif">Assigned Official Statement</span>
           </div>
-          <div class="ps-title-text">${escHtml(psTitle)}</div>
-          <div class="ps-description-box" style="max-height:160px">${escHtml(psDesc)}</div>
+          <div class="ps-title-text" style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--gold-light);margin:0.75rem 0 0.5rem 0">${escHtml(psTitle)}</div>
+          <div class="ps-description-box" style="max-height:240px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;font-size:0.875rem;color:var(--text-secondary);background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.85rem">${escHtml(psDesc)}</div>
         </div>
 
         <div class="card mb-3" style="padding:1.25rem">
@@ -1703,7 +1699,7 @@
 
       // Populate Admin Overrides Form
       document.getElementById('admin-edit-project-id').value = p.id;
-      document.getElementById('admin-edit-title').value = p.project_title || p.custom_topic || p.topic?.title || '';
+      document.getElementById('admin-edit-title').value = p.project_title || psTitle || '';
       document.getElementById('admin-edit-domain').value = p.domain?.name || 'AI';
       document.getElementById('admin-edit-github').value = p.github_url || '';
       document.getElementById('admin-edit-status').value = p.status || 'SUBMITTED';

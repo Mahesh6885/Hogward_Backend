@@ -1,4 +1,4 @@
-"""Admin routes — user & team management, project review, dashboard."""
+import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -324,26 +324,26 @@ def admin_export_teams(
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Columns: Team Name, Team Leader, Realm, Problem Code, Problem Statement Title, Review Round, Project Status, Submission Date
+    # Columns: Team Name, Team Leader, Domain, Problem Code, Problem Statement Title, Review Round, Status, Submission Date
     writer.writerow([
         "Team Name",
         "Team Leader",
-        "Realm",
+        "Domain",
         "Problem Code",
         "Problem Statement Title",
         "Review Round",
-        "Project Status",
+        "Status",
         "Submission Date",
     ])
 
     for u in items:
         project = u.projects[0] if u.projects else None
-        realm_name = ""
+        domain_name = ""
         ps_code = "—"
         ps_title = "—"
 
         if project:
-            realm_name = project.realm or (u.domain.name if u.domain else "")
+            domain_name = project.realm or (u.domain.name if u.domain else "")
             if project.problem_statement_rel:
                 ps_code = project.problem_statement_rel.problem_code
                 ps_title = project.problem_statement_rel.title
@@ -354,7 +354,7 @@ def admin_export_teams(
             cur_round = str(project.current_round) if project.current_round else "1"
             sub_date = project.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if project.submitted_at else "—"
         else:
-            realm_name = u.domain.name if u.domain else ""
+            domain_name = u.domain.name if u.domain else ""
             prj_status = "NOT_SUBMITTED"
             cur_round = "—"
             sub_date = "—"
@@ -362,7 +362,7 @@ def admin_export_teams(
         writer.writerow([
             u.team_name or u.name,
             u.team_leader or u.name,
-            realm_name,
+            domain_name,
             ps_code,
             ps_title,
             cur_round,
@@ -388,15 +388,27 @@ def admin_export_teams(
 @router.get("/projects", status_code=200)
 def admin_list_projects(
     domain: Optional[str] = Query(None),
+    realm: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     current_round: Optional[int] = Query(None),
     user_id: Optional[int] = Query(None),
+    search: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    items, total, total_pages = list_projects_admin(db, domain, status, current_round, user_id, page, page_size)
+    items, total, total_pages = list_projects_admin(
+        db=db,
+        page=page,
+        page_size=page_size,
+        domain=domain,
+        realm=realm or domain,
+        status_filter=status,
+        round_filter=current_round,
+        search=search,
+        user_id=user_id,
+    )
     return {
         "success": True,
         "message": "Projects retrieved",
@@ -519,28 +531,30 @@ def admin_list_problem_statements(
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """List all predefined problem statements with assignment status and assigned teams."""
+    """List all official problem statements with assignment counts and assigned teams."""
     from app.models.problem_statement import ProblemStatement
     query = db.query(ProblemStatement)
     if domain:
-        query = query.join(Domain).filter(Domain.name == domain)
-    statements = query.order_by(ProblemStatement.id).all()
+        query = query.filter(ProblemStatement.realm == domain.upper())
+    statements = query.order_by(ProblemStatement.realm.asc(), ProblemStatement.problem_code.asc()).all()
 
     data = []
     for ps in statements:
-        assigned_projects = db.query(Project).filter(Project.assigned_problem_statement_id == ps.id).all()
-        teams = [{"id": prj.user.id, "team_name": prj.user.team_name, "username": prj.user.username} for prj in assigned_projects]
+        assigned_projects = db.query(Project).filter(Project.problem_statement_id == ps.id).all()
+        teams = [{"id": prj.user.id, "team_name": prj.user.team_name, "username": prj.user.username} for prj in assigned_projects if prj.user]
         data.append({
-            "id": ps.id,
+            "id": str(ps.id),
             "problem_code": ps.problem_code,
-            "domain_id": ps.domain_id,
-            "domain": ps.domain.name if ps.domain else None,
-            "detailed_description": ps.detailed_description,
+            "realm": ps.realm,
+            "title": ps.title,
+            "description": ps.description,
+            "difficulty": ps.difficulty,
+            "status": ps.status,
             "is_assigned": len(teams) > 0,
             "assigned_team_id": teams[0]["id"] if teams else None,
             "teams": teams,
             "teams_count": len(teams),
-            "created_at": ps.created_at.isoformat(),
+            "created_at": ps.created_at.isoformat() if ps.created_at else None,
         })
 
     return {"success": True, "message": "Problem statements retrieved", "data": data}
@@ -548,22 +562,26 @@ def admin_list_problem_statements(
 
 @router.patch("/problem-statements/{id}/release", status_code=200)
 def admin_release_problem_statement(
-    id: int,
+    id: uuid.UUID,
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    """Release/unassign a problem statement if a team was deleted."""
+    """Unassign a problem statement from projects if needed."""
     from app.models.problem_statement import ProblemStatement
     from fastapi import HTTPException
     ps = db.query(ProblemStatement).filter(ProblemStatement.id == id).first()
     if not ps:
         raise HTTPException(status_code=404, detail={"success": False, "message": "Problem statement not found"})
 
-    ps.is_assigned = False
-    ps.assigned_team_id = None
+    projects = db.query(Project).filter(Project.problem_statement_id == ps.id).all()
+    for p in projects:
+        p.problem_statement_id = None
     db.commit()
-    db.refresh(ps)
-    return {"success": True, "message": f"Problem statement {ps.problem_code} released", "data": {"id": ps.id, "problem_code": ps.problem_code, "is_assigned": False}}
+    return {
+        "success": True,
+        "message": f"Problem statement {ps.problem_code} released from {len(projects)} project(s)",
+        "data": {"id": str(ps.id), "problem_code": ps.problem_code, "is_assigned": False},
+    }
 
 
 # ─── Serialization helpers ───────────────────────────────────────────────────
@@ -589,7 +607,8 @@ def _user_dict(user: User) -> dict:
             "problem_code": p_code,
             "problem_statement_id": str(p.problem_statement_id) if p.problem_statement_id else None,
             "realm": p.realm or (user.domain.name if user.domain else "AI"),
-            "project_title": ps_title,
+            "problem_statement_title": ps_title,
+            "assigned_at": p.assigned_at.isoformat() if getattr(p, "assigned_at", None) else None,
             "status": p.status,
             "current_round": p.current_round,
             "submitted_at": p.submitted_at.isoformat() if p.submitted_at else None,
@@ -615,6 +634,9 @@ def _user_dict(user: User) -> dict:
         "role": user.role,
         "status": user.status,
         "project": project_summary,
+        "assigned_problem_code": project_summary.get("problem_code") if project_summary else None,
+        "assigned_problem_title": project_summary.get("project_title") if project_summary else None,
+        "assigned_realm": project_summary.get("realm") if project_summary else None,
         "edit_permission": getattr(user, "edit_permission", False),
         "edit_permission_reason": getattr(user, "edit_permission_reason", None),
         "edit_permission_granted_at": user.edit_permission_granted_at.isoformat() if getattr(user, "edit_permission_granted_at", None) else None,
@@ -674,9 +696,12 @@ def _project_dict(project: Project) -> dict:
             else None
         ),
         "problem_code": p_code,
+        "team_name": user_info["team_name"],
+        "problem_statement_title": ps_title,
         "project_title": ps_title,
         "abstract": project.abstract,
         "detailed_description": ps_desc,
+        "problem_description": ps_desc,
         "objectives": project.objectives,
         "proposed_solution": project.proposed_solution,
         "technologies": project.technology_stack or project.technologies,
@@ -687,10 +712,14 @@ def _project_dict(project: Project) -> dict:
         "demo_url": project.demo_url,
         "is_submitted": project.is_submitted,
         "status": project.status,
+        "project_status": project.status,
+        "review_round": project.current_round,
         "current_round": project.current_round,
+        "submission_date": project.submitted_at.isoformat() if project.submitted_at else (project.created_at.isoformat() if hasattr(project, "created_at") and project.created_at else None),
         "draft_saved_at": project.draft_saved_at.isoformat() if project.draft_saved_at else None,
         "submitted_at": project.submitted_at.isoformat() if project.submitted_at else None,
         "updated_at": project.updated_at.isoformat(),
+        "assigned_at": project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None,
         "edit_permission": getattr(u, "edit_permission", False),
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,

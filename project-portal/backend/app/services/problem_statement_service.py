@@ -1,4 +1,4 @@
-"""Service module for Hogwarts Legacy 5.0 Problem Statements."""
+import random
 import uuid
 from typing import Optional, List, Tuple
 from fastapi import HTTPException, status
@@ -170,3 +170,72 @@ def delete_problem_statement(db: Session, ps_id: uuid.UUID, admin: User) -> None
     )
     db.add(log)
     db.commit()
+
+
+def toggle_problem_statement_status(
+    db: Session, ps_id: uuid.UUID, status_val: bool, admin: User
+) -> ProblemStatement:
+    """Toggle or update active status of a problem statement."""
+    ps = get_problem_statement_by_id(db, ps_id)
+    ps.status = status_val
+
+    log = AuditLog(
+        admin_id=admin.id,
+        action="TOGGLE_PROBLEM_STATEMENT_STATUS",
+        target_type="problem_statement",
+        target_id=admin.id,
+        description=f"Admin '{admin.username}' set problem statement {ps.problem_code} status to {status_val}",
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(ps)
+    return ps
+
+
+def assign_balanced_problem_statement(db: Session, realm: RealmEnum) -> ProblemStatement:
+    """
+    Assign an active problem statement from the given realm using fair balanced rotation.
+    1. Query all ACTIVE problem statements in the realm.
+    2. Count existing project assignments for each statement in PostgreSQL.
+    3. Find the minimum assignment count across active statements in that realm.
+    4. Collect all statements that have this minimum count (current cycle candidates).
+    5. Randomly choose one statement from these candidates.
+
+    Guarantees:
+      - AI teams receive only AI statements.
+      - Cybersecurity teams receive only Cybersecurity statements.
+      - Every statement in a realm is assigned exactly once before any is assigned twice.
+      - The (N+1)th team begins a new balanced shuffled cycle.
+      - Inactive statements are never assigned.
+    """
+    active_statements = (
+        db.query(ProblemStatement)
+        .filter(ProblemStatement.realm == realm, ProblemStatement.status == True)
+        .all()
+    )
+    if not active_statements:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "success": False,
+                "message": f"No active problem statements available in realm {realm.value}",
+                "error_code": "NO_ACTIVE_STATEMENTS",
+            },
+        )
+
+    ps_ids = [ps.id for ps in active_statements]
+    counts_query = (
+        db.query(Project.problem_statement_id, func.count(Project.id))
+        .filter(Project.problem_statement_id.in_(ps_ids))
+        .group_by(Project.problem_statement_id)
+        .all()
+    )
+    count_map = {ps.id: 0 for ps in active_statements}
+    for ps_id, cnt in counts_query:
+        if ps_id in count_map:
+            count_map[ps_id] = cnt
+
+    min_count = min(count_map.values())
+    candidates = [ps for ps in active_statements if count_map[ps.id] == min_count]
+    return random.choice(candidates)
+

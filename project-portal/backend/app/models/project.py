@@ -43,7 +43,10 @@ class Project(Base):
         SAEnum(RealmEnum, name="realm_enum"), nullable=True, index=True
     )
 
-    custom_topic: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+    )
     project_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
     problem_statement: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -265,8 +265,11 @@ def list_projects_admin(
     status_filter: Optional[str] = None,
     round_filter: Optional[int] = None,
     search: Optional[str] = None,
+    user_id: Optional[int] = None,
 ):
     query = db.query(Project)
+    if user_id:
+        query = query.filter(Project.user_id == user_id)
     if realm:
         query = query.filter(Project.realm == realm)
     elif domain:

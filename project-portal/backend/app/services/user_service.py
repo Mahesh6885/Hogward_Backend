@@ -1,4 +1,5 @@
 """User and team management service."""
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
@@ -46,32 +47,28 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             detail={"success": False, "message": "A valid realm (AI or CYBERSECURITY) must be selected.", "error_code": "REALM_REQUIRED"},
         )
 
-    # Validate problem statement for USER role
+    # Problem statement assignment for USER role
     ps = None
     if data.role == UserRole.USER:
-        if data.problem_statement_id:
+        if data.problem_statement_id and str(data.problem_statement_id).strip():
             try:
-                ps_uuid = uuid.UUID(str(data.problem_statement_id))
+                ps_uuid = uuid.UUID(str(data.problem_statement_id).strip())
                 ps = db.query(ProblemStatement).filter(ProblemStatement.id == ps_uuid).first()
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail={"success": False, "message": "Invalid problem statement ID format", "error_code": "INVALID_UUID"},
                 )
-        else:
-            # Fallback to an active statement in the chosen realm
-            ps = db.query(ProblemStatement).filter(ProblemStatement.realm == chosen_realm, ProblemStatement.status == True).first()
+            if ps and ps.realm != chosen_realm:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"success": False, "message": f"Realm mismatch: Problem statement '{ps.problem_code}' is in realm '{ps.realm}', but '{chosen_realm.value}' was selected.", "error_code": "REALM_MISMATCH"},
+                )
 
         if not ps:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"success": False, "message": "Team cannot register without selecting one problem statement.", "error_code": "PROBLEM_STATEMENT_REQUIRED"},
-            )
-        if ps.realm != chosen_realm:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"success": False, "message": f"Realm mismatch: Problem statement '{ps.problem_code}' is in realm '{ps.realm}', but '{chosen_realm.value}' was selected.", "error_code": "REALM_MISMATCH"},
-            )
+            # Automatic fair balanced rotation assignment from chosen realm!
+            from app.services.problem_statement_service import assign_balanced_problem_statement
+            ps = assign_balanced_problem_statement(db, chosen_realm)
 
     domain = None
     if chosen_realm:
@@ -168,6 +165,7 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
         max_id = db.query(func.max(Project.id)).scalar() or 0
         proj_code = generate_project_code(max_id + 1)
 
+        now_utc = datetime.now(timezone.utc)
         project = Project(
             project_code=proj_code,
             user_id=user.id,
@@ -175,11 +173,13 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             problem_statement_id=ps.id,
             problem_code=ps.problem_code,
             realm=ps.realm,
-            project_title=f"{ps.problem_code} Solution Project",
+            project_title=ps.title,
             problem_statement=ps.description,
             status=ProjectStatus.DRAFT,
             is_submitted=False,
             current_round=1,
+            assigned_at=now_utc,
+            created_at=now_utc,
         )
         db.add(project)
         db.flush()

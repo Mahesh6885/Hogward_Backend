@@ -124,6 +124,8 @@ def auto_migrate_schema(engine: Engine) -> None:
                 ("realm", "realm_enum" if is_postgres else "VARCHAR(50)"),
                 ("draft_saved_at", dt_type),
                 ("submitted_at", dt_type),
+                ("assigned_at", dt_type),
+                ("created_at", f"{dt_type} DEFAULT CURRENT_TIMESTAMP"),
                 ("technology_stack", "TEXT"),
             ]
             for col_name, col_def in project_cols_to_add:
@@ -135,13 +137,15 @@ def auto_migrate_schema(engine: Engine) -> None:
                     except Exception as ex:
                         print(f"  [MIGRATION] Column projects.{col_name} notice: {ex}")
 
-            # Drop topic_id from projects if PostgreSQL
-            if is_postgres and "topic_id" in existing_project_cols:
-                try:
-                    conn.execute(text("ALTER TABLE projects DROP COLUMN IF EXISTS topic_id;"))
-                    print("  [MIGRATION] Dropped legacy topic_id from projects table.")
-                except Exception as ex:
-                    print(f"  [MIGRATION] Drop topic_id notice: {ex}")
+            # Drop legacy topic_id and custom_topic from projects if PostgreSQL
+            if is_postgres:
+                for legacy_col in ("topic_id", "custom_topic"):
+                    if legacy_col in existing_project_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE projects DROP COLUMN IF EXISTS {legacy_col};"))
+                            print(f"  [MIGRATION] Dropped legacy {legacy_col} from projects table.")
+                        except Exception as ex:
+                            print(f"  [MIGRATION] Drop {legacy_col} notice: {ex}")
 
             # Clean default null values
             try:

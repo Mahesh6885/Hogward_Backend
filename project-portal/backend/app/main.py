@@ -80,13 +80,27 @@ async def generic_exception_handler(request: Request, exc: Exception):
 # ─── Startup Event ────────────────────────────────────────────────────────────
 @app.on_event("startup")
 def on_startup():
-    from app.database.database import engine
+    import logging
+    from app.database.database import engine, SessionLocal
     from app.database.migration import auto_migrate_schema
+    from app.models.problem_statement import ProblemStatement
+    from app.services.pdf_import_service import import_official_statements
+
     try:
         auto_migrate_schema(engine)
     except Exception as e:
-        import logging
         logging.error("Failed to auto migrate schema on startup: %s", e)
+
+    try:
+        with SessionLocal() as db:
+            ps_count = db.query(ProblemStatement).count()
+            if ps_count < 20:
+                logging.info("Startup: Found %d problem statements. Importing official statements from PDF...", ps_count)
+                import_official_statements(db)
+            else:
+                logging.info("Startup: Verified %d official problem statements present in database.", ps_count)
+    except Exception as e:
+        logging.error("Startup: Failed to initialize/verify official problem statements: %s", e)
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
