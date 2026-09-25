@@ -1576,6 +1576,7 @@
       const psCode = p.problem_code || (psObj ? psObj.problem_code : '—');
       const psRealm = p.realm || (psObj ? psObj.realm : 'AI');
       const psTitle = p.problem_statement_title || (psObj ? psObj.title : null) || p.project_title || 'Official Challenge';
+      const psDiff = (psObj && psObj.difficulty) || 'INTERMEDIATE';
       const psDesc = (psObj && (psObj.description || psObj.detailed_description)) || p.detailed_description || p.problem_description || (typeof p.problem_statement === 'string' ? p.problem_statement : '') || '—';
 
       const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
