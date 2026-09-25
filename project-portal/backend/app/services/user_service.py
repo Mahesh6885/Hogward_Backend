@@ -343,7 +343,6 @@ def reset_user_password(db: Session, user_id: int, data: UserPasswordReset, admi
 
 
 def delete_user(db: Session, user_id: int, admin: User) -> None:
-    from app.models.problem_statement import ProblemStatement
     from app.models.project import Project
     from app.models.review import Review
 
@@ -354,35 +353,34 @@ def delete_user(db: Session, user_id: int, admin: User) -> None:
             detail={"success": False, "message": "You cannot delete your own account", "error_code": "SELF_DELETE"},
         )
 
-    # Delete projects and reviews associated with this user
-    for prj in list(user.projects):
+    # 1. Delete reviews associated with any project of this user, then delete the projects
+    user_projects = db.query(Project).filter(Project.user_id == user.id).all()
+    for prj in user_projects:
         db.query(Review).filter(Review.project_id == prj.id).delete()
-        if prj.assigned_problem_statement_id:
-            other_using = db.query(Project).filter(
-                Project.assigned_problem_statement_id == prj.assigned_problem_statement_id,
-                Project.id != prj.id,
-            ).first()
-            if not other_using:
-                ps = db.query(ProblemStatement).filter(ProblemStatement.id == prj.assigned_problem_statement_id).first()
-                if ps:
-                    ps.is_assigned = False
-                    ps.assigned_team_id = None
         db.delete(prj)
+    db.flush()
 
-    # Release any problem statements directly pointing to this team
-    db.query(ProblemStatement).filter(ProblemStatement.assigned_team_id == user_id).update({
-        "is_assigned": False,
-        "assigned_team_id": None,
-    })
+    # 2. If this user ever authored reviews as admin/reviewer, clean those up
+    db.query(Review).filter(Review.admin_id == user.id).delete()
 
+    # 3. If this user was referenced as admin in audit_logs, nullify foreign key
+    db.query(AuditLog).filter(AuditLog.admin_id == user.id).update(
+        {"admin_id": None}, synchronize_session=False
+    )
+
+    # 4. Log the deletion action
+    username_deleted = user.username
+    team_deleted = user.team_name or user.name
     log = AuditLog(
         admin_id=admin.id,
         action="DELETE_USER",
         target_type="user",
         target_id=user.id,
-        description=f"Admin '{admin.username}' deleted user '{user.username}'",
+        description=f"Admin '{admin.username}' deleted team/user '{username_deleted}' ({team_deleted})",
     )
     db.add(log)
+
+    # 5. Delete user and commit transaction
     db.delete(user)
     db.commit()
 

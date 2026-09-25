@@ -158,3 +158,37 @@ class TestPasswordReset:
         # New password should work
         login2 = client.post("/api/auth/login", json={"username": "aiuser", "password": "newpassword123"})
         assert login2.status_code == 200
+
+
+class TestDeleteUser:
+    def test_admin_deletes_team(self, client, admin_user, ai_user, domains):
+        token = get_token(client, "admin", "adminpass123")
+        resp = client.delete(f"/api/admin/teams/{ai_user.id}", headers=auth_headers(token))
+        assert resp.status_code == 200
+        assert resp.json()["success"] is True
+
+        # Verify user is gone
+        get_resp = client.get(f"/api/admin/teams/{ai_user.id}", headers=auth_headers(token))
+        assert get_resp.status_code == 404
+
+    def test_admin_deletes_user_endpoint(self, client, admin_user, cyber_user, domains):
+        token = get_token(client, "admin", "adminpass123")
+        resp = client.delete(f"/api/admin/users/{cyber_user.id}", headers=auth_headers(token))
+        assert resp.status_code == 200
+        assert resp.json()["success"] is True
+
+    def test_admin_cannot_delete_self(self, client, admin_user, domains):
+        token = get_token(client, "admin", "adminpass123")
+        resp = client.delete(f"/api/admin/teams/{admin_user.id}", headers=auth_headers(token))
+        assert resp.status_code == 400
+        assert resp.json()["error_code"] == "SELF_DELETE"
+
+    def test_non_admin_cannot_delete_user(self, client, ai_user, cyber_user, domains):
+        token = get_token(client, "aiuser", "userpass123")
+        resp = client.delete(f"/api/admin/teams/{cyber_user.id}", headers=auth_headers(token))
+        assert resp.status_code == 403
+
+    def test_delete_nonexistent_user_returns_404(self, client, admin_user, domains):
+        token = get_token(client, "admin", "adminpass123")
+        resp = client.delete("/api/admin/teams/99999", headers=auth_headers(token))
+        assert resp.status_code == 404
