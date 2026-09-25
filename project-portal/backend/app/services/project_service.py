@@ -4,23 +4,20 @@ from typing import Optional, Union
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import or_, func
 
-import random
 from app.core.config import settings
 from app.models.domain import DomainName
 from app.models.project import Project, ProjectStatus
-from app.models.topic import Topic
+from app.models.problem_statement import ProblemStatement, RealmEnum
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.models.topic_lock import TeamTopicLock
-from app.models.problem_statement import ProblemStatement
 from app.schemas.project import ProjectSubmitRequest, ProjectDraftRequest
 from app.utils.helpers import paginate, generate_project_code
 
 
 def _next_project_code(db: Session) -> str:
-    """Generate the next sequential project code (server-side, not from frontend)."""
-    from sqlalchemy import func
+    """Generate the next sequential project code."""
     max_id = db.query(func.max(Project.id)).scalar() or 0
     return generate_project_code(max_id + 1)
 
@@ -32,27 +29,6 @@ def _normalize_list_or_str(val: Optional[Union[str, list]]) -> Optional[str]:
     if isinstance(val, list):
         return "\n".join(str(v) for v in val)
     return str(val).strip() if val else None
-
-
-def _validate_topic_for_domain(db: Session, user: User, topic_id: int) -> Topic:
-    """Validate that a topic belongs to the user's domain."""
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not topic:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"success": False, "message": "Topic not found", "error_code": "TOPIC_NOT_FOUND"},
-        )
-    if topic.domain_id != user.domain_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"success": False, "message": "Selected topic does not belong to your domain", "error_code": "DOMAIN_MISMATCH"},
-        )
-    if not topic.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"success": False, "message": "Selected topic is no longer available", "error_code": "TOPIC_INACTIVE"},
-        )
-    return topic
 
 
 def _check_github_unique(db: Session, github_url: str, exclude_project_id: Optional[int] = None):
@@ -77,15 +53,8 @@ def get_user_project(db: Session, user: User) -> Optional[Project]:
 def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Project:
     """
     Save draft for editable project blocks. Creates draft if not exists.
-    Raises HTTP 403 if project is already fully submitted.
+    Raises HTTP 403 if project is already fully submitted and not granted edit permission.
     """
-    if user.domain is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"success": False, "message": "User has no domain assigned", "error_code": "NO_DOMAIN"},
-        )
-
-    domain_name = user.domain.name
     existing = get_user_project(db, user)
 
     if existing and existing.is_submitted and not getattr(user, "edit_permission", False):
@@ -97,44 +66,34 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
     tech_stack = _normalize_list_or_str(data.technology_stack or data.technologies)
     objectives_str = _normalize_list_or_str(data.objectives)
 
-    # Validate github_url uniqueness if provided
-    github_url = data.github_url.strip() if data.github_url else None
-    if github_url:
-        _check_github_unique(db, github_url, exclude_project_id=existing.id if existing else None)
+    github_url = None
+    if data.github_url is not None:
+        raw_github = data.github_url.strip()
+        if raw_github:
+            if not raw_github.startswith("https://github.com/"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"success": False, "message": "GitHub URL must start with https://github.com/", "error_code": "INVALID_GITHUB_URL"},
+                )
+            _check_github_unique(db, raw_github, exclude_project_id=existing.id if existing else None)
+            github_url = raw_github
 
     if existing is None:
-        # Create new draft project
-        assigned_ps_id = None
-        assigned_ps_desc = None
-        assigned_ps_code = None
+        # Determine realm from domain or default
+        realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
+        ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
+        prefix = "AI" if realm == RealmEnum.AI else "CY"
 
-        if domain_name in (DomainName.AI.value, DomainName.CYBERSECURITY.value):
-            statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == user.domain_id).all()
-            if statements:
-                chosen = random.choice(statements)
-                assigned_ps_id = chosen.id
-                assigned_ps_code = chosen.problem_code
-                assigned_ps_desc = chosen.detailed_description
-                chosen.is_assigned = True
-                chosen.assigned_team_id = user.id
-            project_title = f"{assigned_ps_code} Solution Project" if assigned_ps_code else (data.project_title or "Project")
-            custom_topic = None
-            problem_statement = assigned_ps_desc
-        else:
-            custom_topic = _normalize_list_or_str(data.custom_topic or data.project_title)
-            project_title = data.project_title.strip() if data.project_title else custom_topic
-            problem_statement = data.problem_statement.strip() if data.problem_statement else None
-
-        prefix = "AI" if domain_name == DomainName.AI.value else ("CY" if domain_name == DomainName.CYBERSECURITY.value else "OI")
         project = Project(
             project_code=f"PRJ-{prefix}-{user.id:04d}",
             user_id=user.id,
             domain_id=user.domain_id,
-            assigned_problem_statement_id=assigned_ps_id,
-            custom_topic=custom_topic,
-            project_title=project_title,
+            problem_statement_id=ps.id if ps else None,
+            problem_code=ps.problem_code if ps else None,
+            realm=ps.realm if ps else realm,
+            project_title=data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project"),
             abstract=data.abstract.strip() if data.abstract else None,
-            problem_statement=problem_statement,
+            problem_statement=ps.description if ps else (data.problem_statement or None),
             objectives=objectives_str,
             proposed_solution=data.proposed_solution.strip() if data.proposed_solution else None,
             technologies=tech_stack,
@@ -152,25 +111,8 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
         db.add(project)
     else:
         # Update existing draft
-        if domain_name in (DomainName.AI.value, DomainName.CYBERSECURITY.value):
-            if not existing.assigned_problem_statement_id:
-                statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == user.domain_id).all()
-                if statements:
-                    chosen = random.choice(statements)
-                    existing.assigned_problem_statement_id = chosen.id
-                    existing.problem_statement = chosen.detailed_description
-                    existing.project_title = f"{chosen.problem_code} Solution Project"
-                    chosen.is_assigned = True
-                    chosen.assigned_team_id = user.id
-        else:
-            if data.project_title is not None:
-                existing.project_title = data.project_title.strip()
-            if data.custom_topic is not None:
-                existing.custom_topic = data.custom_topic.strip()
-            if data.problem_statement is not None:
-                existing.problem_statement = data.problem_statement.strip()
-
-        # Update solution blocks
+        if data.project_title is not None:
+            existing.project_title = data.project_title.strip()
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:
@@ -190,7 +132,8 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
             existing.demo_url = data.demo_url.strip()
 
         existing.draft_saved_at = datetime.now(timezone.utc)
-        existing.status = ProjectStatus.DRAFT
+        if not existing.is_submitted:
+            existing.status = ProjectStatus.DRAFT
         project = existing
 
     db.commit()
@@ -198,18 +141,10 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
     return project
 
 
-def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, require_github_for_oi: bool = False) -> Project:
+def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) -> Project:
     """
     Final submission: validates all fields, marks is_submitted=True, status=SUBMITTED.
-    The domain is always taken from the authenticated user.
     """
-    if user.domain is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"success": False, "message": "User has no domain assigned", "error_code": "NO_DOMAIN"},
-        )
-
-    domain_name = user.domain.name
     existing = get_user_project(db, user)
 
     if existing and existing.is_submitted and not getattr(user, "edit_permission", False):
@@ -218,83 +153,37 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
             detail={"success": False, "message": "You already have a project for this user. Multiple projects are not allowed. Editing requires admin permission.", "error_code": "PROJECT_EXISTS"},
         )
 
-    topic_id = None
-    if getattr(data, "topic_id", None):
-        topic = _validate_topic_for_domain(db, user, data.topic_id)
-        topic_id = topic.id
-
     tech_stack = _normalize_list_or_str(data.technology_stack or data.technologies)
     objectives_str = _normalize_list_or_str(data.objectives)
 
-    if domain_name == DomainName.OPEN_INNOVATION.value:
-        topic_title = data.custom_topic or data.project_title or (existing.custom_topic if existing else None) or (existing.project_title if existing else None)
-        if not topic_title:
+    raw_github = data.github_url or (existing.github_url if existing else None)
+    github_url = None
+    if raw_github:
+        github_url = raw_github.strip()
+        if not github_url.startswith("https://github.com/"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"success": False, "message": "Open Innovation teams must provide a project topic/title", "error_code": "CUSTOM_TOPIC_REQUIRED"},
+                detail={"success": False, "message": "GitHub URL must start with https://github.com/", "error_code": "INVALID_GITHUB_URL"},
             )
-        # GitHub URL is mandatory for Open Innovation only when require_github_for_oi is True
-        raw_github = data.github_url or (existing.github_url if existing else None)
-        if require_github_for_oi and not raw_github:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"success": False, "message": "Open Innovation teams must provide a GitHub Repository URL", "error_code": "GITHUB_REQUIRED"},
-            )
-        if raw_github:
-            github_url = raw_github.strip()
-            if not github_url.startswith("https://github.com/"):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail={"success": False, "message": "GitHub URL must start with https://github.com/", "error_code": "INVALID_GITHUB_URL"},
-                )
-        else:
-            github_url = None
-        project_title = data.project_title.strip() if data.project_title else topic_title.strip()
-        custom_topic = topic_title.strip()
-        assigned_ps_id = None
-        problem_statement = data.problem_statement.strip() if data.problem_statement else (existing.problem_statement if existing else None)
-    else:
-        # AI or Cybersecurity: retrieve assigned problem statement
-        assigned_ps_id = existing.assigned_problem_statement_id if existing else None
-        if not assigned_ps_id:
-            statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == user.domain_id).all()
-            if statements:
-                chosen = random.choice(statements)
-                assigned_ps_id = chosen.id
-                chosen.is_assigned = True
-                chosen.assigned_team_id = user.id
-                problem_statement = chosen.detailed_description
-                project_title = f"{chosen.problem_code} Solution Project"
-            else:
-                problem_statement = data.problem_statement
-                project_title = data.project_title or "Project"
-        else:
-            ps = db.query(ProblemStatement).filter(ProblemStatement.id == assigned_ps_id).first()
-            problem_statement = ps.detailed_description if ps else (existing.problem_statement if existing else None)
-            project_title = f"{ps.problem_code} Solution Project" if ps else (existing.project_title if existing else "Project")
-
-        custom_topic = None
-        raw_github = data.github_url or (existing.github_url if existing else None)
-        github_url = raw_github.strip() if raw_github else None
-
-    # Validate github uniqueness
-    if github_url:
         _check_github_unique(db, github_url, exclude_project_id=existing.id if existing else None)
 
     now = datetime.now(timezone.utc)
 
     if existing is None:
-        prefix = "AI" if domain_name == DomainName.AI.value else ("CY" if domain_name == DomainName.CYBERSECURITY.value else "OI")
+        realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
+        ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
+        prefix = "AI" if realm == RealmEnum.AI else "CY"
+
         project = Project(
             project_code=f"PRJ-{prefix}-{user.id:04d}",
             user_id=user.id,
             domain_id=user.domain_id,
-            topic_id=topic_id,
-            assigned_problem_statement_id=assigned_ps_id,
-            custom_topic=custom_topic,
-            project_title=project_title,
+            problem_statement_id=ps.id if ps else None,
+            problem_code=ps.problem_code if ps else None,
+            realm=ps.realm if ps else realm,
+            project_title=data.project_title or (f"{ps.problem_code} Solution Project" if ps else "Project"),
             abstract=data.abstract.strip() if data.abstract else None,
-            problem_statement=problem_statement,
+            problem_statement=ps.description if ps else (data.problem_statement or None),
             objectives=objectives_str,
             proposed_solution=data.proposed_solution.strip() if data.proposed_solution else None,
             technologies=tech_stack,
@@ -310,16 +199,8 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
         )
         db.add(project)
     else:
-        # Update draft project with final submission data
-        if topic_id is not None:
-            existing.topic_id = topic_id
-        if assigned_ps_id is not None:
-            existing.assigned_problem_statement_id = assigned_ps_id
-        if custom_topic is not None:
-            existing.custom_topic = custom_topic
-        existing.project_title = project_title
-        if problem_statement is not None:
-            existing.problem_statement = problem_statement
+        if data.project_title:
+            existing.project_title = data.project_title.strip()
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:
@@ -337,6 +218,7 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
             existing.github_url = github_url
         if data.demo_url is not None:
             existing.demo_url = data.demo_url.strip()
+
         existing.status = ProjectStatus.SUBMITTED
         existing.is_submitted = True
         existing.submitted_at = now
@@ -354,18 +236,13 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest, re
             description=f"Team '{user.team_name}' resubmitted project {project.project_code}. Edit permission revoked automatically."
         ))
 
-    db.flush()
-
-    # Clear temporary topic locks once submitted
-    db.query(TeamTopicLock).filter(TeamTopicLock.user_id == user.id).delete()
-
     db.commit()
     db.refresh(project)
     return project
 
 
 def submit_project(db: Session, user: User, data: ProjectSubmitRequest) -> Project:
-    """Legacy submit_project — now delegates to submit_final_project."""
+    """Submit project handler."""
     return submit_final_project(db, user, data)
 
 
@@ -381,187 +258,105 @@ def get_project_by_id(db: Session, project_id: int) -> Project:
 
 def list_projects_admin(
     db: Session,
-    domain_name: Optional[str] = None,
-    project_status: Optional[str] = None,
-    current_round: Optional[int] = None,
-    user_id: Optional[int] = None,
     page: int = 1,
     page_size: int = 20,
+    domain: Optional[str] = None,
+    realm: Optional[str] = None,
+    status_filter: Optional[str] = None,
+    round_filter: Optional[int] = None,
+    search: Optional[str] = None,
 ):
-    from app.models.domain import Domain
-
     query = db.query(Project)
-    if domain_name:
-        query = query.join(Domain, Project.domain_id == Domain.id).filter(Domain.name == domain_name)
-    if project_status:
-        query = query.filter(Project.status == project_status)
-    if current_round is not None:
-        query = query.filter(Project.current_round == current_round)
-    if user_id is not None:
-        query = query.filter(Project.user_id == user_id)
+    if realm:
+        query = query.filter(Project.realm == realm)
+    elif domain:
+        query = query.filter(or_(Project.realm == domain, Project.domain.has(name=domain)))
+    if status_filter:
+        query = query.filter(Project.status == status_filter)
+    if round_filter is not None:
+        query = query.filter(Project.current_round == round_filter)
+    if search:
+        pattern = f"%{search.strip()}%"
+        query = query.join(User, Project.user_id == User.id).filter(
+            or_(
+                Project.project_code.ilike(pattern),
+                Project.problem_code.ilike(pattern),
+                Project.project_title.ilike(pattern),
+                User.team_name.ilike(pattern),
+                User.team_leader.ilike(pattern),
+                User.username.ilike(pattern),
+            )
+        )
     query = query.order_by(Project.updated_at.desc())
     return paginate(query, page, page_size)
 
 
-def admin_update_project(db: Session, project_id: int, data, admin: User) -> Project:
-    """Admin can edit any project field regardless of submission status."""
+def admin_update_project(
+    db: Session,
+    project_id: int,
+    project_title: Optional[str] = None,
+    current_round: Optional[int] = None,
+    status_val: Optional[str] = None,
+    admin: Optional[User] = None,
+) -> Project:
     project = get_project_by_id(db, project_id)
-
-    if hasattr(data, "assigned_problem_statement_id") and data.assigned_problem_statement_id is not None:
-        ps = db.query(ProblemStatement).filter(ProblemStatement.id == data.assigned_problem_statement_id).first()
-        if ps:
-            project.assigned_problem_statement_id = ps.id
-            project.problem_statement = ps.detailed_description
-            project.project_title = f"{ps.problem_code} Solution Project"
-            ps.is_assigned = True
-
-    if data.project_title is not None:
-        project.project_title = data.project_title.strip()
-    if data.problem_statement is not None:
-        project.problem_statement = data.problem_statement.strip()
-    if data.abstract is not None:
-        project.abstract = data.abstract.strip()
-    if data.objectives is not None:
-        project.objectives = data.objectives.strip()
-    if data.proposed_solution is not None:
-        project.proposed_solution = data.proposed_solution.strip()
-    if data.technologies is not None:
-        project.technologies = data.technologies.strip()
-        project.technology_stack = data.technologies.strip()
-    if data.technology_stack is not None:
-        project.technology_stack = data.technology_stack.strip()
-        project.technologies = data.technology_stack.strip()
-    if data.expected_outcome is not None:
-        project.expected_outcome = data.expected_outcome.strip()
-    if data.project_description is not None:
-        project.project_description = data.project_description.strip()
-    if data.github_url is not None:
-        github_url = data.github_url.strip()
-        _check_github_unique(db, github_url, exclude_project_id=project.id)
-        project.github_url = github_url
-    if data.demo_url is not None:
-        project.demo_url = data.demo_url.strip()
-    if data.status is not None:
-        project.status = data.status
-        if data.status == ProjectStatus.SUBMITTED or data.status != ProjectStatus.DRAFT:
-            project.is_submitted = True
-    if data.current_round is not None:
-        project.current_round = data.current_round
-    if data.domain_id is not None:
-        project.domain_id = data.domain_id
-
-    log = AuditLog(
-        admin_id=admin.id,
-        action="ADMIN_EDIT_PROJECT",
-        target_type="project",
-        target_id=project.id,
-        description=f"Admin '{admin.username}' edited project '{project.project_code}'",
-    )
-    db.add(log)
+    if project_title is not None:
+        project.project_title = project_title.strip()
+    if current_round is not None:
+        project.current_round = current_round
+    if status_val is not None:
+        project.status = status_val
     db.commit()
     db.refresh(project)
     return project
 
 
 def get_project_problem_statement(db: Session, user: User) -> dict:
-    """Return assigned detailed problem statement for AI/Cyber or custom OI statement."""
+    """Retrieve the problem statement for the current user's project."""
     project = get_user_project(db, user)
-    domain_name = user.domain.name if user.domain else "UNKNOWN"
-
-    if not project:
-        if user.domain_id and domain_name in (DomainName.AI.value, DomainName.CYBERSECURITY.value):
-            statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == user.domain_id).all()
-            if statements:
-                chosen = random.choice(statements)
-                prefix = "AI" if domain_name == DomainName.AI.value else "CY"
-                project = Project(
-                    project_code=f"PRJ-{prefix}-{user.id:04d}",
-                    user_id=user.id,
-                    domain_id=user.domain_id,
-                    assigned_problem_statement_id=chosen.id,
-                    project_title=f"{chosen.problem_code} Solution Project",
-                    problem_statement=chosen.detailed_description,
-                    status=ProjectStatus.DRAFT,
-                    is_submitted=False,
-                )
-                db.add(project)
-                chosen.is_assigned = True
-                chosen.assigned_team_id = user.id
-                db.commit()
-                db.refresh(project)
-                return {
-                    "problem_code": chosen.problem_code,
-                    "detailed_description": chosen.detailed_description,
-                    "domain": domain_name,
-                    "title": chosen.problem_code,
-                    "problem_statement": chosen.detailed_description,
-                    "source": "assigned",
-                }
+    if project and project.problem_statement_rel:
+        ps = project.problem_statement_rel
         return {
-            "problem_code": None,
-            "detailed_description": None,
-            "domain": domain_name,
-            "title": None,
-            "problem_statement": None,
-            "source": "custom",
-        }
-
-    # Project exists
-    ps = project.assigned_problem_statement
-    if not ps and project.assigned_problem_statement_id:
-        ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.assigned_problem_statement_id).first()
-
-    if ps:
-        return {
+            "id": str(ps.id),
             "problem_code": ps.problem_code,
-            "detailed_description": ps.detailed_description,
-            "domain": domain_name,
-            "title": ps.problem_code,
-            "problem_statement": ps.detailed_description,
-            "source": "assigned",
+            "realm": ps.realm,
+            "title": ps.title,
+            "description": ps.description,
+            "difficulty": ps.difficulty,
+            "status": ps.status,
+            "source": "official",
         }
-
-    # If AI/Cyber lacks assignment, assign one dynamically
-    if domain_name in (DomainName.AI.value, DomainName.CYBERSECURITY.value):
-        statements = db.query(ProblemStatement).filter(ProblemStatement.domain_id == user.domain_id).all()
-        if statements:
-            chosen = random.choice(statements)
-            project.assigned_problem_statement_id = chosen.id
-            project.problem_statement = chosen.detailed_description
-            project.project_title = f"{chosen.problem_code} Solution Project"
-            chosen.is_assigned = True
-            chosen.assigned_team_id = user.id
-            db.commit()
-            db.refresh(project)
+    if project and project.problem_statement_id:
+        ps = db.query(ProblemStatement).filter(ProblemStatement.id == project.problem_statement_id).first()
+        if ps:
             return {
-                "problem_code": chosen.problem_code,
-                "detailed_description": chosen.detailed_description,
-                "domain": domain_name,
-                "title": chosen.problem_code,
-                "problem_statement": chosen.detailed_description,
-                "source": "assigned",
+                "id": str(ps.id),
+                "problem_code": ps.problem_code,
+                "realm": ps.realm,
+                "title": ps.title,
+                "description": ps.description,
+                "difficulty": ps.difficulty,
+                "status": ps.status,
+                "source": "official",
             }
 
-    # Open Innovation
     return {
-        "problem_code": None,
-        "detailed_description": project.problem_statement or "",
-        "domain": domain_name,
-        "title": project.project_title or project.custom_topic or "",
-        "problem_statement": project.problem_statement or "",
-        "source": "custom",
+        "id": None,
+        "problem_code": project.problem_code if project else None,
+        "realm": project.realm if project else "AI",
+        "title": project.project_title if project else "Hogwarts Legacy 5.0 Challenge",
+        "description": project.problem_statement if project else "Awaiting assignment.",
+        "difficulty": "INTERMEDIATE",
+        "status": True,
+        "source": "assigned",
     }
 
 
 def get_project_timeline(db: Session, project: Project) -> list[dict]:
-    """
-    Construct vertical timeline showing project progress.
-    """
+    """Construct vertical timeline showing project progress."""
     from app.services.review_service import get_project_reviews
 
     timeline = []
-
-    # Milestone 1: Project Submitted
     submitted_date = project.submitted_at or project.updated_at
     timeline.append({
         "round_number": 1,
@@ -573,7 +368,6 @@ def get_project_timeline(db: Session, project: Project) -> list[dict]:
         "date": submitted_date.isoformat(),
     })
 
-    # Milestone 2+: Reviews
     reviews = get_project_reviews(db, project.id)
     for r in reviews:
         status_label = r.status.value if hasattr(r.status, "value") else str(r.status)
@@ -587,7 +381,6 @@ def get_project_timeline(db: Session, project: Project) -> list[dict]:
             "date": (r.reviewed_at or r.created_at).isoformat(),
         })
 
-    # Milestone Final: Decision
     status_val = project.status.value if hasattr(project.status, "value") else str(project.status)
     if status_val == "COMPLETED":
         last_date = reviews[-1].reviewed_at.isoformat() if reviews else project.updated_at.isoformat()

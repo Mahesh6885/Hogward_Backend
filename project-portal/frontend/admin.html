@@ -77,7 +77,7 @@
     <button class="mobile-drawer-item active" data-drawer-view="dashboard"><span class="icon">📊</span> Overview</button>
     <button class="mobile-drawer-item" data-drawer-view="teams"><span class="icon">👥</span> Teams</button>
     <button class="mobile-drawer-item" data-drawer-view="projects"><span class="icon">📁</span> Projects &amp; Reviews</button>
-    <button class="mobile-drawer-item" data-drawer-view="topics"><span class="icon">💡</span> Topics</button>
+    <button class="mobile-drawer-item" data-drawer-view="problem-statements"><span class="icon">🎯</span> Problem Statements</button>
   </div>
   <div class="mobile-drawer-footer">
     <button class="btn btn-danger btn-full" id="drawer-logout-btn">🚪 Sign Out</button>
@@ -153,8 +153,8 @@
       <button class="sidebar-item" data-view="projects" id="nav-projects">
         <span class="icon">📁</span> Projects &amp; Reviews
       </button>
-      <button class="sidebar-item" data-view="topics" id="nav-topics">
-        <span class="icon">💡</span> Topics
+      <button class="sidebar-item" data-view="problem-statements" id="nav-problem-statements">
+        <span class="icon">🎯</span> Problem Statements
       </button>
     </nav>
   </aside>
@@ -334,43 +334,76 @@
       </div>
     </div>
 
-    <!-- ── 4. TOPICS VIEW ──────────────────────────────────────────────── -->
-    <div id="view-topics" class="hidden fade-in">
+    <!-- ── 4. PROBLEM STATEMENTS VIEW ──────────────────────────────────── -->
+    <div id="view-problem-statements" class="hidden fade-in">
       <div class="page-header">
         <div class="page-header-top">
-          <h1 class="page-title">Topic <span class="gradient-text">Pool</span></h1>
-          <button class="btn btn-primary" id="btn-open-create-topic">➕ Add New Topic</button>
+          <h1 class="page-title">Problem Statement <span class="gradient-text">Console</span></h1>
+          <button class="btn btn-primary" id="btn-open-create-ps">➕ Add Problem Statement</button>
         </div>
-        <p class="text-muted">Manage predefined topics for AI and Cybersecurity domains.</p>
+        <p class="text-muted">Official Hogwarts Legacy 5.0 Problem Statements for AI &amp; Cybersecurity Realms.</p>
       </div>
 
-      <div class="filters-bar">
-        <select id="filter-topic-domain">
-          <option value="">All Domains</option>
-          <option value="AI">AI</option>
-          <option value="CYBERSECURITY">Cybersecurity</option>
+      <!-- Problem Statements Statistics Cards -->
+      <div class="grid-4 mb-3" id="ps-stats-grid">
+        <div class="stat-card accent-gold">
+          <div class="stat-label">AI Statements</div>
+          <div class="stat-value" id="stat-ai-ps">10</div>
+          <div class="stat-desc">Artificial Intelligence</div>
+        </div>
+        <div class="stat-card accent-red">
+          <div class="stat-label">Cyber Statements</div>
+          <div class="stat-value" id="stat-cyber-ps">10</div>
+          <div class="stat-desc">Cybersecurity Defense</div>
+        </div>
+        <div class="stat-card accent-green">
+          <div class="stat-label">Total Active</div>
+          <div class="stat-value" id="stat-active-ps">20</div>
+          <div class="stat-desc">Available for Selection</div>
+        </div>
+        <div class="stat-card accent-gray">
+          <div class="stat-label">Total Inactive</div>
+          <div class="stat-value" id="stat-inactive-ps">0</div>
+          <div class="stat-desc">Deactivated Statements</div>
+        </div>
+      </div>
+
+      <div class="filters-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="search-ps" placeholder="🔍 Search by Code or Title…" class="form-input" style="max-width:260px" />
+        <select id="filter-ps-realm" class="form-input" style="max-width:180px">
+          <option value="">All Realms</option>
+          <option value="AI">AI Realm</option>
+          <option value="CYBERSECURITY">Cybersecurity Realm</option>
         </select>
-        <select id="filter-topic-status">
+        <select id="filter-ps-difficulty" class="form-input" style="max-width:180px">
+          <option value="">All Difficulties</option>
+          <option value="BEGINNER">Beginner</option>
+          <option value="INTERMEDIATE">Intermediate</option>
+          <option value="ADVANCED">Advanced</option>
+        </select>
+        <select id="filter-ps-status" class="form-input" style="max-width:160px">
           <option value="">All Statuses</option>
           <option value="true">Active</option>
           <option value="false">Inactive</option>
         </select>
-        <button class="btn btn-ghost btn-sm" id="btn-refresh-topics">🔄 Refresh</button>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-ps">🔄 Refresh</button>
       </div>
 
       <div class="table-wrapper">
         <table class="table">
           <thead>
             <tr>
-              <th>Domain</th>
-              <th>Title</th>
+              <th style="width:120px">Code</th>
+              <th style="width:130px">Realm</th>
+              <th style="width:260px">Title</th>
               <th>Description</th>
-              <th>Status</th>
-              <th>Action</th>
+              <th style="width:120px">Difficulty</th>
+              <th style="width:100px">Status</th>
+              <th style="width:150px">Actions</th>
             </tr>
           </thead>
-          <tbody id="topics-table-body">
-            <tr><td colspan="5" class="text-center py-4 text-muted">Loading topics…</td></tr>
+          <tbody id="ps-table-body">
+            <tr><td colspan="7" class="text-center py-4 text-muted">Loading official problem statements…</td></tr>
           </tbody>
         </table>
       </div>
@@ -434,13 +467,20 @@
           <input class="form-input" type="text" id="new-dept" placeholder="e.g. Computer Science" />
         </div>
         <div class="form-group">
-          <label class="form-label" for="new-domain">Domain *</label>
-          <select class="form-input" id="new-domain" required>
-            <option value="AI">AI</option>
-            <option value="CYBERSECURITY">Cybersecurity</option>
-            <option value="OPEN_INNOVATION">Open Innovation</option>
+          <label class="form-label" for="new-realm">Hackathon Realm *</label>
+          <select class="form-input" id="new-realm" required onchange="onRegistrationRealmChange()">
+            <option value="AI">AI Realm (10 Problem Statements)</option>
+            <option value="CYBERSECURITY">Cybersecurity Realm (10 Problem Statements)</option>
           </select>
         </div>
+      </div>
+
+      <div class="form-group mb-2">
+        <label class="form-label" for="new-problem-statement">Official Problem Statement *</label>
+        <select class="form-input" id="new-problem-statement" required style="font-size:0.85rem">
+          <option value="">-- Select Problem Statement --</option>
+        </select>
+        <p class="text-xs text-muted mt-1">Teams must be assigned exactly one official problem statement corresponding to their chosen realm.</p>
       </div>
 
       <h4 class="mt-2 mb-1" style="font-size:0.95rem;color:var(--text-primary)">
@@ -638,33 +678,62 @@
   </div>
 </div>
 
-<!-- ── MODAL: CREATE TOPIC ────────────────────────────────────────────── -->
-<div class="modal-overlay" id="modal-create-topic">
-  <div class="modal">
+<!-- ── MODAL: CREATE / EDIT PROBLEM STATEMENT ──────────────────────── -->
+<div class="modal-overlay" id="modal-ps-form">
+  <div class="modal" style="max-width:650px">
     <div class="modal-header">
-      <h3 class="modal-title">Add Predefined Topic</h3>
-      <button class="modal-close" onclick="closeModal('modal-create-topic')">&times;</button>
+      <h3 class="modal-title" id="modal-ps-title">Add Official Problem Statement</h3>
+      <button class="modal-close" onclick="closeModal('modal-ps-form')">&times;</button>
     </div>
-    <form id="form-create-topic" class="modal-form">
-      <div class="form-group">
-        <label class="form-label" for="topic-domain">Domain *</label>
-        <select class="form-input" id="topic-domain" required>
-          <option value="AI">AI</option>
-          <option value="CYBERSECURITY">Cybersecurity</option>
-        </select>
+    <form id="form-ps" class="modal-form">
+      <input type="hidden" id="ps-form-id" />
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="ps-code">Problem Code *</label>
+          <input class="form-input font-mono" type="text" id="ps-code" required placeholder="e.g. AI-PS-11 or CY-PS-11" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ps-realm">Hackathon Realm *</label>
+          <select class="form-input" id="ps-realm" required>
+            <option value="AI">AI Realm</option>
+            <option value="CYBERSECURITY">Cybersecurity Realm</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="topic-title">Topic Title *</label>
-        <input class="form-input" type="text" id="topic-title" required placeholder="e.g. Federated Learning in Edge Computing" />
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label" for="ps-difficulty">Difficulty Level *</label>
+          <select class="form-input" id="ps-difficulty" required>
+            <option value="BEGINNER">Beginner</option>
+            <option value="INTERMEDIATE" selected>Intermediate</option>
+            <option value="ADVANCED">Advanced</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ps-status">Status *</label>
+          <select class="form-input" id="ps-status" required>
+            <option value="true" selected>Active (Available)</option>
+            <option value="false">Inactive (Disabled)</option>
+          </select>
+        </div>
       </div>
+
       <div class="form-group">
-        <label class="form-label" for="topic-desc">Description (Optional)</label>
-        <textarea class="form-textarea" id="topic-desc" rows="3" placeholder="Brief outline of the topic..."></textarea>
+        <label class="form-label" for="ps-title-input">Problem Statement Title *</label>
+        <input class="form-input" type="text" id="ps-title-input" required placeholder="Concise, descriptive title of challenge" />
       </div>
-      <div id="modal-topic-alert" class="alert alert-hidden"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="ps-desc-input">Full Description &amp; Technical Scope *</label>
+        <textarea class="form-textarea" id="ps-desc-input" rows="6" required placeholder="Comprehensive specifications, architecture requirements, deliverable expectations..."></textarea>
+      </div>
+
+      <div id="modal-ps-alert" class="alert alert-hidden"></div>
+
       <div class="modal-footer">
-        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-create-topic')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Create Topic</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-ps-form')">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btn-save-ps">Save Problem Statement</button>
       </div>
     </form>
   </div>
@@ -815,7 +884,7 @@
     if (view === 'dashboard') loadDashboard();
     else if (view === 'teams') loadTeams();
     else if (view === 'projects') loadProjects();
-    else if (view === 'topics') loadTopics();
+    else if (view === 'problem-statements') loadProblemStatements();
   };
 
   // ── Mobile Drawer ──────────────────────────────────────────────────────────
@@ -1190,12 +1259,35 @@
     if (el) el.value = slug || '';
   });
 
-  // Create Team Modal
-  document.getElementById('btn-open-create-team').addEventListener('click', () => {
+  // Create Team Modal & Realm-based Problem Statement Selection
+  let registrationStatements = [];
+
+  window.onRegistrationRealmChange = function() {
+    const realm = document.getElementById('new-realm')?.value || 'AI';
+    const sel = document.getElementById('new-problem-statement');
+    if (!sel) return;
+
+    const filtered = registrationStatements.filter(ps => ps.realm === realm && ps.status !== false);
+    sel.innerHTML = '<option value="">-- Select Problem Statement --</option>' +
+      filtered.map(ps => `<option value="${ps.id}">${escHtml(ps.problem_code)} — ${escHtml(ps.title)}</option>`).join('');
+  };
+
+  async function loadRegistrationProblemStatements() {
+    try {
+      const resp = await api.get('/api/problem-statements');
+      registrationStatements = resp.data || [];
+      window.onRegistrationRealmChange();
+    } catch (e) {
+      console.warn('Could not load problem statements for registration:', e);
+    }
+  }
+
+  document.getElementById('btn-open-create-team').addEventListener('click', async () => {
     document.getElementById('form-create-team').reset();
     document.getElementById('modal-team-alert').classList.add('alert-hidden');
     document.getElementById('form-create-team').classList.remove('hidden');
     document.getElementById('create-team-success-step').classList.add('hidden');
+    await loadRegistrationProblemStatements();
     openModal('modal-create-team');
   });
 
@@ -1206,6 +1298,17 @@
     btn.textContent = 'Creating Team Account…';
     const alertEl = document.getElementById('modal-team-alert');
 
+    const chosenRealm = document.getElementById('new-realm').value;
+    const chosenPsId = document.getElementById('new-problem-statement').value;
+
+    if (!chosenPsId) {
+      alertEl.className = 'alert alert-error';
+      alertEl.innerHTML = '<span>⚠️</span><span>Please select an official Problem Statement for this team.</span>';
+      alertEl.classList.remove('alert-hidden');
+      btn.disabled = false; btn.innerHTML = '⚡ Register Team';
+      return;
+    }
+
     const payload = {
       team_name: document.getElementById('new-team-name').value.trim(),
       team_leader: document.getElementById('new-team-leader').value.trim(),
@@ -1215,7 +1318,8 @@
       college_name: document.getElementById('new-college').value.trim(),
       organization: document.getElementById('new-college').value.trim(),
       department: document.getElementById('new-dept').value.trim() || null,
-      domain: document.getElementById('new-domain').value,
+      realm: chosenRealm,
+      problem_statement_id: chosenPsId,
       status: 'ACTIVE',
       member_one: document.getElementById('new-member-1').value.trim() || null,
       member_two: document.getElementById('new-member-2').value.trim() || null,
@@ -1224,7 +1328,6 @@
 
     // Validate Member 1 is required (Leader + Member 1 = min 2, max 4 total)
     if (!payload.member_one) {
-      const alertEl = document.getElementById('modal-team-alert');
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = '<span>⚠️</span><span>Member 1 is required (Minimum team size is 2: Leader + Member 1).</span>';
       alertEl.classList.remove('alert-hidden');
@@ -1470,8 +1573,18 @@
       const team = p.user || {};
       const teamName = team.team_name || team.name || 'Team';
       const leader = team.team_leader || team.name || '—';
-      const dName = p.domain?.display_name || p.domain?.name || 'Domain';
-      const subDate = new Date(p.submitted_at).toLocaleString();
+      const dName = p.realm || p.domain?.display_name || p.domain?.name || 'Realm';
+      const subDate = p.submitted_at ? new Date(p.submitted_at).toLocaleString() : '—';
+
+      const psObj = p.problem_statement;
+      const psCode = p.problem_code || (psObj ? psObj.problem_code : '—');
+      const psRealm = p.realm || (psObj ? psObj.realm : 'AI');
+      const psTitle = (psObj ? psObj.title : null) || p.project_title || 'Official Challenge';
+      const psDiff = (psObj && psObj.difficulty) || 'INTERMEDIATE';
+      const psDesc = (psObj && psObj.description) || p.detailed_description || p.problem_statement || '—';
+
+      const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
+      const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
 
       b.innerHTML = `
         <div class="doc-meta-card mb-3">
@@ -1506,15 +1619,23 @@
           </div>
         </div>
 
-        <div class="grid-2 mb-3">
-          <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Abstract</h4>
-            <p class="text-sm text-secondary">${escHtml(p.abstract || 'None provided')}</p>
+        <!-- Official Problem Statement Card for Reviewer -->
+        <div class="enchanted-parchment-card mb-3">
+          <div class="ps-card-header">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <span class="ps-code-pill">${escHtml(psCode)}</span>
+              <span class="badge ${realmBadgeClass}">${psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm'}</span>
+              <span class="badge ${diffBadgeClass}">${escHtml(psDiff)}</span>
+            </div>
+            <span class="text-xs text-muted">Official Challenge</span>
           </div>
-          <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Problem Statement</h4>
-            <p class="text-sm text-secondary">${escHtml(p.problem_statement || 'None provided')}</p>
-          </div>
+          <div class="ps-title-text">${escHtml(psTitle)}</div>
+          <div class="ps-description-box" style="max-height:160px">${escHtml(psDesc)}</div>
+        </div>
+
+        <div class="card mb-3" style="padding:1.25rem">
+          <h4 style="font-weight:700;margin-bottom:0.5rem">Project Abstract</h4>
+          <p class="text-sm text-secondary">${escHtml(p.abstract || 'None provided')}</p>
         </div>
 
         <div class="grid-2 mb-3">
@@ -1663,67 +1784,144 @@
     }
   });
 
-  // ── 4. TOPICS ─────────────────────────────────────────────────────────────
-  async function loadTopics() {
-    const tbody = document.getElementById('topics-table-body');
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Loading topics…</td></tr>`;
+  // ── 4. PROBLEM STATEMENTS MANAGEMENT ─────────────────────────────────────
+  let cachedProblemStatements = [];
 
-    const domain = document.getElementById('filter-topic-domain').value;
-    const status = document.getElementById('filter-topic-status').value;
-    let query = `/api/admin/topics?page=1&page_size=100`;
-    if (domain) query += `&domain=${domain}`;
-    if (status !== '') query += `&is_active=${status}`;
+  async function loadProblemStatements() {
+    const tbody = document.getElementById('ps-table-body');
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">Loading official problem statements…</td></tr>`;
+
+    const realm = document.getElementById('filter-ps-realm').value;
+    const diff = document.getElementById('filter-ps-difficulty').value;
+    const status = document.getElementById('filter-ps-status').value;
+    const search = document.getElementById('search-ps').value.trim();
+
+    let query = `/api/problem-statements?`;
+    const params = [];
+    if (realm) params.push(`realm=${encodeURIComponent(realm)}`);
+    if (diff) params.push(`difficulty=${encodeURIComponent(diff)}`);
+    if (status !== '') params.push(`status=${encodeURIComponent(status)}`);
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    query += params.join('&');
 
     try {
+      // 1. Fetch statements
       const resp = await api.get(query);
-      if (!resp.data.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">No topics found.</td></tr>`;
+      cachedProblemStatements = resp.data || [];
+
+      // 2. Fetch stats
+      try {
+        const statsResp = await api.get('/api/admin/problem-statements/stats');
+        const st = statsResp.data;
+        document.getElementById('stat-ai-ps').textContent = st.total_ai;
+        document.getElementById('stat-cyber-ps').textContent = st.total_cybersecurity;
+        document.getElementById('stat-active-ps').textContent = st.total_active;
+        document.getElementById('stat-inactive-ps').textContent = st.total_inactive;
+      } catch (err) {
+        console.warn('Stats fetch notice:', err);
+      }
+
+      if (!cachedProblemStatements.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No problem statements match criteria.</td></tr>`;
         return;
       }
-      tbody.innerHTML = resp.data.map(t => {
-        const dBadge = t.domain?.name === 'AI' ? 'badge-blue' : 'badge-cyan';
+
+      tbody.innerHTML = cachedProblemStatements.map(ps => {
+        const rBadge = ps.realm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
+        const diffClass = ps.difficulty === 'ADVANCED' ? 'badge-diff-advanced' : (ps.difficulty === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+        const statusBadge = ps.status ? '<span class="badge badge-green">Active</span>' : '<span class="badge badge-red">Inactive</span>';
+
         return `
           <tr>
-            <td><span class="badge ${dBadge}">${escHtml(t.domain?.display_name || t.domain?.name)}</span></td>
-            <td><strong>${escHtml(t.title)}</strong></td>
-            <td class="text-secondary text-sm">${escHtml(t.description || '—')}</td>
-            <td><span class="badge ${t.is_active ? 'badge-green' : 'badge-red'}">${t.is_active ? 'Active' : 'Inactive'}</span></td>
+            <td><code class="ps-code-pill" style="font-size:0.9rem">${escHtml(ps.problem_code)}</code></td>
+            <td><span class="badge ${rBadge}">${ps.realm === 'AI' ? '⚡ AI' : '🛡️ Cyber'}</span></td>
+            <td><strong>${escHtml(ps.title)}</strong></td>
             <td>
-              <button class="btn btn-ghost btn-sm" onclick="toggleTopicStatus(${t.id}, ${t.is_active})">
-                ${t.is_active ? 'Deactivate' : 'Activate'}
-              </button>
+              <div style="max-height:80px;overflow-y:auto;font-size:0.85rem;color:var(--text-secondary);line-height:1.5;padding-right:4px">
+                ${escHtml(ps.description)}
+              </div>
+            </td>
+            <td><span class="badge ${diffClass}">${escHtml(ps.difficulty)}</span></td>
+            <td>${statusBadge}</td>
+            <td>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="editProblemStatement('${ps.id}')" title="Edit Problem Statement">✏️</button>
+                <button class="btn btn-ghost btn-sm" onclick="toggleProblemStatementStatus('${ps.id}', ${ps.status})" title="Toggle Active Status">
+                  ${ps.status ? '⏸️' : '▶️'}
+                </button>
+                <button class="btn btn-ghost btn-sm" style="color:var(--accent-red)" onclick="deleteProblemStatement('${ps.id}', '${ps.problem_code}')" title="Delete Problem Statement">🗑️</button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-danger">Error: ${e.message}</td></tr>`;
     }
   }
 
-  document.getElementById('filter-topic-domain').addEventListener('change', loadTopics);
-  document.getElementById('filter-topic-status').addEventListener('change', loadTopics);
-  document.getElementById('btn-refresh-topics').addEventListener('click', loadTopics);
+  // Filter Listeners
+  document.getElementById('filter-ps-realm').addEventListener('change', loadProblemStatements);
+  document.getElementById('filter-ps-difficulty').addEventListener('change', loadProblemStatements);
+  document.getElementById('filter-ps-status').addEventListener('change', loadProblemStatements);
+  document.getElementById('search-ps').addEventListener('input', loadProblemStatements);
+  document.getElementById('btn-refresh-ps').addEventListener('click', loadProblemStatements);
 
-  document.getElementById('btn-open-create-topic').addEventListener('click', () => {
-    document.getElementById('form-create-topic').reset();
-    document.getElementById('modal-topic-alert').classList.add('alert-hidden');
-    openModal('modal-create-topic');
+  // Open Create Modal
+  document.getElementById('btn-open-create-ps').addEventListener('click', () => {
+    document.getElementById('form-ps').reset();
+    document.getElementById('ps-form-id').value = '';
+    document.getElementById('modal-ps-title').textContent = 'Add Official Problem Statement';
+    document.getElementById('ps-code').readOnly = false;
+    document.getElementById('ps-code').style.opacity = '1';
+    document.getElementById('modal-ps-alert').classList.add('alert-hidden');
+    openModal('modal-ps-form');
   });
 
-  document.getElementById('form-create-topic').addEventListener('submit', async (e) => {
+  // Edit Problem Statement
+  window.editProblemStatement = function(id) {
+    const ps = cachedProblemStatements.find(p => p.id === id);
+    if (!ps) return;
+    document.getElementById('ps-form-id').value = ps.id;
+    document.getElementById('ps-code').value = ps.problem_code;
+    document.getElementById('ps-code').readOnly = true;
+    document.getElementById('ps-code').style.opacity = '0.7';
+    document.getElementById('ps-realm').value = ps.realm;
+    document.getElementById('ps-difficulty').value = ps.difficulty;
+    document.getElementById('ps-status').value = String(ps.status);
+    document.getElementById('ps-title-input').value = ps.title;
+    document.getElementById('ps-desc-input').value = ps.description;
+    document.getElementById('modal-ps-title').textContent = `Edit Statement ${ps.problem_code}`;
+    document.getElementById('modal-ps-alert').classList.add('alert-hidden');
+    openModal('modal-ps-form');
+  };
+
+  // Form Submit (Create or Update)
+  document.getElementById('form-ps').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const alertEl = document.getElementById('modal-topic-alert');
+    const id = document.getElementById('ps-form-id').value;
+    const alertEl = document.getElementById('modal-ps-alert');
+    const isEdit = Boolean(id);
+
     const payload = {
-      domain: document.getElementById('topic-domain').value,
-      title: document.getElementById('topic-title').value.trim(),
-      description: document.getElementById('topic-desc').value.trim() || null,
+      problem_code: document.getElementById('ps-code').value.trim().toUpperCase(),
+      realm: document.getElementById('ps-realm').value,
+      difficulty: document.getElementById('ps-difficulty').value,
+      status: document.getElementById('ps-status').value === 'true',
+      title: document.getElementById('ps-title-input').value.trim(),
+      description: document.getElementById('ps-desc-input').value.trim(),
     };
+
     try {
-      await api.post('/api/admin/topics', payload);
-      closeModal('modal-create-topic');
-      showAlert(`Topic '${payload.title}' created!`);
-      loadTopics();
+      if (isEdit) {
+        await api.put(`/api/admin/problem-statements/${id}`, payload);
+        showAlert(`Problem statement '${payload.problem_code}' updated successfully!`);
+      } else {
+        await api.post('/api/admin/problem-statements', payload);
+        showAlert(`Problem statement '${payload.problem_code}' created successfully!`);
+      }
+      closeModal('modal-ps-form');
+      loadProblemStatements();
     } catch (err) {
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
@@ -1731,12 +1929,25 @@
     }
   });
 
-  window.toggleTopicStatus = async function(id, isCurrentlyActive) {
-    const nextState = !isCurrentlyActive;
+  // Toggle Status
+  window.toggleProblemStatementStatus = async function(id, curStatus) {
+    const nextStatus = !curStatus;
     try {
-      await api.patch(`/api/admin/topics/${id}/status`, { is_active: nextState });
-      showAlert(`Topic status updated.`);
-      loadTopics();
+      await api.put(`/api/admin/problem-statements/${id}`, { status: nextStatus });
+      showAlert(`Problem statement status updated.`);
+      loadProblemStatements();
+    } catch (e) {
+      showAlert(e.message, 'error');
+    }
+  };
+
+  // Delete Problem Statement
+  window.deleteProblemStatement = async function(id, code) {
+    if (!confirm(`Are you sure you want to delete problem statement '${code}'? This is only permitted if no projects have been assigned to it.`)) return;
+    try {
+      await api.delete(`/api/admin/problem-statements/${id}`);
+      showAlert(`Problem statement '${code}' deleted.`);
+      loadProblemStatements();
     } catch (e) {
       showAlert(e.message, 'error');
     }

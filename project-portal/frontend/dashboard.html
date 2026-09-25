@@ -506,22 +506,24 @@
           </div>
         </div>
 
-        <!-- Predefined Problem Statement Card -->
-        <div class="form-block-card" style="border-left:4px solid var(--accent-blue)">
-          <div class="form-block-header">
-            <div class="form-block-title">
-              <span>🎯 Problem Statement</span>
-              <span class="badge badge-blue text-xs">Predefined · Read-Only</span>
+        <!-- Official Problem Statement Card (Enchanted Parchment) -->
+        <div class="enchanted-parchment-card mb-3">
+          <div class="ps-card-header">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <span class="ps-code-pill" id="draft-ps-code">AI-PS-01</span>
+              <span class="badge" id="draft-ps-realm-badge">AI Realm</span>
+              <span class="badge" id="draft-ps-diff-badge">Intermediate</span>
             </div>
             <button type="button" class="btn btn-secondary btn-sm" id="btn-view-problem-modal" onclick="openProblemStatementModal()">
               🔍 [ View ] Full Problem Statement
             </button>
           </div>
-          <div class="text-sm text-secondary mb-2" id="draft-problem-preview" style="line-height:1.6">
-            Loading predefined problem statement…
+          <div class="ps-title-text" id="draft-ps-title">Loading Official Problem Statement…</div>
+          <div class="ps-description-box" id="draft-problem-preview">
+            Loading official problem statement scope and requirements…
           </div>
           <p class="text-xs text-muted" style="margin:0">
-            ℹ️ The problem statement is predefined by your assigned topic and cannot be edited. Click <strong>[ View ]</strong> to open the full popup.
+            📜 <em>Official Hogwarts Legacy 5.0 Problem Statement. This scope is permanently assigned to your team realm.</em>
           </p>
         </div>
 
@@ -767,15 +769,23 @@
           </div>
         </div>
 
-        <!-- Problem Statement Card -->
-        <div class="doc-section">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-            <div class="doc-section-title" style="margin-bottom:0">🎯 Problem Statement</div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('problem_statement', '🎯 Predefined Problem Statement', 'PREDEFINED TOPIC')">
-              🔍 [ View ] Full Problem Statement
+        <!-- Problem Statement Card (Enchanted Parchment) -->
+        <div class="enchanted-parchment-card mb-3">
+          <div class="ps-card-header">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <span class="ps-code-pill" id="doc-ps-code">AI-PS-01</span>
+              <span class="badge" id="doc-ps-realm-badge">AI Realm</span>
+              <span class="badge" id="doc-ps-diff-badge">Intermediate</span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('problem_statement', '🎯 Official Problem Statement', 'OFFICIAL CHALLENGE')">
+              🔍 [ View ] Full Scope
             </button>
           </div>
-          <div class="doc-section-body" id="doc-problem">—</div>
+          <div class="ps-title-text" id="doc-ps-title">Official Problem Statement</div>
+          <div class="ps-description-box" id="doc-problem">—</div>
+          <p class="text-xs text-muted" style="margin:0">
+            📜 <em>Official Hogwarts Legacy 5.0 Problem Statement.</em>
+          </p>
         </div>
 
         <!-- Abstract & Proposed Solution -->
@@ -1674,7 +1684,47 @@
           if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Final Submit';
         }
 
-        document.getElementById('draft-problem-preview').textContent = psPreviewText;
+        // Populate Problem Statement Card elements
+        const psObj = p.problem_statement;
+        const psCode = p.problem_code || (psObj ? psObj.problem_code : 'AI-PS-01');
+        const psRealm = p.realm || (psObj ? psObj.realm : 'AI');
+        const psTitle = p.project_title || (psObj ? psObj.title : 'Official Challenge');
+        const psDiff = (psObj && psObj.difficulty) || 'INTERMEDIATE';
+        const psDesc = (psObj && psObj.description) || p.problem_description || p.problem_statement || '';
+
+        const realmBadgeClass = psRealm === 'AI' ? 'badge-realm-ai' : 'badge-realm-cyber';
+        const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+
+        // Set draft card
+        if (document.getElementById('draft-ps-code')) document.getElementById('draft-ps-code').textContent = psCode;
+        if (document.getElementById('draft-ps-title')) document.getElementById('draft-ps-title').textContent = psTitle;
+        if (document.getElementById('draft-problem-preview')) document.getElementById('draft-problem-preview').textContent = psDesc;
+        if (document.getElementById('draft-ps-realm-badge')) {
+          const rEl = document.getElementById('draft-ps-realm-badge');
+          rEl.className = `badge ${realmBadgeClass}`;
+          rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
+        }
+        if (document.getElementById('draft-ps-diff-badge')) {
+          const dEl = document.getElementById('draft-ps-diff-badge');
+          dEl.className = `badge ${diffBadgeClass}`;
+          dEl.textContent = psDiff;
+        }
+
+        // Set submitted read-only card
+        if (document.getElementById('doc-ps-code')) document.getElementById('doc-ps-code').textContent = psCode;
+        if (document.getElementById('doc-ps-title')) document.getElementById('doc-ps-title').textContent = psTitle;
+        if (document.getElementById('doc-problem')) document.getElementById('doc-problem').textContent = psDesc;
+        if (document.getElementById('doc-ps-realm-badge')) {
+          const rEl = document.getElementById('doc-ps-realm-badge');
+          rEl.className = `badge ${realmBadgeClass}`;
+          rEl.textContent = psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm';
+        }
+        if (document.getElementById('doc-ps-diff-badge')) {
+          const dEl = document.getElementById('doc-ps-diff-badge');
+          dEl.className = `badge ${diffBadgeClass}`;
+          dEl.textContent = psDiff;
+        }
+
         document.getElementById('draft-abstract').value = p.abstract || '';
         document.getElementById('draft-objectives').value = p.objectives || '';
         document.getElementById('draft-solution').value = p.proposed_solution || '';
@@ -1685,12 +1735,9 @@
         document.getElementById('draft-demo').value = p.demo_url || '';
 
         // Configure GitHub label
-        const isOI = (p.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION');
         const ghLabel = document.getElementById('lbl-draft-github');
         if (ghLabel) {
-          ghLabel.innerHTML = isOI 
-            ? `<span>🐙 GitHub Repository Link *</span> <span class="badge badge-orange text-xs">Mandatory (https://github.com/)</span>` 
-            : `<span>🐙 GitHub Repository Link</span> <span class="badge badge-gray text-xs">Optional</span>`;
+          ghLabel.innerHTML = `<span>🐙 GitHub Repository Link</span> <span class="badge badge-gray text-xs">Optional</span>`;
         }
 
         if (p.draft_saved_at) {
@@ -1707,15 +1754,14 @@
         document.getElementById('prj-header-subtitle').textContent = 'Submitted project documentation. Edits are locked.';
 
         document.getElementById('doc-code').textContent = p.project_code || '—';
-        document.getElementById('doc-title').textContent = p.project_title || p.custom_topic || p.topic?.title || '—';
-        document.getElementById('doc-domain').textContent = p.domain?.display_name || p.domain?.name || '—';
+        document.getElementById('doc-title').textContent = (p.problem_statement && p.problem_statement.title) || p.project_title || '—';
+        document.getElementById('doc-domain').textContent = p.realm || p.domain?.display_name || p.domain?.name || '—';
         document.getElementById('doc-date').textContent = p.submitted_at 
           ? new Date(p.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) 
           : '—';
         document.getElementById('doc-status').innerHTML = `<span class="badge ${statusColors[p.status] || 'badge-gray'}">${p.status}</span>`;
         document.getElementById('doc-round').textContent = `Round ${p.current_round} of 3`;
 
-        document.getElementById('doc-problem').textContent = p.problem_statement || 'Predefined by topic.';
         document.getElementById('doc-abstract').textContent = p.abstract || 'No abstract provided.';
         document.getElementById('doc-objectives').textContent = p.objectives || 'No objectives provided.';
         document.getElementById('doc-solution').textContent = p.proposed_solution || 'No proposed solution provided.';

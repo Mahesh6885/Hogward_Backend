@@ -37,7 +37,6 @@ class Domain(Base):
 
     # Relationships
     users: Mapped[list["User"]] = relationship("User", back_populates="domain")
-    topics: Mapped[list["Topic"]] = relationship("Topic", back_populates="domain")
     projects: Mapped[list["Project"]] = relationship("Project", back_populates="domain")
 
     def __repr__(self) -> str:

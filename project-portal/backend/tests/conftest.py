@@ -1,5 +1,5 @@
 """
-Pytest configuration and shared fixtures.
+Pytest configuration and shared fixtures for Hogwarts Legacy 5.0.
 
 Uses a separate SQLite test database so tests never touch production PostgreSQL.
 """
@@ -14,11 +14,10 @@ from app.main import app
 from app.core.security import hash_password
 from app.models.domain import Domain, DomainName
 from app.models.user import User, UserRole, UserStatus
-from app.models.topic import Topic
+from app.models.problem_statement import ProblemStatement, RealmEnum, DifficultyEnum
 from app.models.project import Project, ProjectStatus
 from app.models.review import Review
 
-# Use in-memory SQLite for tests
 TEST_DATABASE_URL = "sqlite:///./test_portal.db"
 
 test_engine = create_engine(
@@ -60,11 +59,9 @@ def clean_db():
     yield
     db = TestingSessionLocal()
     try:
-        from app.models.topic_lock import TeamTopicLock
-        db.query(TeamTopicLock).delete()
         db.query(Review).delete()
         db.query(Project).delete()
-        db.query(Topic).delete()
+        db.query(ProblemStatement).delete()
         db.query(User).delete()
         db.query(Domain).delete()
         db.commit()
@@ -92,13 +89,33 @@ def client():
 def domains(db):
     ai = Domain(name=DomainName.AI.value, description="AI domain")
     cyber = Domain(name=DomainName.CYBERSECURITY.value, description="Cybersecurity domain")
-    oi = Domain(name=DomainName.OPEN_INNOVATION.value, description="Open Innovation domain")
-    db.add_all([ai, cyber, oi])
+    db.add_all([ai, cyber])
     db.commit()
     db.refresh(ai)
     db.refresh(cyber)
-    db.refresh(oi)
-    return {"ai": ai, "cyber": cyber, "oi": oi}
+
+    # Seed at least one default problem statement per realm
+    from app.models.problem_statement import ProblemStatement, RealmEnum, DifficultyEnum
+    ps_ai = ProblemStatement(
+        problem_code="AI-PS-01",
+        realm=RealmEnum.AI,
+        title="AI Default Problem",
+        description="Default AI Description for testing",
+        difficulty=DifficultyEnum.INTERMEDIATE,
+        status=True,
+    )
+    ps_cy = ProblemStatement(
+        problem_code="CY-PS-01",
+        realm=RealmEnum.CYBERSECURITY,
+        title="Cyber Default Problem",
+        description="Default Cyber Description for testing",
+        difficulty=DifficultyEnum.INTERMEDIATE,
+        status=True,
+    )
+    db.add_all([ps_ai, ps_cy])
+    db.commit()
+
+    return {"ai": ai, "cyber": cyber}
 
 
 # ─── User fixtures ────────────────────────────────────────────────────────────
@@ -121,9 +138,58 @@ def admin_user(db, domains):
 
 
 @pytest.fixture
-def ai_user(db, domains):
+def ai_problem_statements(db):
+    """Seed 10 AI problem statements."""
+    statements = []
+    for i in range(1, 11):
+        code = f"AI-PS-{i:02d}"
+        s = db.query(ProblemStatement).filter(ProblemStatement.problem_code == code).first()
+        if not s:
+            s = ProblemStatement(
+                problem_code=code,
+                realm=RealmEnum.AI,
+                title=f"AI Challenge {i}",
+                description=f"Detailed technical description for AI problem statement {i}",
+                difficulty=DifficultyEnum.INTERMEDIATE,
+                status=True,
+            )
+            db.add(s)
+            db.commit()
+            db.refresh(s)
+        statements.append(s)
+    return statements
+
+
+@pytest.fixture
+def cyber_problem_statements(db):
+    """Seed 10 Cybersecurity problem statements."""
+    statements = []
+    for i in range(1, 11):
+        code = f"CY-PS-{i:02d}"
+        s = db.query(ProblemStatement).filter(ProblemStatement.problem_code == code).first()
+        if not s:
+            s = ProblemStatement(
+                problem_code=code,
+                realm=RealmEnum.CYBERSECURITY,
+                title=f"Cyber Challenge {i}",
+                description=f"Detailed technical description for Cybersecurity problem statement {i}",
+                difficulty=DifficultyEnum.ADVANCED,
+                status=True,
+            )
+            db.add(s)
+            db.commit()
+            db.refresh(s)
+        statements.append(s)
+    return statements
+
+
+@pytest.fixture
+def ai_user(db, domains, ai_problem_statements):
     user = User(
         name="AI User",
+        team_name="AI Team",
+        team_leader="Alice",
+        member_one="Bob",
         username="aiuser",
         email="ai@test.com",
         password_hash=hash_password("userpass123"),
@@ -134,13 +200,32 @@ def ai_user(db, domains):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    ps = ai_problem_statements[0]
+    project = Project(
+        project_code="PRJ-AI-0001",
+        user_id=user.id,
+        domain_id=domains["ai"].id,
+        problem_statement_id=ps.id,
+        problem_code=ps.problem_code,
+        realm=ps.realm,
+        project_title=f"{ps.problem_code} Solution Project",
+        problem_statement=ps.description,
+        status=ProjectStatus.DRAFT,
+        is_submitted=False,
+    )
+    db.add(project)
+    db.commit()
     return user
 
 
 @pytest.fixture
-def cyber_user(db, domains):
+def cyber_user(db, domains, cyber_problem_statements):
     user = User(
         name="Cyber User",
+        team_name="Cyber Team",
+        team_leader="Carol",
+        member_one="Dave",
         username="cyberuser",
         email="cyber@test.com",
         password_hash=hash_password("userpass123"),
@@ -151,23 +236,22 @@ def cyber_user(db, domains):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
 
-
-@pytest.fixture
-def oi_user(db, domains):
-    user = User(
-        name="OI User",
-        username="oiuser",
-        email="oi@test.com",
-        password_hash=hash_password("userpass123"),
-        role=UserRole.USER,
-        status=UserStatus.ACTIVE,
-        domain_id=domains["oi"].id,
+    ps = cyber_problem_statements[0]
+    project = Project(
+        project_code="PRJ-CY-0001",
+        user_id=user.id,
+        domain_id=domains["cyber"].id,
+        problem_statement_id=ps.id,
+        problem_code=ps.problem_code,
+        realm=ps.realm,
+        project_title=f"{ps.problem_code} Solution Project",
+        problem_statement=ps.description,
+        status=ProjectStatus.DRAFT,
+        is_submitted=False,
     )
-    db.add(user)
+    db.add(project)
     db.commit()
-    db.refresh(user)
     return user
 
 
@@ -186,48 +270,6 @@ def inactive_user(db, domains):
     db.commit()
     db.refresh(user)
     return user
-
-
-# ─── Topic fixtures ───────────────────────────────────────────────────────────
-
-@pytest.fixture
-def ai_topics(db, domains):
-    """Create 15 active AI topics."""
-    titles = [
-        "Machine Learning", "Deep Learning", "Generative AI", "Computer Vision",
-        "Natural Language Processing", "AI Agents", "Reinforcement Learning",
-        "Explainable AI", "Edge AI", "AI in Healthcare", "Speech Recognition",
-        "Recommendation Systems", "Multimodal AI", "Robotics and AI", "Large Language Models",
-    ]
-    topics = [
-        Topic(title=t, description=f"Description for {t}", domain_id=domains["ai"].id, is_active=True)
-        for t in titles
-    ]
-    db.add_all(topics)
-    db.commit()
-    for t in topics:
-        db.refresh(t)
-    return topics
-
-
-@pytest.fixture
-def cyber_topics(db, domains):
-    """Create 15 active Cybersecurity topics."""
-    titles = [
-        "Network Security", "Cloud Security", "IoT Security", "Application Security",
-        "Digital Forensics", "Threat Intelligence", "Malware Analysis", "Cryptography",
-        "Ethical Hacking", "Zero Trust", "Intrusion Detection", "Security Operations",
-        "Identity and Access Management", "Mobile Security", "Web Security",
-    ]
-    topics = [
-        Topic(title=t, description=f"Description for {t}", domain_id=domains["cyber"].id, is_active=True)
-        for t in titles
-    ]
-    db.add_all(topics)
-    db.commit()
-    for t in topics:
-        db.refresh(t)
-    return topics
 
 
 # ─── Auth token helpers ───────────────────────────────────────────────────────

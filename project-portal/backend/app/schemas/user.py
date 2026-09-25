@@ -31,7 +31,9 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: Optional[str] = "hogwarts-legacy"
     phone: Optional[str] = None
-    domain: DomainName
+    domain: Optional[DomainName] = None
+    realm: Optional[str] = None
+    problem_statement_id: Optional[str] = None
     role: UserRole = UserRole.USER
     status: UserStatus = UserStatus.ACTIVE
 

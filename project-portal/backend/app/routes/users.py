@@ -57,16 +57,36 @@ def _serialize_project(project) -> dict:
             "name": project.domain.name,
             "display_name": domain_map.get(project.domain.name, project.domain.name),
         },
-        "topic_id": project.topic_id,
-        "topic": (
-            {"id": project.topic.id, "title": project.topic.title, "description": project.topic.description}
-            if project.topic
+        "realm": project.realm or (project.domain.name if project.domain else "AI"),
+        "problem_statement_id": str(project.problem_statement_id) if project.problem_statement_id else None,
+        "problem_statement": (
+            {
+                "id": str(project.problem_statement_rel.id),
+                "problem_code": project.problem_statement_rel.problem_code,
+                "realm": project.problem_statement_rel.realm,
+                "title": project.problem_statement_rel.title,
+                "description": project.problem_statement_rel.description,
+                "difficulty": project.problem_statement_rel.difficulty,
+            }
+            if project.problem_statement_rel
             else None
         ),
-        "custom_topic": project.custom_topic,
-        "project_title": project.project_title or (project.topic.title if project.topic else project.custom_topic),
+        "problem_code": (
+            project.problem_statement_rel.problem_code
+            if project.problem_statement_rel
+            else project.problem_code
+        ),
+        "project_title": (
+            project.problem_statement_rel.title
+            if project.problem_statement_rel
+            else (project.project_title or "Project")
+        ),
         "abstract": project.abstract,
-        "problem_statement": project.problem_statement or (project.topic.description if project.topic else None),
+        "problem_description": (
+            project.problem_statement_rel.description
+            if project.problem_statement_rel
+            else project.problem_statement
+        ),
         "objectives": project.objectives,
         "proposed_solution": project.proposed_solution,
         "technologies": tech,

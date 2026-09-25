@@ -67,38 +67,9 @@ class TestTeamPortalFeatures:
         assert team["college_name"] == "Tech University"
         assert team["domain"]["display_name"] == "Cybersecurity"
 
-    def test_domain_random_topic_locking(self, client, admin_user, domains, ai_topics):
+    def test_full_project_submission_and_timeline(self, client, admin_user, domains, ai_problem_statements):
         admin_token = get_token(client, "admin", "adminpass123")
-        # Create AI team
-        client.post(
-            "/api/admin/teams",
-            json={
-                "team_name": "AI Visionaries",
-                "team_leader": "Visi Leader",
-                "username": "ai_vision",
-                "email": "vision@example.com",
-                "password": "VisionPassword123!",
-                "domain": "AI",
-            },
-            headers=auth_headers(admin_token),
-        )
-
-        token = get_token(client, "ai_vision", "VisionPassword123!")
-
-        # First call to random topics
-        resp1 = client.get("/api/topics/random", headers=auth_headers(token))
-        assert resp1.status_code == 200
-        topics1 = resp1.json()["data"]
-        assert len(topics1) == 10
-
-        # Second call — must return the exact same 10 locked topics (not a new random set)
-        resp2 = client.get("/api/topics/random", headers=auth_headers(token))
-        assert resp2.status_code == 200
-        topics2 = resp2.json()["data"]
-        assert [t["id"] for t in topics1] == [t["id"] for t in topics2]
-
-    def test_full_project_submission_and_timeline(self, client, admin_user, domains, ai_topics):
-        admin_token = get_token(client, "admin", "adminpass123")
+        ps = ai_problem_statements[0]
         # Create team
         client.post(
             "/api/admin/teams",
@@ -109,18 +80,14 @@ class TestTeamPortalFeatures:
                 "email": "nexus@example.com",
                 "password": "NexusPassword123!",
                 "domain": "AI",
+                "problem_statement_id": str(ps.id),
             },
             headers=auth_headers(admin_token),
         )
         token = get_token(client, "nexus_ai", "NexusPassword123!")
 
-        # Get locked topics
-        topics_resp = client.get("/api/topics/random", headers=auth_headers(token))
-        selected_topic = topics_resp.json()["data"][0]
-
         # Submit project with full description fields
         sub_payload = {
-            "topic_id": selected_topic["id"],
             "project_title": "Deep Neural Network for Medical Imaging",
             "abstract": "This project develops an automated diagnostics system using deep CNNs.",
             "problem_statement": "Manual scan reading is error-prone and time-consuming.",
@@ -185,7 +152,7 @@ class TestTeamPortalFeatures:
     def test_admin_team_management_api(self, client, admin_user, domains):
         admin_token = get_token(client, "admin", "adminpass123")
         # Create team
-        client.post(
+        resp = client.post(
             "/api/admin/teams",
             json={
                 "team_name": "Nexus Alpha",
@@ -197,6 +164,7 @@ class TestTeamPortalFeatures:
             },
             headers=auth_headers(admin_token),
         )
+        assert resp.status_code == 201
 
         # List teams
         list_resp = client.get("/api/admin/teams", headers=auth_headers(admin_token))

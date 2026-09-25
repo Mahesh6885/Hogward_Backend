@@ -324,55 +324,50 @@ def admin_export_teams(
     output = io.StringIO()
     writer = csv.writer(output)
 
-    # Columns: Project Code, Team Name, Team Leader, Username, Domain, Assigned Problem Statement ID, Project Title, Project Status, Current Review Round, GitHub Repository, Submission Date, Edit Permission (Enabled / Disabled)
+    # Columns: Team Name, Team Leader, Realm, Problem Code, Problem Statement Title, Review Round, Project Status, Submission Date
     writer.writerow([
-        "Project Code",
         "Team Name",
         "Team Leader",
-        "Username",
-        "Domain",
-        "Assigned Problem Statement ID",
-        "Project Title",
+        "Realm",
+        "Problem Code",
+        "Problem Statement Title",
+        "Review Round",
         "Project Status",
-        "Current Review Round",
-        "GitHub Repository",
         "Submission Date",
-        "Edit Permission",
     ])
 
     for u in items:
-        domain_name = u.domain.name if u.domain else ""
         project = u.projects[0] if u.projects else None
+        realm_name = ""
+        ps_code = "—"
+        ps_title = "—"
 
-        prj_code = project.project_code if project else "—"
-        ps_code = ""
-        if project and project.assigned_problem_statement:
-            ps_code = project.assigned_problem_statement.problem_code
-        elif project and project.assigned_problem_statement_id:
-            ps_code = str(project.assigned_problem_statement_id)
+        if project:
+            realm_name = project.realm or (u.domain.name if u.domain else "")
+            if project.problem_statement_rel:
+                ps_code = project.problem_statement_rel.problem_code
+                ps_title = project.problem_statement_rel.title
+            elif project.problem_code:
+                ps_code = project.problem_code
+                ps_title = project.project_title or "—"
+            prj_status = project.status if project.status else "NOT_SUBMITTED"
+            cur_round = str(project.current_round) if project.current_round else "1"
+            sub_date = project.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if project.submitted_at else "—"
         else:
-            ps_code = "—"
-
-        prj_title = project.project_title or project.custom_topic or (project.topic.title if project and project.topic else "—") if project else "—"
-        prj_status = project.status if project else "NOT_SUBMITTED"
-        cur_round = str(project.current_round) if project else "—"
-        github = project.github_url or "—" if project else "—"
-        sub_date = project.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if (project and project.submitted_at) else "—"
-        edit_perm = "Enabled" if getattr(u, "edit_permission", False) else "Disabled"
+            realm_name = u.domain.name if u.domain else ""
+            prj_status = "NOT_SUBMITTED"
+            cur_round = "—"
+            sub_date = "—"
 
         writer.writerow([
-            prj_code,
             u.team_name or u.name,
             u.team_leader or u.name,
-            u.username,
-            domain_name,
+            realm_name,
             ps_code,
-            prj_title,
-            prj_status,
+            ps_title,
             cur_round,
-            github,
+            prj_status,
             sub_date,
-            edit_perm,
         ])
 
     today_str = date.today().strftime("%Y-%m-%d")
@@ -585,15 +580,16 @@ def _user_dict(user: User) -> dict:
     project_summary = None
     if user.projects:
         p = user.projects[0]
-        p_code = p.assigned_problem_statement.problem_code if p.assigned_problem_statement else None
+        ps_obj = p.problem_statement_rel
+        p_code = ps_obj.problem_code if ps_obj else p.problem_code
+        ps_title = ps_obj.title if ps_obj else (p.project_title or "—")
         project_summary = {
             "id": p.id,
             "project_code": p.project_code,
             "problem_code": p_code,
-            "assigned_problem_statement_id": p.assigned_problem_statement_id,
-            "project_title": p.project_title or (
-                f"{p_code} Solution Project" if p_code else (p.topic.title if p.topic else p.custom_topic)
-            ),
+            "problem_statement_id": str(p.problem_statement_id) if p.problem_statement_id else None,
+            "realm": p.realm or (user.domain.name if user.domain else "AI"),
+            "project_title": ps_title,
             "status": p.status,
             "current_round": p.current_round,
             "submitted_at": p.submitted_at.isoformat() if p.submitted_at else None,
@@ -646,45 +642,41 @@ def _project_dict(project: Project) -> dict:
         "organization": u.organization or u.college_name,
         "department": u.department,
     }
-    p_code = project.assigned_problem_statement.problem_code if project.assigned_problem_statement else None
+    ps = project.problem_statement_rel
+    p_code = ps.problem_code if ps else project.problem_code
+    ps_title = ps.title if ps else (project.project_title or "—")
+    ps_desc = ps.description if ps else (project.problem_statement or "—")
+    ps_diff = ps.difficulty if ps else "INTERMEDIATE"
+
     return {
         "id": project.id,
         "project_code": project.project_code,
         "user_id": project.user_id,
         "user": user_info,
+        "realm": project.realm or (project.domain.name if project.domain else "AI"),
         "domain_id": project.domain_id,
         "domain": {
-            "id": project.domain.id,
-            "name": project.domain.name,
-            "display_name": domain_map.get(project.domain.name, project.domain.name),
+            "id": project.domain.id if project.domain else None,
+            "name": project.domain.name if project.domain else (project.realm or "AI"),
+            "display_name": domain_map.get(project.realm or (project.domain.name if project.domain else "AI"), "AI"),
         },
-        "topic_id": project.topic_id,
-        "topic": (
-            {"id": project.topic.id, "title": project.topic.title, "description": project.topic.description}
-            if project.topic
-            else None
-        ),
-        "assigned_problem_statement_id": project.assigned_problem_statement_id,
-        "assigned_problem_statement": (
+        "problem_statement_id": str(project.problem_statement_id) if project.problem_statement_id else None,
+        "problem_statement": (
             {
-                "id": project.assigned_problem_statement.id,
-                "problem_code": project.assigned_problem_statement.problem_code,
-                "detailed_description": project.assigned_problem_statement.detailed_description,
+                "id": str(ps.id),
+                "problem_code": ps.problem_code,
+                "realm": ps.realm,
+                "title": ps.title,
+                "description": ps.description,
+                "difficulty": ps.difficulty,
             }
-            if project.assigned_problem_statement
+            if ps
             else None
         ),
         "problem_code": p_code,
-        "custom_topic": project.custom_topic,
-        "project_title": project.project_title or (
-            f"{p_code} Solution Project" if p_code else (project.topic.title if project.topic else project.custom_topic)
-        ),
+        "project_title": ps_title,
         "abstract": project.abstract,
-        "problem_statement": (
-            project.assigned_problem_statement.detailed_description
-            if project.assigned_problem_statement
-            else project.problem_statement
-        ),
+        "detailed_description": ps_desc,
         "objectives": project.objectives,
         "proposed_solution": project.proposed_solution,
         "technologies": project.technology_stack or project.technologies,

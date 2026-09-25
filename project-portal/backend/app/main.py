@@ -6,28 +6,23 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routes import auth, users, topics, projects, admin
+from app.routes import auth, users, problem_statements, projects, admin
 
 app = FastAPI(
     title=settings.APP_NAME,
     description="""
-## Project Portal API
+## Hogwarts Legacy 5.0 Project Portal API
 
-A private project topic selection and review portal.
+Portal for official Hogwarts Legacy 5.0 problem statements and project reviews.
 
-### Roles
-- **ADMIN**: Full access — manage users, topics, projects, reviews
-- **USER**: Limited access — view own profile, submit project, view own reviews
-
-### Domains
-- **AI**: Gets 10 random AI topics to choose from
-- **CYBERSECURITY**: Gets 10 random Cybersecurity topics
-- **OPEN_INNOVATION**: Enters a custom project topic
+### Realms
+- **AI**: 10 Official Problem Statements
+- **CYBERSECURITY**: 10 Official Problem Statements
 
 ### Authentication
 Use `POST /api/auth/login` to obtain a Bearer token. Include it in the `Authorization` header.
 """,
-    version="1.0.0",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -96,7 +91,7 @@ def on_startup():
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(users.router)
-app.include_router(topics.router)
+app.include_router(problem_statements.router)
 app.include_router(projects.router)
 app.include_router(admin.router)
 

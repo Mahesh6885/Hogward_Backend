@@ -1,15 +1,15 @@
 """Pydantic schemas for projects."""
+import uuid
 from datetime import datetime
 from typing import Optional, Any, Union
 from pydantic import BaseModel, field_validator
 
 from app.models.project import ProjectStatus
+from app.models.problem_statement import RealmEnum
 
 
 class ProjectDraftRequest(BaseModel):
     """Save draft request for editable blocks."""
-    topic_id: Optional[int] = None
-    custom_topic: Optional[str] = None
     project_title: Optional[str] = None
     abstract: Optional[str] = None
     problem_statement: Optional[str] = None
@@ -34,8 +34,6 @@ class ProjectDraftRequest(BaseModel):
 
 class ProjectSubmitRequest(BaseModel):
     """Universal final project submission."""
-    topic_id: Optional[int] = None
-    custom_topic: Optional[str] = None
     project_title: Optional[str] = None
     abstract: Optional[str] = None
     problem_statement: Optional[str] = None
@@ -47,19 +45,6 @@ class ProjectSubmitRequest(BaseModel):
     project_description: Optional[str] = None
     github_url: Optional[str] = None
     demo_url: Optional[str] = None
-
-    @field_validator("custom_topic")
-    @classmethod
-    def custom_topic_valid(cls, v: Optional[str]) -> Optional[str]:
-        if v is not None:
-            v = v.strip()
-            if not v:
-                raise ValueError("Custom topic cannot be empty")
-            if len(v) < 10:
-                raise ValueError("Custom topic must be at least 10 characters")
-            if len(v) > 500:
-                raise ValueError("Custom topic cannot exceed 500 characters")
-        return v
 
     @field_validator("github_url")
     @classmethod
@@ -86,8 +71,8 @@ class AdminProjectUpdateRequest(BaseModel):
     demo_url: Optional[str] = None
     status: Optional[ProjectStatus] = None
     current_round: Optional[int] = None
-    domain_id: Optional[int] = None
-    assigned_problem_statement_id: Optional[int] = None
+    realm: Optional[RealmEnum] = None
+    problem_statement_id: Optional[uuid.UUID] = None
 
     @field_validator("github_url")
     @classmethod
@@ -113,30 +98,25 @@ class AdminGithubUpdateRequest(BaseModel):
 
 
 class AdminDomainUpdateRequest(BaseModel):
-    """Admin update domain for project and team."""
+    """Admin update realm/domain for project and team."""
     domain: str
 
 
 class DomainBasic(BaseModel):
-    id: int
+    id: Optional[int] = None
     name: str
     display_name: str
 
     model_config = {"from_attributes": True}
 
 
-class TopicBasic(BaseModel):
-    id: int
-    title: str
-    description: Optional[str]
-
-    model_config = {"from_attributes": True}
-
-
-class ProblemStatementBasic(BaseModel):
-    id: int
+class ProblemStatementSummary(BaseModel):
+    id: uuid.UUID
     problem_code: str
-    detailed_description: str
+    realm: RealmEnum
+    title: str
+    description: str
+    difficulty: str
 
     model_config = {"from_attributes": True}
 
@@ -162,24 +142,22 @@ class ProjectResponse(BaseModel):
     project_code: str
     user_id: int
     user: TeamUserBasic
-    domain_id: int
-    domain: DomainBasic
-    topic_id: Optional[int]
-    topic: Optional[TopicBasic]
-    assigned_problem_statement_id: Optional[int] = None
-    assigned_problem_statement: Optional[ProblemStatementBasic] = None
-    custom_topic: Optional[str]
-    project_title: Optional[str]
-    abstract: Optional[str]
-    problem_statement: Optional[str]
-    objectives: Optional[str]
-    proposed_solution: Optional[str]
-    technologies: Optional[str]
+    realm: Optional[str] = None
+    domain_id: Optional[int] = None
+    domain: Optional[DomainBasic] = None
+    problem_statement_id: Optional[uuid.UUID] = None
+    problem_statement: Optional[ProblemStatementSummary] = None
+    problem_code: Optional[str] = None
+    project_title: Optional[str] = None
+    abstract: Optional[str] = None
+    objectives: Optional[str] = None
+    proposed_solution: Optional[str] = None
+    technologies: Optional[str] = None
     technology_stack: Optional[str] = None
-    expected_outcome: Optional[str]
-    project_description: Optional[str]
-    github_url: Optional[str]
-    demo_url: Optional[str]
+    expected_outcome: Optional[str] = None
+    project_description: Optional[str] = None
+    github_url: Optional[str] = None
+    demo_url: Optional[str] = None
     is_submitted: bool = False
     status: ProjectStatus
     current_round: int

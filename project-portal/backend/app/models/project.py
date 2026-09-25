@@ -1,11 +1,13 @@
 """Project model."""
 import enum
+import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, UniqueConstraint, Boolean, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+from app.models.problem_statement import GUID, RealmEnum
 
 
 class ProjectStatus(str, enum.Enum):
@@ -28,15 +30,19 @@ class Project(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    domain_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("domains.id", ondelete="RESTRICT"), nullable=False, index=True
+    domain_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("domains.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    topic_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("topics.id", ondelete="RESTRICT"), nullable=True, index=True
+
+    # Refactored Problem Statement relationship
+    problem_statement_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID(), ForeignKey("problem_statements.id", ondelete="RESTRICT"), nullable=True, index=True
     )
-    assigned_problem_statement_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("problem_statements.id", ondelete="SET NULL"), nullable=True, index=True
+    problem_code: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    realm: Mapped[str | None] = mapped_column(
+        SAEnum(RealmEnum, name="realm_enum"), nullable=True, index=True
     )
+
     custom_topic: Mapped[str | None] = mapped_column(String(500), nullable=True)
     project_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
     abstract: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -67,9 +73,8 @@ class Project(Base):
 
     # Relationships
     user: Mapped["User"] = relationship("User", back_populates="projects", foreign_keys=[user_id])
-    domain: Mapped["Domain"] = relationship("Domain", back_populates="projects")
-    topic: Mapped["Topic | None"] = relationship("Topic", back_populates="projects")
-    assigned_problem_statement: Mapped["ProblemStatement | None"] = relationship(
+    domain: Mapped["Domain | None"] = relationship("Domain", back_populates="projects")
+    problem_statement_rel: Mapped["ProblemStatement | None"] = relationship(
         "ProblemStatement", back_populates="projects"
     )
     reviews: Mapped[list["Review"]] = relationship(

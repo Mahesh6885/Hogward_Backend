@@ -26,7 +26,60 @@ def get_domain_by_name(db: Session, domain_name: DomainName) -> Domain:
 def create_user(db: Session, data: UserCreate, created_by: User) -> User:
     """Admin creates a new team/user account."""
     import re
-    domain = get_domain_by_name(db, data.domain)
+    import uuid
+    from app.models.problem_statement import ProblemStatement, RealmEnum
+    from app.models.project import Project, ProjectStatus
+
+    # Determine realm: must be AI or CYBERSECURITY
+    chosen_realm = None
+    if data.realm:
+        realm_str = data.realm.strip().upper()
+        if realm_str in (RealmEnum.AI.value, RealmEnum.CYBERSECURITY.value):
+            chosen_realm = RealmEnum(realm_str)
+    elif data.domain:
+        if data.domain.value in (RealmEnum.AI.value, RealmEnum.CYBERSECURITY.value):
+            chosen_realm = RealmEnum(data.domain.value)
+
+    if not chosen_realm and data.role == UserRole.USER:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "message": "A valid realm (AI or CYBERSECURITY) must be selected.", "error_code": "REALM_REQUIRED"},
+        )
+
+    # Validate problem statement for USER role
+    ps = None
+    if data.role == UserRole.USER:
+        if data.problem_statement_id:
+            try:
+                ps_uuid = uuid.UUID(str(data.problem_statement_id))
+                ps = db.query(ProblemStatement).filter(ProblemStatement.id == ps_uuid).first()
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={"success": False, "message": "Invalid problem statement ID format", "error_code": "INVALID_UUID"},
+                )
+        else:
+            # Fallback to an active statement in the chosen realm
+            ps = db.query(ProblemStatement).filter(ProblemStatement.realm == chosen_realm, ProblemStatement.status == True).first()
+
+        if not ps:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"success": False, "message": "Team cannot register without selecting one problem statement.", "error_code": "PROBLEM_STATEMENT_REQUIRED"},
+            )
+        if ps.realm != chosen_realm:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"success": False, "message": f"Realm mismatch: Problem statement '{ps.problem_code}' is in realm '{ps.realm}', but '{chosen_realm.value}' was selected.", "error_code": "REALM_MISMATCH"},
+            )
+
+    domain = None
+    if chosen_realm:
+        domain = db.query(Domain).filter(Domain.name == chosen_realm.value).first()
+    elif data.domain:
+        domain = get_domain_by_name(db, data.domain)
+    else:
+        domain = db.query(Domain).filter(Domain.name == DomainName.AI.value).first()
 
     team_name = (data.team_name or data.name or "Hogwarts Team").strip()
     team_leader = (data.team_leader or data.name or team_name).strip()
@@ -107,6 +160,29 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             status_code=status.HTTP_409_CONFLICT,
             detail={"success": False, "message": "Username or email already exists", "error_code": "DUPLICATE"},
         )
+
+    # For USER role, automatically create the Project linked to the chosen problem statement
+    if data.role == UserRole.USER and ps:
+        from app.utils.helpers import generate_project_code
+        from sqlalchemy import func
+        max_id = db.query(func.max(Project.id)).scalar() or 0
+        proj_code = generate_project_code(max_id + 1)
+
+        project = Project(
+            project_code=proj_code,
+            user_id=user.id,
+            domain_id=domain.id if domain else None,
+            problem_statement_id=ps.id,
+            problem_code=ps.problem_code,
+            realm=ps.realm,
+            project_title=f"{ps.problem_code} Solution Project",
+            problem_statement=ps.description,
+            status=ProjectStatus.DRAFT,
+            is_submitted=False,
+            current_round=1,
+        )
+        db.add(project)
+        db.flush()
 
     # Audit log
     log = AuditLog(
