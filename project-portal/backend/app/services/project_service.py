@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 
 from app.core.config import settings
-from app.models.domain import DomainName
+from app.models.domain import Domain, DomainName
 from app.models.project import Project, ProjectStatus
 from app.models.problem_statement import ProblemStatement, RealmEnum
 from app.models.user import User
 from app.models.audit_log import AuditLog
-from app.schemas.project import ProjectSubmitRequest, ProjectDraftRequest
+from app.schemas.project import ProjectSubmitRequest, ProjectDraftRequest, AdminProjectUpdateRequest
 from app.utils.helpers import paginate, generate_project_code
 
 
@@ -341,18 +341,98 @@ def list_projects_admin(
 def admin_update_project(
     db: Session,
     project_id: int,
+    data: Optional[Union[AdminProjectUpdateRequest, dict, str]] = None,
+    admin: Optional[User] = None,
     project_title: Optional[str] = None,
     current_round: Optional[int] = None,
     status_val: Optional[str] = None,
-    admin: Optional[User] = None,
 ) -> Project:
+    """Admin updates any project field (including locked fields) regardless of submission status."""
     project = get_project_by_id(db, project_id)
+
+    # If data is passed as a string, it might be legacy project_title positional argument
+    if isinstance(data, str):
+        project_title = data
+        data = None
+
+    updates = {}
+    if data is not None:
+        if hasattr(data, "model_dump"):
+            updates = data.model_dump(exclude_unset=True)
+        elif isinstance(data, dict):
+            updates = dict(data)
+
     if project_title is not None:
-        project.project_title = project_title.strip()
+        updates["project_title"] = project_title
     if current_round is not None:
-        project.current_round = current_round
+        updates["current_round"] = current_round
     if status_val is not None:
-        project.status = status_val
+        updates["status"] = status_val
+
+    # Apply project_title
+    if "project_title" in updates and updates["project_title"] is not None:
+        project.project_title = str(updates["project_title"]).strip()
+
+    # Apply github_url with uniqueness validation
+    if "github_url" in updates:
+        gh = updates["github_url"]
+        if gh:
+            gh_clean = str(gh).strip()
+            _check_github_unique(db, gh_clean, exclude_project_id=project.id)
+            project.github_url = gh_clean
+        else:
+            project.github_url = None
+
+    # Apply domain
+    if "domain" in updates and updates["domain"] is not None:
+        dom_name = str(updates["domain"]).strip()
+        dom = db.query(Domain).filter(Domain.name == dom_name).first()
+        if dom:
+            project.domain_id = dom.id
+
+    # Apply status
+    if "status" in updates and updates["status"] is not None:
+        st = updates["status"]
+        if hasattr(st, "value"):
+            project.status = st.value
+        else:
+            project.status = str(st)
+
+    # Apply current_round
+    if "current_round" in updates and updates["current_round"] is not None:
+        project.current_round = int(updates["current_round"])
+
+    # Optional text fields
+    for field in [
+        "problem_statement",
+        "abstract",
+        "objectives",
+        "proposed_solution",
+        "technologies",
+        "technology_stack",
+        "expected_outcome",
+        "project_description",
+        "demo_url",
+    ]:
+        if field in updates and updates[field] is not None:
+            setattr(project, field, str(updates[field]).strip())
+
+    if "realm" in updates and updates["realm"] is not None:
+        project.realm = updates["realm"]
+
+    if "problem_statement_id" in updates and updates["problem_statement_id"] is not None:
+        project.problem_statement_id = updates["problem_statement_id"]
+
+    if admin:
+        log = AuditLog(
+            admin_id=admin.id,
+            action="ADMIN_UPDATE_PROJECT",
+            target_type="project",
+            target_id=project.id,
+            description=f"Admin '{admin.username}' updated fields for project '{project.project_code}'",
+        )
+        db.add(log)
+
     db.commit()
     db.refresh(project)
     return project

@@ -101,3 +101,43 @@ class TestGetMyProject:
     def test_unauthenticated_cannot_get_project(self, client):
         resp = client.get("/api/projects/me")
         assert resp.status_code == 403
+
+
+class TestAdminUpdateProject:
+    def test_admin_updates_project_fields(self, client, admin_user, ai_user, domains):
+        user_token = get_token(client, "aiuser", "userpass123")
+        admin_token = get_token(client, "admin", "adminpass123")
+        proj_resp = client.get("/api/projects/me", headers=auth_headers(user_token))
+        project_id = proj_resp.json()["data"]["id"]
+
+        update_payload = {
+            "project_title": "Admin Overridden Title",
+            "domain": "CYBERSECURITY",
+            "github_url": "https://github.com/admin-override/repo",
+            "status": "REJECTED",
+            "current_round": 3,
+        }
+        resp = client.put(
+            f"/api/admin/projects/{project_id}",
+            json=update_payload,
+            headers=auth_headers(admin_token),
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["project_title"] == "Admin Overridden Title"
+        assert data["status"] == "REJECTED"
+        assert data["current_round"] == 3
+        assert data["github_url"] == "https://github.com/admin-override/repo"
+        assert data["domain"]["name"] == "CYBERSECURITY"
+
+    def test_non_admin_cannot_update_project(self, client, ai_user, domains):
+        user_token = get_token(client, "aiuser", "userpass123")
+        proj_resp = client.get("/api/projects/me", headers=auth_headers(user_token))
+        project_id = proj_resp.json()["data"]["id"]
+
+        resp = client.put(
+            f"/api/admin/projects/{project_id}",
+            json={"project_title": "Hacked Title"},
+            headers=auth_headers(user_token),
+        )
+        assert resp.status_code == 403

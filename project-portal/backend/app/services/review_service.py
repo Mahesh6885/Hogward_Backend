@@ -10,7 +10,7 @@ from app.models.audit_log import AuditLog
 from app.schemas.review import ReviewCreate, ReviewUpdate
 
 
-def create_review(db: Session, project_id: int, data: ReviewCreate, admin: User) -> Review:
+def create_review(db: Session, project_id: int, data: ReviewCreate, admin: User, upsert: bool = False) -> Review:
     """Admin submits a review for a project round."""
     project = db.query(Project).filter(Project.id == project_id).first()
     if not project:
@@ -42,20 +42,42 @@ def create_review(db: Session, project_id: int, data: ReviewCreate, admin: User)
             },
         )
 
-    # Prevent duplicate reviews for same project+round (must use PUT to update)
+    # Prevent duplicate reviews for same project+round (must use PUT to update, or upsert=True)
     existing_review = db.query(Review).filter(
         Review.project_id == project_id,
         Review.round_number == data.round_number,
     ).first()
     if existing_review:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "success": False,
-                "message": f"A review for round {data.round_number} already exists. Use PUT to update.",
-                "error_code": "REVIEW_EXISTS",
-            },
+        if not upsert:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "success": False,
+                    "message": f"A review for round {data.round_number} already exists. Use PUT to update.",
+                    "error_code": "REVIEW_EXISTS",
+                    "existing_review_id": existing_review.id,
+                },
+            )
+        # Upsert branch: update existing review in-place
+        existing_review.admin_id = admin.id
+        existing_review.review_text = data.review_text.strip()
+        existing_review.suggested_improvements = (
+            data.suggested_improvements.strip() if data.suggested_improvements else None
         )
+        existing_review.status = data.status
+        _update_project_after_review(db, project, existing_review)
+
+        log = AuditLog(
+            admin_id=admin.id,
+            action="UPDATE_REVIEW",
+            target_type="project",
+            target_id=project_id,
+            description=f"Admin '{admin.username}' updated review for project '{project.project_code}' round {data.round_number} — status: {data.status.value}",
+        )
+        db.add(log)
+        db.commit()
+        db.refresh(existing_review)
+        return existing_review
 
     review = Review(
         project_id=project_id,

@@ -822,10 +822,17 @@
 
     <!-- Review Submission Form -->
     <div class="card" style="border-top:2px solid var(--accent-blue)">
-      <h4 style="font-weight:700;margin-bottom:1rem">Submit Review for Current Round</h4>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+        <h4 style="font-weight:700;margin:0" id="review-form-title">Submit Review for Current Round</h4>
+        <span class="badge badge-blue" id="review-round-badge">Review Controls</span>
+      </div>
+      <div id="review-existing-note" class="alert alert-info alert-hidden mb-3" style="font-size:0.85rem">
+        <span>ℹ️</span><span>A review for this round already exists. Submitting will update the evaluation and project status.</span>
+      </div>
       <form id="form-submit-review" class="modal-form">
         <input type="hidden" id="review-project-id" />
         <input type="hidden" id="review-project-round" />
+        <input type="hidden" id="review-existing-id" />
         <div class="form-group">
           <label class="form-label" for="review-status">Review Status Decision *</label>
           <select class="form-input" id="review-status" required>
@@ -1706,7 +1713,10 @@
             <div class="review-history-card" style="padding:1rem;margin-bottom:0.75rem">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
                 <strong>Round ${r.round_number} Review (${r.status})</strong>
-                <span class="text-xs text-muted">${new Date(r.reviewed_at || r.created_at).toLocaleDateString()}</span>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="text-xs text-muted">${new Date(r.reviewed_at || r.created_at).toLocaleDateString()}</span>
+                  <button type="button" class="btn btn-ghost btn-xs" onclick="window.editReviewFromHistory(${r.id}, ${r.round_number})" title="Edit or update this review">✏️ Edit</button>
+                </div>
               </div>
               <div class="feedback-box" style="margin-top:0.25rem">
                 <div class="feedback-box-title">Admin Feedback</div>
@@ -1723,11 +1733,35 @@
         </div>
       `;
 
+      window.currentModalProject = p;
       document.getElementById('review-project-id').value = p.id;
       document.getElementById('review-project-round').value = p.current_round;
-      document.getElementById('review-text').value = '';
-      document.getElementById('review-improvements').value = '';
       document.getElementById('modal-review-alert').classList.add('alert-hidden');
+
+      // Check if a review already exists for the project's current round
+      const existingRoundReview = (p.reviews || []).find(r => r.round_number === p.current_round);
+      const existingIdInput = document.getElementById('review-existing-id');
+      const formTitle = document.getElementById('review-form-title');
+      const submitBtn = document.getElementById('btn-submit-review-action');
+      const existingNote = document.getElementById('review-existing-note');
+
+      if (existingRoundReview) {
+        if (existingIdInput) existingIdInput.value = existingRoundReview.id;
+        document.getElementById('review-status').value = existingRoundReview.status || 'REJECTED';
+        document.getElementById('review-text').value = existingRoundReview.review_text || '';
+        document.getElementById('review-improvements').value = existingRoundReview.suggested_improvements || '';
+        if (formTitle) formTitle.textContent = `Update Review for Round ${p.current_round}`;
+        if (submitBtn) submitBtn.textContent = `💾 Save Review (Round ${p.current_round})`;
+        if (existingNote) existingNote.classList.remove('alert-hidden');
+      } else {
+        if (existingIdInput) existingIdInput.value = '';
+        document.getElementById('review-status').value = 'PASSED';
+        document.getElementById('review-text').value = '';
+        document.getElementById('review-improvements').value = '';
+        if (formTitle) formTitle.textContent = `Submit Review for Current Round (Round ${p.current_round || 1})`;
+        if (submitBtn) submitBtn.textContent = 'Submit Review';
+        if (existingNote) existingNote.classList.add('alert-hidden');
+      }
 
       // Populate Admin Overrides Form
       document.getElementById('admin-edit-project-id').value = p.id;
@@ -1743,6 +1777,22 @@
       if (window.toast) toast.error(e.message);
       else showAlert(e.message, 'error');
     }
+  };
+
+  window.editReviewFromHistory = function(reviewId, roundNum) {
+    const p = window.currentModalProject;
+    const review = (p?.reviews || []).find(r => r.id === reviewId);
+    if (!review) return;
+    document.getElementById('review-existing-id').value = review.id;
+    document.getElementById('review-project-round').value = review.round_number;
+    document.getElementById('review-status').value = review.status;
+    document.getElementById('review-text').value = review.review_text || '';
+    document.getElementById('review-improvements').value = review.suggested_improvements || '';
+    document.getElementById('review-form-title').textContent = `Update Review for Round ${review.round_number}`;
+    document.getElementById('btn-submit-review-action').textContent = `💾 Save Review (Round ${review.round_number})`;
+    const noteEl = document.getElementById('review-existing-note');
+    if (noteEl) noteEl.classList.remove('alert-hidden');
+    document.getElementById('form-submit-review').scrollIntoView({ behavior: 'smooth' });
   };
 
   document.getElementById('form-admin-edit-project').addEventListener('submit', async (e) => {
@@ -1784,10 +1834,11 @@
     e.preventDefault();
     const projectId = document.getElementById('review-project-id').value;
     const currentRound = parseInt(document.getElementById('review-project-round').value, 10);
+    const existingReviewId = document.getElementById('review-existing-id')?.value;
     const alertEl = document.getElementById('modal-review-alert');
     const btn = document.getElementById('btn-submit-review-action');
     btn.disabled = true;
-    btn.textContent = 'Submitting…';
+    btn.textContent = 'Saving…';
 
     const payload = {
       round_number: currentRound,
@@ -1797,9 +1848,27 @@
     };
 
     try {
-      await api.post(`/api/admin/projects/${projectId}/reviews`, payload);
-      closeModal('modal-review-project');
-      showAlert(`Review for Round ${currentRound} successfully submitted!`);
+      if (existingReviewId) {
+        await api.put(`/api/admin/projects/${projectId}/reviews/${existingReviewId}`, {
+          status: payload.status,
+          review_text: payload.review_text,
+          suggested_improvements: payload.suggested_improvements,
+        });
+        closeModal('modal-review-project');
+        showAlert(`Review for Round ${currentRound} successfully updated!`);
+      } else {
+        try {
+          await api.post(`/api/admin/projects/${projectId}/reviews`, payload);
+        } catch (postErr) {
+          if (postErr.message && postErr.message.includes('already exists')) {
+            await api.post(`/api/admin/projects/${projectId}/reviews?upsert=true`, payload);
+          } else {
+            throw postErr;
+          }
+        }
+        closeModal('modal-review-project');
+        showAlert(`Review for Round ${currentRound} successfully submitted!`);
+      }
       loadProjects();
       loadDashboard();
     } catch (err) {
@@ -1808,7 +1877,7 @@
       alertEl.classList.remove('alert-hidden');
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Submit Review';
+      btn.textContent = existingReviewId ? `💾 Save Review (Round ${currentRound})` : 'Submit Review';
     }
   });
 

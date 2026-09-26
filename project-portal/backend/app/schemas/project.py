@@ -73,6 +73,7 @@ class AdminProjectUpdateRequest(BaseModel):
     current_round: Optional[int] = None
     realm: Optional[RealmEnum] = None
     problem_statement_id: Optional[uuid.UUID] = None
+    domain: Optional[str] = None
 
     @field_validator("github_url")
     @classmethod

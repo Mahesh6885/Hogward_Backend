@@ -129,3 +129,44 @@ class TestUpdateReview:
         assert update_resp.status_code == 200
         assert update_resp.json()["data"]["status"] == "PASSED"
         assert update_resp.json()["data"]["review_text"] == "Updated review text."
+
+    def test_admin_updates_review_to_rejected(self, client, admin_user, ai_user, domains):
+        project_id, _ = _get_project_id(client, "aiuser", "userpass123")
+        admin_token = get_token(client, "admin", "adminpass123")
+        create_resp = client.post(
+            f"/api/admin/projects/{project_id}/reviews",
+            json={"round_number": 1, "review_text": "Initial review pending.", "status": "IN_REVIEW"},
+            headers=auth_headers(admin_token),
+        )
+        review_id = create_resp.json()["data"]["id"]
+
+        update_resp = client.put(
+            f"/api/admin/projects/{project_id}/reviews/{review_id}",
+            json={"review_text": "Project failed criteria and is rejected.", "status": "REJECTED"},
+            headers=auth_headers(admin_token),
+        )
+        assert update_resp.status_code == 200
+        assert update_resp.json()["data"]["status"] == "REJECTED"
+
+        # Verify project status updated to REJECTED
+        proj_resp = client.get(f"/api/admin/projects/{project_id}", headers=auth_headers(admin_token))
+        assert proj_resp.json()["data"]["status"] == "REJECTED"
+
+    def test_admin_post_review_with_upsert(self, client, admin_user, ai_user, domains):
+        project_id, _ = _get_project_id(client, "aiuser", "userpass123")
+        admin_token = get_token(client, "admin", "adminpass123")
+        client.post(
+            f"/api/admin/projects/{project_id}/reviews",
+            json={"round_number": 1, "review_text": "First review text.", "status": "IN_REVIEW"},
+            headers=auth_headers(admin_token),
+        )
+
+        # Upsert=true should update existing review instead of 409
+        upsert_resp = client.post(
+            f"/api/admin/projects/{project_id}/reviews?upsert=true",
+            json={"round_number": 1, "review_text": "Overwritten review text.", "status": "REJECTED"},
+            headers=auth_headers(admin_token),
+        )
+        assert upsert_resp.status_code == 201
+        assert upsert_resp.json()["data"]["status"] == "REJECTED"
+        assert upsert_resp.json()["data"]["review_text"] == "Overwritten review text."

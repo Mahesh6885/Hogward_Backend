@@ -452,10 +452,11 @@ def admin_get_project_reviews_endpoint(
 def admin_create_review(
     project_id: int,
     data: ReviewCreate,
+    upsert: bool = False,
     admin: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
-    review = create_review(db, project_id, data, admin)
+    review = create_review(db, project_id, data, admin, upsert=upsert)
     return {"success": True, "message": "Review submitted", "data": _review_dict(review)}
 
 
@@ -698,7 +699,7 @@ def _project_dict(project: Project) -> dict:
         "problem_code": p_code,
         "team_name": user_info["team_name"],
         "problem_statement_title": ps_title,
-        "project_title": ps_title,
+        "project_title": project.project_title if project.project_title else ps_title,
         "abstract": project.abstract,
         "detailed_description": ps_desc,
         "problem_description": ps_desc,
