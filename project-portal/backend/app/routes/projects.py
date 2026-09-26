@@ -277,3 +277,20 @@ def get_my_project_timeline(
         "message": "Project timeline retrieved",
         "data": timeline,
     }
+
+
+# ─── Team Evaluations (Phase 3 User Portal View) ─────────────────────────────
+
+@router.get("/me/evaluations", status_code=200)
+def get_my_project_evaluations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Get evaluated round scores, totals, evaluator remarks, and suggestions for the team."""
+    from app.services.evaluation_service import get_team_evaluation_details
+    data = get_team_evaluation_details(db, current_user.id)
+    return {
+        "success": True,
+        "message": "Team evaluations retrieved",
+        "data": data,
+    }

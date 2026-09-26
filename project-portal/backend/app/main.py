@@ -6,7 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.config import settings
-from app.routes import auth, users, problem_statements, projects, admin
+from app.routes import auth, users, problem_statements, projects, admin, leaderboard
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -108,6 +108,7 @@ app.include_router(users.router)
 app.include_router(problem_statements.router)
 app.include_router(projects.router)
 app.include_router(admin.router)
+app.include_router(leaderboard.router)
 
 
 @app.get("/health", tags=["Health"])

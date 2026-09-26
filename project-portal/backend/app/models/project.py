@@ -83,6 +83,15 @@ class Project(Base):
     reviews: Mapped[list["Review"]] = relationship(
         "Review", back_populates="project", cascade="all, delete-orphan", order_by="Review.round_number"
     )
+    reviews_round_1: Mapped[list["ReviewRound1"]] = relationship(
+        "ReviewRound1", back_populates="project", cascade="all, delete-orphan", order_by="ReviewRound1.id.desc()"
+    )
+    reviews_round_2: Mapped[list["ReviewRound2"]] = relationship(
+        "ReviewRound2", back_populates="project", cascade="all, delete-orphan", order_by="ReviewRound2.id.desc()"
+    )
+    reviews_round_3: Mapped[list["ReviewRound3"]] = relationship(
+        "ReviewRound3", back_populates="project", cascade="all, delete-orphan", order_by="ReviewRound3.id.desc()"
+    )
 
     def __repr__(self) -> str:
         return f"<Project id={self.id} code={self.project_code} status={self.status}>"

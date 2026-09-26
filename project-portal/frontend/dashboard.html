@@ -2294,10 +2294,15 @@
     list.innerHTML = '';
 
     try {
-      const res = await api.get('/api/projects/me/reviews');
-      const rawReviews = res.data || [];
+      const [res, evalRes] = await Promise.all([
+        api.get('/api/projects/me/reviews').catch(() => ({ data: [] })),
+        api.get('/api/projects/me/evaluations').catch(() => null)
+      ]);
 
-      // Deduplicate by review ID to prevent double-render
+      const rawReviews = res.data || [];
+      const ev = evalRes ? evalRes.data : null;
+
+      // Deduplicate legacy reviews
       const seenIds = new Set();
       const reviews = rawReviews.filter(r => {
         if (seenIds.has(r.id)) return false;
@@ -2305,46 +2310,140 @@
         return true;
       });
 
-      if (reviews.length === 0) {
+      const hasEvaluations = ev && (
+        (ev.round_1 && ev.round_1.is_published) ||
+        (ev.round_2 && ev.round_2.is_published) ||
+        (ev.round_3 && ev.round_3.is_published)
+      );
+
+      if (reviews.length === 0 && !hasEvaluations) {
         empty.classList.remove('hidden');
         return;
       }
 
-      list.innerHTML = reviews.map(r => {
-        const formattedDate = new Date(r.reviewed_at || r.created_at).toLocaleDateString(undefined, {
-          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        });
+      let html = '';
 
-        return `
-          <div class="review-history-card" data-review-id="${r.id}">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span style="font-size:1.5rem">📝</span>
-                <div>
-                  <h3 style="font-weight:700;font-size:1.15rem">Round ${r.round_number} Review</h3>
-                  <span class="text-xs text-muted">Evaluated by Admin: <strong>${escHtml(r.admin?.name || 'Administrator')}</strong></span>
+      // ── Official Evaluation Scorecard Banner ───────────────────────────────
+      if (hasEvaluations) {
+        const scores = ev.scores || {};
+        const r1 = ev.round_1;
+        const r2 = ev.round_2;
+        const r3 = ev.round_3;
+
+        html += `
+          <div class="card mb-3" style="border:1.5px solid var(--gold);background:linear-gradient(135deg, rgba(26,21,14,0.95), rgba(16,12,8,0.98));box-shadow:0 10px 30px rgba(212,175,55,0.15)">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid rgba(212,175,55,0.3)">
+              <div>
+                <div style="font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.5rem">
+                  <span>🏆</span> Official Hackathon Evaluation Scorecard
                 </div>
+                <div class="text-xs text-muted mt-1">Multi-round evaluation criteria verified by Ministry of Magic Arbiters</div>
               </div>
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span class="badge ${statusColors[r.status] || 'badge-gray'}">${escHtml(r.status)}</span>
-                <span class="text-xs text-muted font-mono">${formattedDate}</span>
+              <div style="text-align:right">
+                <div class="text-xs text-muted uppercase">Grand Total Score</div>
+                <div style="font-family:'Cinzel',serif;font-size:1.6rem;font-weight:800;color:var(--gold-light)">
+                  ${scores.grand_total} <span style="font-size:1rem;color:var(--text-muted)">/ 200</span>
+                </div>
+                <div class="text-xs text-muted">${scores.percentage}% Overall</div>
               </div>
             </div>
 
-            <div class="feedback-box">
-              <div class="feedback-box-title">Admin Feedback</div>
-              <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.review_text)}</div>
-            </div>
-
-            ${r.suggested_improvements ? `
-              <div class="improvement-box">
-                <div class="improvement-box-title">💡 Suggested Improvements</div>
-                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.suggested_improvements)}</div>
+            <!-- Three Round Score Breakdown Cards -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem;margin-bottom:1rem">
+              <!-- Round 1 -->
+              <div class="card" style="background:rgba(0,0,0,0.3);border:1px solid ${r1 && r1.is_published ? 'rgba(34,197,94,0.4)' : 'var(--border)'}">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                  <strong style="font-family:'Cinzel',serif">Round 1 — Problem &amp; Plan</strong>
+                  <span class="badge ${r1 && r1.is_published ? 'badge-green' : 'badge-gray'}">${r1 && r1.is_published ? 'Published' : 'Pending'}</span>
+                </div>
+                <div style="font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:var(--gold-light);margin-bottom:0.5rem">
+                  ${r1 && r1.is_published ? `${r1.total_score} / 60` : '— / 60'}
+                </div>
+                ${r1 && r1.is_published ? `
+                  <div class="text-xs text-muted mb-2">Evaluator: <strong>${escHtml(r1.evaluator_name || 'Arbiter')}</strong></div>
+                  ${r1.comments ? `<div class="feedback-box" style="margin-top:0.5rem"><div class="feedback-box-title">Comments</div><div class="text-xs" style="color:var(--text-primary);line-height:1.5">${escHtml(r1.comments)}</div></div>` : ''}
+                  ${r1.suggestions_next_round ? `<div class="improvement-box" style="margin-top:0.5rem"><div class="improvement-box-title">💡 Next Round Suggestions</div><div class="text-xs" style="color:var(--text-primary);line-height:1.5">${escHtml(r1.suggestions_next_round)}</div></div>` : ''}
+                ` : '<div class="text-xs text-muted">Evaluation pending or not yet published.</div>'}
               </div>
-            ` : ''}
+
+              <!-- Round 2 -->
+              <div class="card" style="background:rgba(0,0,0,0.3);border:1px solid ${r2 && r2.is_published ? 'rgba(34,197,94,0.4)' : 'var(--border)'}">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                  <strong style="font-family:'Cinzel',serif">Round 2 — Working Progress</strong>
+                  <span class="badge ${r2 && r2.is_published ? 'badge-green' : 'badge-gray'}">${r2 && r2.is_published ? 'Published' : 'Pending'}</span>
+                </div>
+                <div style="font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:var(--gold-light);margin-bottom:0.5rem">
+                  ${r2 && r2.is_published ? `${r2.total_score} / 70` : '— / 70'}
+                </div>
+                ${r2 && r2.is_published ? `
+                  <div class="text-xs text-muted mb-2">Evaluator: <strong>${escHtml(r2.evaluator_name || 'Arbiter')}</strong></div>
+                  ${r2.review_notes ? `<div class="feedback-box" style="margin-top:0.5rem"><div class="feedback-box-title">Review Notes</div><div class="text-xs" style="color:var(--text-primary);line-height:1.5">${escHtml(r2.review_notes)}</div></div>` : ''}
+                  ${r2.improvement_suggestions ? `<div class="improvement-box" style="margin-top:0.5rem"><div class="improvement-box-title">💡 Improvement Suggestions</div><div class="text-xs" style="color:var(--text-primary);line-height:1.5">${escHtml(r2.improvement_suggestions)}</div></div>` : ''}
+                ` : '<div class="text-xs text-muted">Evaluation pending or not yet published.</div>'}
+              </div>
+
+              <!-- Round 3 -->
+              <div class="card" style="background:rgba(0,0,0,0.3);border:1px solid ${r3 && r3.is_published ? 'rgba(34,197,94,0.4)' : 'var(--border)'}">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+                  <strong style="font-family:'Cinzel',serif">Round 3 — Final Readiness</strong>
+                  <span class="badge ${r3 && r3.is_published ? 'badge-green' : 'badge-gray'}">${r3 && r3.is_published ? 'Published' : 'Pending'}</span>
+                </div>
+                <div style="font-family:'Cinzel',serif;font-size:1.3rem;font-weight:700;color:var(--gold-light);margin-bottom:0.5rem">
+                  ${r3 && r3.is_published ? `${r3.total_score} / 70` : '— / 70'}
+                </div>
+                ${r3 && r3.is_published ? `
+                  <div class="text-xs text-muted mb-2">Evaluator: <strong>${escHtml(r3.evaluator_name || 'Arbiter')}</strong></div>
+                  ${r3.final_remarks ? `<div class="feedback-box" style="margin-top:0.5rem"><div class="feedback-box-title">Final Remarks</div><div class="text-xs" style="color:var(--text-primary);line-height:1.5">${escHtml(r3.final_remarks)}</div></div>` : ''}
+                  ${r3.strengths ? `<div class="text-xs text-success mt-1">✓ <strong>Strengths:</strong> ${escHtml(r3.strengths)}</div>` : ''}
+                  ${r3.weaknesses ? `<div class="text-xs text-warning mt-1">⚠ <strong>Weaknesses:</strong> ${escHtml(r3.weaknesses)}</div>` : ''}
+                  ${r3.recommendation ? `<div class="text-xs text-muted mt-1">🏆 <strong>Recommendation:</strong> ${escHtml(r3.recommendation)}</div>` : ''}
+                ` : '<div class="text-xs text-muted">Evaluation pending or not yet published.</div>'}
+              </div>
+            </div>
           </div>
         `;
-      }).join('');
+      }
+
+      // ── Legacy Review History Cards ────────────────────────────────────────
+      if (reviews.length > 0) {
+        html += reviews.map(r => {
+          const formattedDate = new Date(r.reviewed_at || r.created_at).toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+
+          return `
+            <div class="review-history-card" data-review-id="${r.id}">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <span style="font-size:1.5rem">📝</span>
+                  <div>
+                    <h3 style="font-weight:700;font-size:1.15rem">Round ${r.round_number} Review Decision</h3>
+                    <span class="text-xs text-muted">Evaluated by Admin: <strong>${escHtml(r.admin?.name || 'Administrator')}</strong></span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <span class="badge ${statusColors[r.status] || 'badge-gray'}">${escHtml(r.status)}</span>
+                  <span class="text-xs text-muted font-mono">${formattedDate}</span>
+                </div>
+              </div>
+
+              <div class="feedback-box">
+                <div class="feedback-box-title">Admin Feedback</div>
+                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.review_text)}</div>
+              </div>
+
+              ${r.suggested_improvements ? `
+                <div class="improvement-box">
+                  <div class="improvement-box-title">💡 Suggested Improvements</div>
+                  <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.suggested_improvements)}</div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      list.innerHTML = html;
     } catch (e) {
       if (e.status === 404) {
         empty.classList.remove('hidden');

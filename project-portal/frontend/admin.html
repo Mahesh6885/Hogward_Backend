@@ -78,6 +78,8 @@
     <button class="mobile-drawer-item" data-drawer-view="teams"><span class="icon">👥</span> Teams</button>
     <button class="mobile-drawer-item" data-drawer-view="projects"><span class="icon">📁</span> Projects &amp; Reviews</button>
     <button class="mobile-drawer-item" data-drawer-view="problem-statements"><span class="icon">🎯</span> Problem Statements</button>
+    <button class="mobile-drawer-item" data-drawer-view="reviews"><span class="icon">⭐</span> Reviews</button>
+    <button class="mobile-drawer-item" data-drawer-view="leaderboard"><span class="icon">🏆</span> Leaderboard</button>
   </div>
   <div class="mobile-drawer-footer">
     <button class="btn btn-danger btn-full" id="drawer-logout-btn">🚪 Sign Out</button>
@@ -157,6 +159,12 @@
       </button>
       <button class="sidebar-item" data-view="problem-statements" id="nav-problem-statements">
         <span class="icon">🎯</span> Problem Statements
+      </button>
+      <button class="sidebar-item" data-view="reviews" id="nav-reviews">
+        <span class="icon">⭐</span> Reviews
+      </button>
+      <button class="sidebar-item" data-view="leaderboard" id="nav-leaderboard">
+        <span class="icon">🏆</span> Leaderboard
       </button>
     </nav>
   </aside>
@@ -407,6 +415,130 @@
           </thead>
           <tbody id="ps-table-body">
             <tr><td colspan="7" class="text-center py-4 text-muted">Loading official problem statements…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 5. REVIEWS EVALUATION VIEW ────────────────────────────────────── -->
+    <div id="view-reviews" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">⭐ Review <span class="gradient-text">Evaluation Console</span></h1>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-reviews">🔄 Refresh</button>
+            <button class="btn btn-primary btn-sm" id="btn-export-evaluations-csv">⬇️ Export Evaluations CSV</button>
+          </div>
+        </div>
+        <p class="text-muted">Central evaluation portal for judges across Review 1 (60), Review 2 (70), and Review 3 (70).</p>
+      </div>
+
+      <div class="filters-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="search-reviews" placeholder="🔍 Search Team ID, Name, or Project Code…" class="form-input" style="min-width:260px;flex:1" />
+        <select id="filter-reviews-domain" class="form-input" style="max-width:180px">
+          <option value="">All Domains</option>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+          <option value="OPEN_INNOVATION">Open Innovation</option>
+        </select>
+        <select id="filter-reviews-round" class="form-input" style="max-width:160px">
+          <option value="">All Rounds</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+        </select>
+        <select id="filter-reviews-status" class="form-input" style="max-width:160px">
+          <option value="">All Statuses</option>
+          <option value="PENDING">Pending</option>
+          <option value="COMPLETED">Completed</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:90px">Team ID</th>
+              <th style="width:200px">Team Name</th>
+              <th style="width:140px">Project Domain</th>
+              <th style="width:120px">Project Code</th>
+              <th style="width:110px">Review Round</th>
+              <th style="width:130px">Review Status</th>
+              <th style="width:150px">Total Score</th>
+              <th style="width:120px">Action</th>
+            </tr>
+          </thead>
+          <tbody id="evaluations-table-body">
+            <tr><td colspan="8" class="text-center py-4 text-muted">Loading registered teams for review…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 6. LEADERBOARD VIEW ────────────────────────────────────────────── -->
+    <div id="view-leaderboard" class="hidden fade-in">
+      <div class="page-header">
+        <div class="page-header-top">
+          <h1 class="page-title">🏆 Live <span class="gradient-text">Leaderboard</span></h1>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" id="btn-refresh-leaderboard">🔄 Refresh</button>
+            <button class="btn btn-primary btn-sm" id="btn-export-leaderboard-csv">⬇️ Export Leaderboard CSV</button>
+          </div>
+        </div>
+        <p class="text-muted">Live hackathon standings: R1 (60) + R2 (70) + R3 (70) = <strong>Grand Total 200 Marks</strong>.</p>
+      </div>
+
+      <!-- House Cup Winners Podium (Top 3) -->
+      <div id="leaderboard-podium-container">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <div class="filters-bar" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;margin-top:1.5rem">
+        <input type="text" id="search-leaderboard" placeholder="🔍 Search team…" class="form-input" style="min-width:200px;flex:1" />
+        <select id="sort-leaderboard" class="form-input" style="max-width:200px">
+          <option value="total">⭐ Highest Grand Total</option>
+          <option value="r3">🌟 Highest Review-3</option>
+          <option value="innovation">💡 Highest Innovation</option>
+          <option value="backend">⚙️ Highest Backend Progress</option>
+          <option value="ai">🤖 Highest AI Realm</option>
+          <option value="cybersecurity">🛡️ Highest Cybersecurity</option>
+        </select>
+        <select id="filter-leaderboard-domain" class="form-input" style="max-width:160px">
+          <option value="">All Domains</option>
+          <option value="AI">AI</option>
+          <option value="CYBERSECURITY">Cybersecurity</option>
+          <option value="OPEN_INNOVATION">Open Innovation</option>
+        </select>
+        <select id="filter-leaderboard-limit" class="form-input" style="max-width:140px">
+          <option value="">All Teams</option>
+          <option value="10">Top 10</option>
+          <option value="20">Top 20</option>
+        </select>
+        <select id="filter-leaderboard-round" class="form-input" style="max-width:150px">
+          <option value="">All Rounds</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="table">
+          <thead>
+            <tr>
+              <th style="width:70px">Rank</th>
+              <th style="width:200px">Team Name</th>
+              <th style="width:80px">Team ID</th>
+              <th style="width:130px">Domain</th>
+              <th style="width:110px">Review 1 (/60)</th>
+              <th style="width:110px">Review 2 (/70)</th>
+              <th style="width:110px">Review 3 (/70)</th>
+              <th style="width:130px">Grand Total (/200)</th>
+              <th style="width:140px">Percentage</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-table-body">
+            <tr><td colspan="9" class="text-center py-4 text-muted">Calculating live standings…</td></tr>
           </tbody>
         </table>
       </div>
@@ -896,10 +1028,496 @@
   </div>
 </div>
 
+<!-- ── MODAL: EVALUATE TEAM (ROUND 1, 2, 3) ────────────────────────── -->
+<div class="modal-overlay" id="modal-evaluate-team">
+  <div class="modal" style="max-width:960px;width:95vw">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <span style="font-size:1.6rem">⭐</span>
+        <div>
+          <h3 class="modal-title">Team Evaluation Console</h3>
+          <div class="text-xs text-muted">Ministry of Magic · Multi-Round Official Review Sheets</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-evaluate-team')">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding:1.25rem 0">
+      <!-- Top Information Card -->
+      <div class="eval-team-banner">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <h2 id="eval-team-name" style="font-family:'Cinzel',serif;font-size:1.4rem;font-weight:700;color:#fff">Team Name</h2>
+              <span id="eval-team-id-badge" class="badge badge-admin font-mono">ID: 0</span>
+              <span id="eval-domain-badge" class="badge badge-blue">Domain</span>
+            </div>
+            <div class="text-sm mt-1" style="color:var(--gold-light)">
+              Project: <strong id="eval-project-title">—</strong> <span class="font-mono text-muted" id="eval-project-code">(PRJ-000)</span>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="text-xs text-muted" style="text-transform:uppercase;letter-spacing:0.05em">Grand Total Score</div>
+            <div style="font-family:'Cinzel',serif;font-size:1.6rem;font-weight:800;color:var(--gold-light)">
+              <span id="eval-grand-total">0</span> <span style="font-size:1rem;color:var(--text-muted)">/ 200</span>
+            </div>
+            <div class="text-xs text-muted" id="eval-percentage-label">0.0% Overall</div>
+          </div>
+        </div>
+
+        <div class="eval-banner-grid">
+          <div class="eval-banner-item">
+            <div class="eval-banner-label">Problem Statement Code</div>
+            <div class="eval-banner-value font-mono" id="eval-ps-code">—</div>
+          </div>
+          <div class="eval-banner-item">
+            <div class="eval-banner-label">Problem Statement Title</div>
+            <div class="eval-banner-value" id="eval-ps-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+          </div>
+          <div class="eval-banner-item">
+            <div class="eval-banner-label">Current Review Round</div>
+            <div class="eval-banner-value" id="eval-current-round">Round 1</div>
+          </div>
+          <div class="eval-banner-item">
+            <div class="eval-banner-label">Project Status</div>
+            <div class="eval-banner-value" id="eval-project-status">IN_PROGRESS</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REVIEW 1 CARD (Expandable / Collapsible) ────────────────────── -->
+      <div class="review-accordion open" id="accordion-r1">
+        <div class="review-accordion-header" onclick="toggleAccordion('accordion-r1')">
+          <div class="review-accordion-title">
+            <span>📜</span> Review 1 — Problem &amp; Plan
+            <span id="badge-r1-status" class="badge badge-yellow text-xs ml-2">Pending</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">
+              Score: <span id="r1-total-display">0</span> / 60
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+        </div>
+        <div class="review-accordion-body">
+          <form id="form-eval-r1">
+            <input type="hidden" id="r1-team-id" />
+            <div class="text-xs text-muted mb-2">Scores accept integer marks from 1 to 10 for each evaluation criterion.</div>
+            
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">1. Problem Statement Clarity (1–10)</div>
+                <div class="criterion-desc">Depth of problem comprehension, scope definition, and contextual alignment.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-1" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">2. Proposed Solution Quality (1–10)</div>
+                <div class="criterion-desc">Soundness, originality, and architectural merit of the proposed approach.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-2" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">3. Tech Stack Appropriation (1–10)</div>
+                <div class="criterion-desc">Relevance, scalability, and justification of chosen libraries, frameworks, and tools.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-3" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">4. Idea Presentation (1–10)</div>
+                <div class="criterion-desc">Clarity of pitch, articulation of objectives, and visual or diagrammatic representation.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-4" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">5. Feasibility (1–10)</div>
+                <div class="criterion-desc">Practical viability, resource requirements, and completion probability in hackathon timeframe.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-5" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">6. Team Confidence &amp; Q&amp;A Handling (1–10)</div>
+                <div class="criterion-desc">Defense of technical choices, team cohesion, and clarity under judge interrogation.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r1-score-6" value="5" oninput="updateR1Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="total-score-banner">
+              <div>
+                <span style="font-weight:700">Review 1 Total Marks:</span>
+                <span class="total-score-val ml-2" id="r1-calculated-total">30</span>
+                <span class="text-muted">/ 60</span>
+                <div class="progress-track" style="max-width:240px">
+                  <div class="progress-fill" id="r1-progress-bar" style="width:50%"></div>
+                </div>
+              </div>
+              <div id="r1-status-msg" class="text-xs text-muted">Draft mode</div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="r1-evaluator">Evaluator Name *</label>
+                <input class="form-input" type="text" id="r1-evaluator" required placeholder="Judge / Arbiter Name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="r1-date">Evaluation Date</label>
+                <input class="form-input" type="text" id="r1-date" readonly />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r1-comments">Comments * (strengths, observations, critique)</label>
+              <textarea class="form-textarea" id="r1-comments" rows="3" required placeholder="Enter detailed comments on the problem & plan..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r1-suggestions">Suggestions for Next Review</label>
+              <textarea class="form-textarea" id="r1-suggestions" rows="2" placeholder="Actionable milestones to accomplish for Review 2..."></textarea>
+            </div>
+
+            <div id="r1-alert" class="alert alert-hidden mb-2"></div>
+
+            <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-save-draft-r1" onclick="submitRoundEvaluation(1, true)">💾 Save Draft</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-submit-r1" onclick="submitRoundEvaluation(1, false)">⚡ Submit Review 1</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── REVIEW 2 CARD (Expandable / Collapsible) ────────────────────── -->
+      <div class="review-accordion" id="accordion-r2">
+        <div class="review-accordion-header" onclick="toggleAccordion('accordion-r2')">
+          <div class="review-accordion-title">
+            <span>⚙️</span> Review 2 — Working Progress
+            <span id="badge-r2-status" class="badge badge-yellow text-xs ml-2">Pending</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">
+              Score: <span id="r2-total-display">0</span> / 70
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+        </div>
+        <div class="review-accordion-body">
+          <form id="form-eval-r2">
+            <input type="hidden" id="r2-team-id" />
+            <div class="text-xs text-muted mb-2">Scores accept integer marks from 1 to 10 for each working progress criterion.</div>
+            
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">1. Project Planning &amp; Workflow (1–10)</div>
+                <div class="criterion-desc">Task breakdown, agile tracking, repo hygiene, and structured execution.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-1" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">2. Frontend Development Progress (1–10)</div>
+                <div class="criterion-desc">UI design, responsiveness, component architecture, and interaction flow.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-2" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">3. Backend Development Progress (1–10)</div>
+                <div class="criterion-desc">API endpoints, DB schema, business logic implementation, and authentication.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-3" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">4. Prototype Development Progress (1–10)</div>
+                <div class="criterion-desc">Working demo readiness, module connectivity, and functional core features.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-4" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">5. Technical Implementation Quality (1–10)</div>
+                <div class="criterion-desc">Code quality, error handling, performance optimization, and architectural rigor.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-5" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">6. Team Collaboration (1–10)</div>
+                <div class="criterion-desc">Commit distribution, shared ownership, team synergy, and communication.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-6" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">7. Time Management &amp; Milestone Completion (1–10)</div>
+                <div class="criterion-desc">Punctuality with sprint goals, progress against timeline, and milestone coverage.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r2-score-7" value="5" oninput="updateR2Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="total-score-banner">
+              <div>
+                <span style="font-weight:700">Review 2 Total Marks:</span>
+                <span class="total-score-val ml-2" id="r2-calculated-total">35</span>
+                <span class="text-muted">/ 70</span>
+                <div class="progress-track" style="max-width:240px">
+                  <div class="progress-fill" id="r2-progress-bar" style="width:50%"></div>
+                </div>
+              </div>
+              <div id="r2-status-msg" class="text-xs text-muted">Draft mode</div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="r2-evaluator">Evaluator Name *</label>
+                <input class="form-input" type="text" id="r2-evaluator" required placeholder="Judge / Arbiter Name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="r2-date">Evaluation Date</label>
+                <input class="form-input" type="text" id="r2-date" readonly />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r2-notes">Review Notes * (detailed progress analysis)</label>
+              <textarea class="form-textarea" id="r2-notes" rows="3" required placeholder="Enter review notes on development velocity and code quality..."></textarea>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r2-suggestions">Improvement Suggestions</label>
+              <textarea class="form-textarea" id="r2-suggestions" rows="2" placeholder="Urgent fixes and polish required before final review..."></textarea>
+            </div>
+
+            <div id="r2-alert" class="alert alert-hidden mb-2"></div>
+
+            <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-save-draft-r2" onclick="submitRoundEvaluation(2, true)">💾 Save Draft</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-submit-r2" onclick="submitRoundEvaluation(2, false)">⚡ Submit Review 2</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ── REVIEW 3 CARD (Expandable / Collapsible) ────────────────────── -->
+      <div class="review-accordion" id="accordion-r3">
+        <div class="review-accordion-header" onclick="toggleAccordion('accordion-r3')">
+          <div class="review-accordion-title">
+            <span>🏆</span> Review 3 — Final Readiness
+            <span id="badge-r3-status" class="badge badge-yellow text-xs ml-2">Pending</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">
+              Score: <span id="r3-total-display">0</span> / 70
+            </div>
+            <span class="accordion-arrow">▼</span>
+          </div>
+        </div>
+        <div class="review-accordion-body">
+          <form id="form-eval-r3">
+            <input type="hidden" id="r3-team-id" />
+            <div class="text-xs text-muted mb-2">Scores accept integer marks from 1 to 10 for each final assessment criterion.</div>
+            
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">1. Tech Stack Understanding (1–10)</div>
+                <div class="criterion-desc">Mastery of underlying frameworks, architectural choices, and technical depth.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-1" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">2. Final Problem–Solution Fit (1–10)</div>
+                <div class="criterion-desc">How thoroughly and effectively the completed project addresses the original problem.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-2" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">3. Innovation &amp; Creativity (1–10)</div>
+                <div class="criterion-desc">Uniqueness of vision, novel algorithms, creative UX, and competitive differentiation.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-3" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">4. Prototype Functionality (1–10)</div>
+                <div class="criterion-desc">Live stability, robustness under edge cases, real data handling, and lack of crashes.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-4" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">5. Completeness of Solution (1–10)</div>
+                <div class="criterion-desc">End-to-end user journeys, deployment status, documentation, and production readiness.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-5" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">6. Teamwork &amp; Execution (1–10)</div>
+                <div class="criterion-desc">Equal team participation in final demonstration, cohesion, and execution excellence.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-6" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="criterion-card">
+              <div class="criterion-info">
+                <div class="criterion-title">7. Q&amp;A Handling (1–10)</div>
+                <div class="criterion-desc">Defending scalability, handling challenging judge questions, and technical clarity.</div>
+              </div>
+              <div class="score-input-wrap">
+                <input type="number" min="1" max="10" required class="score-num-input" id="r3-score-7" value="5" oninput="updateR3Total()" />
+                <span class="score-max-label">/ 10</span>
+              </div>
+            </div>
+
+            <div class="total-score-banner">
+              <div>
+                <span style="font-weight:700">Review 3 Total Marks:</span>
+                <span class="total-score-val ml-2" id="r3-calculated-total">35</span>
+                <span class="text-muted">/ 70</span>
+                <div class="progress-track" style="max-width:240px">
+                  <div class="progress-fill" id="r3-progress-bar" style="width:50%"></div>
+                </div>
+              </div>
+              <div id="r3-status-msg" class="text-xs text-muted">Draft mode</div>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="r3-evaluator">Evaluator Name *</label>
+                <input class="form-input" type="text" id="r3-evaluator" required placeholder="Judge / Arbiter Name" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="r3-date">Evaluation Date</label>
+                <input class="form-input" type="text" id="r3-date" readonly />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r3-remarks">Final Remarks * (overall verdict and summary)</label>
+              <textarea class="form-textarea" id="r3-remarks" rows="3" required placeholder="Enter final assessment and evaluation commentary..."></textarea>
+            </div>
+
+            <div class="grid-2">
+              <div class="form-group">
+                <label class="form-label" for="r3-strengths">Key Strengths</label>
+                <textarea class="form-textarea" id="r3-strengths" rows="2" placeholder="Highlight project highlights and standout work..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="r3-weaknesses">Areas for Improvement / Weaknesses</label>
+                <textarea class="form-textarea" id="r3-weaknesses" rows="2" placeholder="Note architectural gaps or missing polish..."></textarea>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="r3-recommendation">Award &amp; Placement Recommendation</label>
+              <select class="form-input" id="r3-recommendation">
+                <option value="RECOMMENDED_FOR_AWARDS">🏆 Highly Recommended for Top Awards</option>
+                <option value="EXCELLENT">🌟 Excellent Performance</option>
+                <option value="VERY_GOOD">✨ Very Good Prototype</option>
+                <option value="SATISFACTORY">👍 Satisfactory Completion</option>
+              </select>
+            </div>
+
+            <div id="r3-alert" class="alert alert-hidden mb-2"></div>
+
+            <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1rem;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-save-draft-r3" onclick="submitRoundEvaluation(3, true)">💾 Save Draft</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-submit-r3" onclick="submitRoundEvaluation(3, false)">🏆 Submit Final Review &amp; Complete</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-evaluate-team')">Close Console</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Client Logic ────────────────────────────────────────────────────── -->
 <script type="module">
   import { requireAdmin, logout } from './js/auth.js';
-  import { api } from './js/api.js';
+  import { api, getToken } from './js/api.js';
   import { toast } from './js/toast.js';
   import { initParticles } from './js/particles.js';
   import { showLoader, hideLoader } from './js/theme.js';
@@ -942,6 +1560,8 @@
     else if (view === 'teams') loadTeams();
     else if (view === 'projects') loadProjects();
     else if (view === 'problem-statements') loadProblemStatements();
+    else if (view === 'reviews') loadReviewsSummary();
+    else if (view === 'leaderboard') loadLeaderboardView();
   };
 
   // ── Mobile Drawer ──────────────────────────────────────────────────────────
@@ -1566,17 +2186,39 @@
   // View Team Modal
   window.viewTeamModal = async function(id) {
     try {
-      const resp = await api.get(`/api/admin/teams/${id}`);
-      const t = resp.data;
+      const [teamResp, evalResp] = await Promise.all([
+        api.get(`/api/admin/teams/${id}`),
+        api.get(`/api/admin/teams/${id}/evaluations`).catch(() => null)
+      ]);
+      const t = teamResp.data;
+      const ev = evalResp ? evalResp.data : null;
       const b = document.getElementById('view-team-modal-body');
-        const rosterMembers = [
-          { role: 'Leader', name: t.team_leader || t.name },
-          { role: 'Member 1', name: t.member_one },
-          { role: 'Member 2', name: t.member_two },
-          { role: 'Member 3', name: t.member_three },
-        ].filter(m => m.name && m.name.trim());
+      const rosterMembers = [
+        { role: 'Leader', name: t.team_leader || t.name },
+        { role: 'Member 1', name: t.member_one },
+        { role: 'Member 2', name: t.member_two },
+        { role: 'Member 3', name: t.member_three },
+      ].filter(m => m.name && m.name.trim());
 
-        b.innerHTML = `
+      const r1 = ev ? ev.round_1 : null;
+      const r2 = ev ? ev.round_2 : null;
+      const r3 = ev ? ev.round_3 : null;
+      const curRound = (t.project && t.project.current_round) || 1;
+
+      // Status helper for rounds
+      const getRoundStatus = (rObj, roundNum) => {
+        if (rObj && rObj.status === 'COMPLETED') return { class: 'completed', badge: 'badge-green', label: 'Completed' };
+        if (rObj && rObj.status === 'DRAFT') return { class: 'pending', badge: 'badge-blue', label: 'Draft In Progress' };
+        if (curRound === roundNum) return { class: 'pending', badge: 'badge-blue', label: 'Under Review' };
+        if (curRound > roundNum) return { class: 'pending', badge: 'badge-yellow', label: 'Pending Evaluation' };
+        return { class: 'upcoming', badge: 'badge-purple', label: 'Upcoming Round' };
+      };
+
+      const s1 = getRoundStatus(r1, 1);
+      const s2 = getRoundStatus(r2, 2);
+      const s3 = getRoundStatus(r3, 3);
+
+      b.innerHTML = `
         <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
             <h3 style="font-size:1.3rem;font-weight:700">${escHtml(t.team_name || t.name)}</h3>
@@ -1601,11 +2243,84 @@
         </div>
 
         <h4 style="font-weight:700;margin-bottom:0.5rem">Project Information</h4>
-        <div class="card" style="padding:1rem">
+        <div class="card" style="padding:1rem;margin-bottom:1.5rem">
           ${t.project ? `
             <div><strong>${escHtml(t.project.project_title || 'Project')}</strong> (${escHtml(t.project.project_code)})</div>
-            <div class="text-xs text-muted mt-1">Status: <span class="badge ${statusColors[t.project.status] || 'badge-gray'}">${t.project.status}</span> · Round: ${t.project.current_round}</div>
+            <div class="text-xs text-muted mt-1">Status: <span class="badge ${statusColors[t.project.status] || 'badge-gray'}">${t.project.status}</span> · Current Round: <strong>Round ${t.project.current_round}</strong></div>
           ` : '<span class="text-muted">No project submitted yet by this team.</span>'}
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <h4 style="font-weight:700;margin:0">📜 Official Review History Timeline</h4>
+          ${ev ? `
+            <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light);font-size:0.95rem">
+              Total Score: <strong>${ev.scores.grand_total} / 200</strong> (${ev.scores.percentage}%)
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="review-timeline">
+          <!-- Round 1 -->
+          <div class="review-timeline-item">
+            <div class="review-timeline-dot ${s1.class}">1</div>
+            <div class="review-timeline-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+                <div><strong>Review 1 — Problem &amp; Plan</strong></div>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="badge ${s1.badge}">${s1.label}</span>
+                  <span style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">${r1 ? r1.total_score : 0} / 60</span>
+                </div>
+              </div>
+              ${r1 ? `
+                <div class="text-xs text-muted mt-1">Evaluator: <strong>${escHtml(r1.evaluator_name || 'Arbiter')}</strong> · ${r1.evaluated_at ? new Date(r1.evaluated_at).toLocaleDateString() : '—'}</div>
+                ${r1.comments ? `<div class="text-sm mt-2" style="color:var(--text-primary);line-height:1.5;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:var(--radius-sm)"><strong>Comments:</strong> ${escHtml(r1.comments)}</div>` : ''}
+                ${r1.suggestions_next_round ? `<div class="text-xs text-muted mt-1">💡 <em>Suggestions: ${escHtml(r1.suggestions_next_round)}</em></div>` : ''}
+              ` : '<div class="text-xs text-muted mt-1">No evaluation submitted yet for Round 1.</div>'}
+            </div>
+          </div>
+
+          <!-- Round 2 -->
+          <div class="review-timeline-item">
+            <div class="review-timeline-dot ${s2.class}">2</div>
+            <div class="review-timeline-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+                <div><strong>Review 2 — Working Progress</strong></div>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="badge ${s2.badge}">${s2.label}</span>
+                  <span style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">${r2 ? r2.total_score : 0} / 70</span>
+                </div>
+              </div>
+              ${r2 ? `
+                <div class="text-xs text-muted mt-1">Evaluator: <strong>${escHtml(r2.evaluator_name || 'Arbiter')}</strong> · ${r2.evaluated_at ? new Date(r2.evaluated_at).toLocaleDateString() : '—'}</div>
+                ${r2.review_notes ? `<div class="text-sm mt-2" style="color:var(--text-primary);line-height:1.5;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:var(--radius-sm)"><strong>Notes:</strong> ${escHtml(r2.review_notes)}</div>` : ''}
+                ${r2.improvement_suggestions ? `<div class="text-xs text-muted mt-1">💡 <em>Improvements: ${escHtml(r2.improvement_suggestions)}</em></div>` : ''}
+              ` : '<div class="text-xs text-muted mt-1">No evaluation submitted yet for Round 2.</div>'}
+            </div>
+          </div>
+
+          <!-- Round 3 -->
+          <div class="review-timeline-item">
+            <div class="review-timeline-dot ${s3.class}">3</div>
+            <div class="review-timeline-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+                <div><strong>Review 3 — Final Readiness</strong></div>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="badge ${s3.badge}">${s3.label}</span>
+                  <span style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light)">${r3 ? r3.total_score : 0} / 70</span>
+                </div>
+              </div>
+              ${r3 ? `
+                <div class="text-xs text-muted mt-1">Evaluator: <strong>${escHtml(r3.evaluator_name || 'Arbiter')}</strong> · ${r3.evaluated_at ? new Date(r3.evaluated_at).toLocaleDateString() : '—'}</div>
+                ${r3.final_remarks ? `<div class="text-sm mt-2" style="color:var(--text-primary);line-height:1.5;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:var(--radius-sm)"><strong>Remarks:</strong> ${escHtml(r3.final_remarks)}</div>` : ''}
+                ${r3.strengths ? `<div class="text-xs text-success mt-1">✓ Strengths: ${escHtml(r3.strengths)}</div>` : ''}
+                ${r3.weaknesses ? `<div class="text-xs text-warning mt-1">⚠ Weaknesses: ${escHtml(r3.weaknesses)}</div>` : ''}
+              ` : '<div class="text-xs text-muted mt-1">No evaluation submitted yet for Round 3.</div>'}
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem;text-align:right">
+          <button class="btn btn-primary btn-sm" onclick="closeModal('modal-view-team'); openEvaluateTeamModal(${t.id})">⭐ Open Evaluation Console</button>
         </div>
       `;
       openModal('modal-view-team');
@@ -1761,9 +2476,14 @@
             <td><span class="badge ${sBadge}">${prjStatus}</span></td>
             <td class="text-xs text-muted">${submittedDate}</td>
             <td>
-              <button class="btn btn-primary btn-sm" onclick="openReviewModal(${p.id})">
-                Review &amp; Details →
-              </button>
+              <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" onclick="openReviewModal(${p.id})">
+                  Details →
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="openEvaluateTeamModal(${p.user_id || (p.user && p.user.id)})" title="Evaluate this team">
+                  ⭐ Evaluate
+                </button>
+              </div>
             </td>
           </tr>
         `;
@@ -2448,6 +3168,571 @@
       document.getElementById('notif-dropdown')?.classList.remove('open');
       document.getElementById('notif-bell-btn')?.setAttribute('aria-expanded', 'false');
     }
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 3: REVIEW EVALUATION MANAGEMENT SYSTEM & LIVE LEADERBOARD
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── Accordion Toggle ───────────────────────────────────────────────────────
+  window.toggleAccordion = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('open');
+  };
+
+  // ── Score Validation & Real-time Total Calculations ────────────────────────
+  function clampScore(val) {
+    let n = parseInt(val, 10);
+    if (isNaN(n) || n < 1) n = 1;
+    if (n > 10) n = 10;
+    return n;
+  }
+
+  function updateGrandTotalPreview() {
+    const r1 = parseInt(document.getElementById('r1-calculated-total')?.textContent || '0', 10);
+    const r2 = parseInt(document.getElementById('r2-calculated-total')?.textContent || '0', 10);
+    const r3 = parseInt(document.getElementById('r3-calculated-total')?.textContent || '0', 10);
+    const grand = r1 + r2 + r3;
+    const pct = ((grand / 200) * 100).toFixed(1);
+    const grandEl = document.getElementById('eval-grand-total');
+    const pctEl = document.getElementById('eval-percentage-label');
+    if (grandEl) grandEl.textContent = grand;
+    if (pctEl) pctEl.textContent = `${pct}% Overall`;
+  }
+
+  window.updateR1Total = function() {
+    let sum = 0;
+    for (let i = 1; i <= 6; i++) {
+      const inp = document.getElementById(`r1-score-${i}`);
+      if (inp) {
+        inp.value = clampScore(inp.value);
+        sum += parseInt(inp.value, 10);
+      }
+    }
+    const disp = document.getElementById('r1-total-display');
+    const calc = document.getElementById('r1-calculated-total');
+    const bar = document.getElementById('r1-progress-bar');
+    if (disp) disp.textContent = sum;
+    if (calc) calc.textContent = sum;
+    if (bar) bar.style.width = Math.min(100, Math.round((sum / 60) * 100)) + '%';
+    updateGrandTotalPreview();
+    return sum;
+  };
+
+  window.updateR2Total = function() {
+    let sum = 0;
+    for (let i = 1; i <= 7; i++) {
+      const inp = document.getElementById(`r2-score-${i}`);
+      if (inp) {
+        inp.value = clampScore(inp.value);
+        sum += parseInt(inp.value, 10);
+      }
+    }
+    const disp = document.getElementById('r2-total-display');
+    const calc = document.getElementById('r2-calculated-total');
+    const bar = document.getElementById('r2-progress-bar');
+    if (disp) disp.textContent = sum;
+    if (calc) calc.textContent = sum;
+    if (bar) bar.style.width = Math.min(100, Math.round((sum / 70) * 100)) + '%';
+    updateGrandTotalPreview();
+    return sum;
+  };
+
+  window.updateR3Total = function() {
+    let sum = 0;
+    for (let i = 1; i <= 7; i++) {
+      const inp = document.getElementById(`r3-score-${i}`);
+      if (inp) {
+        inp.value = clampScore(inp.value);
+        sum += parseInt(inp.value, 10);
+      }
+    }
+    const disp = document.getElementById('r3-total-display');
+    const calc = document.getElementById('r3-calculated-total');
+    const bar = document.getElementById('r3-progress-bar');
+    if (disp) disp.textContent = sum;
+    if (calc) calc.textContent = sum;
+    if (bar) bar.style.width = Math.min(100, Math.round((sum / 70) * 100)) + '%';
+    updateGrandTotalPreview();
+    return sum;
+  };
+
+  // ── Open Dedicated Evaluation Console Modal ────────────────────────────────
+  window.openEvaluateTeamModal = async function(teamId) {
+    if (!teamId) return;
+    try {
+      showLoader();
+      const resp = await api.get(`/api/admin/teams/${teamId}/evaluations`);
+      const data = resp.data;
+      const team = data.team || {};
+      const proj = data.project || {};
+      const scores = data.scores || {};
+      const r1 = data.round_1 || {};
+      const r2 = data.round_2 || {};
+      const r3 = data.round_3 || {};
+
+      // Set Banner
+      document.getElementById('eval-team-name').textContent = team.team_name || 'Team';
+      document.getElementById('eval-team-id-badge').textContent = `ID: ${team.id}`;
+      document.getElementById('eval-domain-badge').textContent = team.domain_display || team.domain || 'Domain';
+      document.getElementById('eval-project-title').textContent = proj.project_title || '—';
+      document.getElementById('eval-project-code').textContent = `(${proj.project_code || 'PRJ'})`;
+      document.getElementById('eval-ps-code').textContent = proj.problem_code || '—';
+      document.getElementById('eval-ps-title').textContent = proj.problem_title || '—';
+      document.getElementById('eval-current-round').textContent = `Round ${proj.current_round || 1}`;
+      document.getElementById('eval-project-status').textContent = proj.status || 'IN_PROGRESS';
+      document.getElementById('eval-grand-total').textContent = scores.grand_total || 0;
+      document.getElementById('eval-percentage-label').textContent = `${scores.percentage || 0.0}% Overall`;
+
+      // Set IDs
+      document.getElementById('r1-team-id').value = team.id;
+      document.getElementById('r2-team-id').value = team.id;
+      document.getElementById('r3-team-id').value = team.id;
+
+      // ── Populate Round 1 ───────────────────────────────────────────────────
+      document.getElementById('r1-score-1').value = r1.score_problem_clarity || 5;
+      document.getElementById('r1-score-2').value = r1.score_proposed_solution || 5;
+      document.getElementById('r1-score-3').value = r1.score_tech_stack || 5;
+      document.getElementById('r1-score-4').value = r1.score_idea_presentation || 5;
+      document.getElementById('r1-score-5').value = r1.score_feasibility || 5;
+      document.getElementById('r1-score-6').value = r1.score_team_confidence_qa || 5;
+      document.getElementById('r1-evaluator').value = r1.evaluator_name || user.name || 'Chief Arbiter';
+      document.getElementById('r1-date').value = r1.evaluated_at ? new Date(r1.evaluated_at).toLocaleString() : new Date().toLocaleString();
+      document.getElementById('r1-comments').value = r1.comments || '';
+      document.getElementById('r1-suggestions').value = r1.suggestions_next_round || '';
+      
+      const badgeR1 = document.getElementById('badge-r1-status');
+      const r1Msg = document.getElementById('r1-status-msg');
+      if (r1.status === 'COMPLETED') {
+        badgeR1.className = 'badge badge-green text-xs ml-2';
+        badgeR1.textContent = 'Completed (Locked)';
+        if (r1Msg) r1Msg.textContent = '🔒 Review 1 locked and permanently recorded';
+      } else {
+        badgeR1.className = 'badge badge-yellow text-xs ml-2';
+        badgeR1.textContent = r1.status === 'DRAFT' ? 'Draft Saved' : 'Pending Evaluation';
+        if (r1Msg) r1Msg.textContent = 'Draft mode';
+      }
+      updateR1Total();
+
+      // ── Populate Round 2 ───────────────────────────────────────────────────
+      document.getElementById('r2-score-1').value = r2.score_planning_workflow || 5;
+      document.getElementById('r2-score-2').value = r2.score_frontend_progress || 5;
+      document.getElementById('r2-score-3').value = r2.score_backend_progress || 5;
+      document.getElementById('r2-score-4').value = r2.score_prototype_progress || 5;
+      document.getElementById('r2-score-5').value = r2.score_technical_quality || 5;
+      document.getElementById('r2-score-6').value = r2.score_team_collaboration || 5;
+      document.getElementById('r2-score-7').value = r2.score_milestone_completion || 5;
+      document.getElementById('r2-evaluator').value = r2.evaluator_name || user.name || 'Chief Arbiter';
+      document.getElementById('r2-date').value = r2.evaluated_at ? new Date(r2.evaluated_at).toLocaleString() : new Date().toLocaleString();
+      document.getElementById('r2-notes').value = r2.review_notes || '';
+      document.getElementById('r2-suggestions').value = r2.improvement_suggestions || '';
+
+      const badgeR2 = document.getElementById('badge-r2-status');
+      const r2Msg = document.getElementById('r2-status-msg');
+      if (r2.status === 'COMPLETED') {
+        badgeR2.className = 'badge badge-green text-xs ml-2';
+        badgeR2.textContent = 'Completed (Locked)';
+        if (r2Msg) r2Msg.textContent = '🔒 Review 2 locked and permanently recorded';
+      } else {
+        badgeR2.className = 'badge badge-yellow text-xs ml-2';
+        badgeR2.textContent = r2.status === 'DRAFT' ? 'Draft Saved' : 'Pending Evaluation';
+        if (r2Msg) r2Msg.textContent = 'Draft mode';
+      }
+      updateR2Total();
+
+      // ── Populate Round 3 ───────────────────────────────────────────────────
+      document.getElementById('r3-score-1').value = r3.score_tech_stack_understanding || 5;
+      document.getElementById('r3-score-2').value = r3.score_problem_solution_fit || 5;
+      document.getElementById('r3-score-3').value = r3.score_innovation_creativity || 5;
+      document.getElementById('r3-score-4').value = r3.score_prototype_functionality || 5;
+      document.getElementById('r3-score-5').value = r3.score_solution_completeness || 5;
+      document.getElementById('r3-score-6').value = r3.score_teamwork_execution || 5;
+      document.getElementById('r3-score-7').value = r3.score_qa_handling || 5;
+      document.getElementById('r3-evaluator').value = r3.evaluator_name || user.name || 'Chief Arbiter';
+      document.getElementById('r3-date').value = r3.evaluated_at ? new Date(r3.evaluated_at).toLocaleString() : new Date().toLocaleString();
+      document.getElementById('r3-remarks').value = r3.final_remarks || '';
+      document.getElementById('r3-strengths').value = r3.strengths || '';
+      document.getElementById('r3-weaknesses').value = r3.weaknesses || '';
+      if (r3.recommendation) {
+        document.getElementById('r3-recommendation').value = r3.recommendation;
+      }
+
+      const badgeR3 = document.getElementById('badge-r3-status');
+      const r3Msg = document.getElementById('r3-status-msg');
+      if (r3.status === 'COMPLETED') {
+        badgeR3.className = 'badge badge-green text-xs ml-2';
+        badgeR3.textContent = 'Completed (Locked)';
+        if (r3Msg) r3Msg.textContent = '🔒 Review 3 locked — Hackathon evaluation finalized';
+      } else {
+        badgeR3.className = 'badge badge-yellow text-xs ml-2';
+        badgeR3.textContent = r3.status === 'DRAFT' ? 'Draft Saved' : 'Pending Evaluation';
+        if (r3Msg) r3Msg.textContent = 'Draft mode';
+      }
+      updateR3Total();
+
+      // Accordion focus: open current round card, collapse others
+      const curRound = proj.current_round || 1;
+      ['accordion-r1', 'accordion-r2', 'accordion-r3'].forEach((accId, idx) => {
+        const acc = document.getElementById(accId);
+        if (acc) {
+          if (idx + 1 === curRound) acc.classList.add('open');
+          else acc.classList.remove('open');
+        }
+      });
+
+      // Clear alerts
+      ['r1-alert', 'r2-alert', 'r3-alert'].forEach(id => {
+        const al = document.getElementById(id);
+        if (al) { al.className = 'alert alert-hidden mb-2'; al.innerHTML = ''; }
+      });
+
+      openModal('modal-evaluate-team');
+    } catch (e) {
+      if (window.toast) toast.error(e.message || 'Failed to open evaluation console');
+      else alert(e.message);
+    } finally {
+      hideLoader();
+    }
+  };
+
+  // ── Submit Round Evaluation ────────────────────────────────────────────────
+  window.submitRoundEvaluation = async function(roundNum, isDraft) {
+    const alertId = `r${roundNum}-alert`;
+    const alertEl = document.getElementById(alertId);
+    if (alertEl) { alertEl.className = 'alert alert-hidden mb-2'; alertEl.innerHTML = ''; }
+
+    try {
+      let payload = { is_draft: isDraft };
+      let teamId = null;
+
+      if (roundNum === 1) {
+        teamId = parseInt(document.getElementById('r1-team-id').value, 10);
+        payload.score_problem_clarity = clampScore(document.getElementById('r1-score-1').value);
+        payload.score_proposed_solution = clampScore(document.getElementById('r1-score-2').value);
+        payload.score_tech_stack = clampScore(document.getElementById('r1-score-3').value);
+        payload.score_idea_presentation = clampScore(document.getElementById('r1-score-4').value);
+        payload.score_feasibility = clampScore(document.getElementById('r1-score-5').value);
+        payload.score_team_confidence_qa = clampScore(document.getElementById('r1-score-6').value);
+        payload.evaluator_name = document.getElementById('r1-evaluator').value.trim() || user.name || 'Chief Arbiter';
+        payload.comments = document.getElementById('r1-comments').value.trim();
+        payload.suggestions_next_round = document.getElementById('r1-suggestions').value.trim() || null;
+
+        if (!payload.comments && !isDraft) {
+          throw new Error('Please provide evaluation comments before submitting Review 1.');
+        }
+      } else if (roundNum === 2) {
+        teamId = parseInt(document.getElementById('r2-team-id').value, 10);
+        payload.score_planning_workflow = clampScore(document.getElementById('r2-score-1').value);
+        payload.score_frontend_progress = clampScore(document.getElementById('r2-score-2').value);
+        payload.score_backend_progress = clampScore(document.getElementById('r2-score-3').value);
+        payload.score_prototype_progress = clampScore(document.getElementById('r2-score-4').value);
+        payload.score_technical_quality = clampScore(document.getElementById('r2-score-5').value);
+        payload.score_team_collaboration = clampScore(document.getElementById('r2-score-6').value);
+        payload.score_milestone_completion = clampScore(document.getElementById('r2-score-7').value);
+        payload.evaluator_name = document.getElementById('r2-evaluator').value.trim() || user.name || 'Chief Arbiter';
+        payload.review_notes = document.getElementById('r2-notes').value.trim();
+        payload.improvement_suggestions = document.getElementById('r2-suggestions').value.trim() || null;
+
+        if (!payload.review_notes && !isDraft) {
+          throw new Error('Please provide review notes before submitting Review 2.');
+        }
+      } else if (roundNum === 3) {
+        teamId = parseInt(document.getElementById('r3-team-id').value, 10);
+        payload.score_tech_stack_understanding = clampScore(document.getElementById('r3-score-1').value);
+        payload.score_problem_solution_fit = clampScore(document.getElementById('r3-score-2').value);
+        payload.score_innovation_creativity = clampScore(document.getElementById('r3-score-3').value);
+        payload.score_prototype_functionality = clampScore(document.getElementById('r3-score-4').value);
+        payload.score_solution_completeness = clampScore(document.getElementById('r3-score-5').value);
+        payload.score_teamwork_execution = clampScore(document.getElementById('r3-score-6').value);
+        payload.score_qa_handling = clampScore(document.getElementById('r3-score-7').value);
+        payload.evaluator_name = document.getElementById('r3-evaluator').value.trim() || user.name || 'Chief Arbiter';
+        payload.final_remarks = document.getElementById('r3-remarks').value.trim();
+        payload.strengths = document.getElementById('r3-strengths').value.trim() || null;
+        payload.weaknesses = document.getElementById('r3-weaknesses').value.trim() || null;
+        payload.recommendation = document.getElementById('r3-recommendation').value;
+
+        if (!payload.final_remarks && !isDraft) {
+          throw new Error('Please provide final remarks before submitting Final Review 3.');
+        }
+      }
+
+      showLoader();
+      const res = await api.post(`/api/admin/round-${roundNum}?team_id=${teamId}`, payload);
+      const actionWord = isDraft ? 'saved as draft' : 'submitted successfully';
+      const msg = `Review ${roundNum} evaluation ${actionWord}!`;
+      if (window.toast) toast.success(msg);
+
+      // Refresh modal and tables
+      await openEvaluateTeamModal(teamId);
+      if (currentView === 'reviews') loadReviewsSummary();
+      else if (currentView === 'leaderboard') loadLeaderboardView();
+    } catch (e) {
+      if (alertEl) {
+        alertEl.className = 'alert alert-error mb-2';
+        alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(e.message || 'Evaluation submission failed')}</span>`;
+        alertEl.classList.remove('alert-hidden');
+      }
+      if (window.toast) toast.error(e.message || 'Submission failed');
+    } finally {
+      hideLoader();
+    }
+  };
+
+  // ── 5. Load Reviews Dashboard Summary ──────────────────────────────────────
+  let reviewsSearchTimeout = null;
+  window.loadReviewsSummary = async function() {
+    const tbody = document.getElementById('evaluations-table-body');
+    if (!tbody) return;
+
+    const search = document.getElementById('search-reviews')?.value.trim() || '';
+    const domain = document.getElementById('filter-reviews-domain')?.value || '';
+    const round = document.getElementById('filter-reviews-round')?.value || '';
+    const status = document.getElementById('filter-reviews-status')?.value || '';
+
+    let url = '/api/admin/evaluations';
+    const params = [];
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    if (domain) params.push(`domain=${domain}`);
+    if (round) params.push(`round_num=${round}`);
+    if (status) params.push(`status_filter=${status}`);
+    if (params.length) url += '?' + params.join('&');
+
+    try {
+      const resp = await api.get(url);
+      const rows = resp.data || [];
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No teams found matching current evaluation filter criteria.</td></tr>`;
+        return;
+      }
+
+      const statusBadgeMap = {
+        COMPLETED: { cls: 'badge-green', label: 'Completed' },
+        ROUND_2_DONE: { cls: 'badge-purple', label: 'Round 2 Done' },
+        ROUND_1_DONE: { cls: 'badge-blue', label: 'Round 1 Done' },
+        DRAFT: { cls: 'badge-yellow', label: 'Draft Saved' },
+        PENDING: { cls: 'badge-gray', label: 'Pending' },
+      };
+
+      tbody.innerHTML = rows.map(r => {
+        const sInfo = statusBadgeMap[r.review_status] || { cls: 'badge-gray', label: r.review_status };
+        const dBadge = domainColors[r.domain] || 'badge-blue';
+
+        return `
+          <tr>
+            <td><code class="badge badge-admin font-mono">#${r.team_id}</code></td>
+            <td>
+              <strong>${escHtml(r.team_name)}</strong>
+              <div class="text-xs text-muted">Leader: ${escHtml(r.team_leader || '—')}</div>
+            </td>
+            <td><span class="badge ${dBadge}">${escHtml(r.domain_display || r.domain)}</span></td>
+            <td><code class="badge badge-gold font-mono">${escHtml(r.project_code || '—')}</code></td>
+            <td><span class="badge badge-purple">Round ${r.current_round}</span></td>
+            <td><span class="badge ${sInfo.cls}">${sInfo.label}</span></td>
+            <td>
+              <strong style="color:var(--gold-light);font-size:1.05rem;font-family:'Cinzel',serif">${r.grand_total}</strong>
+              <span class="text-xs text-muted">/ 200 (${r.percentage}%)</span>
+            </td>
+            <td>
+              <button class="btn btn-primary btn-sm" onclick="openEvaluateTeamModal(${r.team_id})">
+                ⭐ Evaluate
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Error: ${escHtml(e.message)}</td></tr>`;
+    }
+  };
+
+  // Reviews controls listeners
+  document.getElementById('search-reviews')?.addEventListener('input', () => {
+    clearTimeout(reviewsSearchTimeout);
+    reviewsSearchTimeout = setTimeout(loadReviewsSummary, 300);
+  });
+  document.getElementById('filter-reviews-domain')?.addEventListener('change', loadReviewsSummary);
+  document.getElementById('filter-reviews-round')?.addEventListener('change', loadReviewsSummary);
+  document.getElementById('filter-reviews-status')?.addEventListener('change', loadReviewsSummary);
+  document.getElementById('btn-refresh-reviews')?.addEventListener('click', loadReviewsSummary);
+
+  // ── 6. Load Live Leaderboard ───────────────────────────────────────────────
+  let leaderboardSearchTimeout = null;
+  window.loadLeaderboardView = async function() {
+    const podiumEl = document.getElementById('leaderboard-podium-container');
+    const tbody = document.getElementById('leaderboard-table-body');
+    if (!tbody) return;
+
+    const search = document.getElementById('search-leaderboard')?.value.trim() || '';
+    const sortBy = document.getElementById('sort-leaderboard')?.value || 'total';
+    const domain = document.getElementById('filter-leaderboard-domain')?.value || '';
+    const limit = document.getElementById('filter-leaderboard-limit')?.value || '';
+    const round = document.getElementById('filter-leaderboard-round')?.value || '';
+
+    let url = '/api/leaderboard';
+    const params = [];
+    if (search) params.push(`search=${encodeURIComponent(search)}`);
+    if (sortBy) params.push(`sort_by=${sortBy}`);
+    if (domain) params.push(`domain=${domain}`);
+    if (limit) params.push(`limit=${limit}`);
+    if (round) params.push(`round_num=${round}`);
+    if (params.length) url += '?' + params.join('&');
+
+    try {
+      const resp = await api.get(url);
+      const data = resp.data || {};
+      const podium = data.podium || {};
+      const list = data.leaderboard || [];
+
+      // ── Render House Cup Podium ────────────────────────────────────────────
+      if (podiumEl) {
+        const renderPodiumCard = (cardData, rank, rankClass, icon, crownHtml) => {
+          if (!cardData) {
+            return `
+              <div class="podium-card ${rankClass}" style="opacity:0.6">
+                ${crownHtml || ''}
+                <div class="podium-icon">${icon}</div>
+                <div class="podium-rank-badge">Rank ${rank}</div>
+                <div class="podium-team-name text-muted">Awaiting Marks</div>
+                <div class="podium-score-pill">
+                  <span class="podium-score-val">0 / 200</span>
+                  <span class="podium-score-pct">0.0%</span>
+                </div>
+              </div>
+            `;
+          }
+          const dBadge = domainColors[cardData.domain] || 'badge-blue';
+          return `
+            <div class="podium-card ${rankClass}">
+              ${crownHtml || ''}
+              <div class="podium-icon">${icon}</div>
+              <div class="podium-rank-badge">Rank ${rank}</div>
+              <div class="podium-team-name">${escHtml(cardData.team_name)}</div>
+              <div class="podium-team-id">ID: #${cardData.team_id} · <span class="badge ${dBadge} text-xs">${escHtml(cardData.domain_display || cardData.domain)}</span></div>
+              <div class="podium-score-pill">
+                <span class="podium-score-val">${cardData.grand_total} <span style="font-size:0.75rem;color:var(--text-muted)">/ 200</span></span>
+                <span class="podium-score-pct">${cardData.percentage}%</span>
+              </div>
+            </div>
+          `;
+        };
+
+        podiumEl.innerHTML = `
+          <div class="house-cup-podium">
+            <!-- Rank 2: Silver Shield -->
+            ${renderPodiumCard(podium.silver, 2, 'silver', '🛡️', '')}
+
+            <!-- Rank 1: Golden Trophy + Animated Crown -->
+            ${renderPodiumCard(podium.gold, 1, 'gold', '🏆', '<div class="podium-crown">👑</div>')}
+
+            <!-- Rank 3: Bronze Medal -->
+            ${renderPodiumCard(podium.bronze, 3, 'bronze', '🥉', '')}
+          </div>
+        `;
+      }
+
+      // ── Render Leaderboard Table ───────────────────────────────────────────
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No teams found matching leaderboard criteria.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(r => {
+        let rankBadge = `<span class="badge badge-gray font-mono">#${r.rank}</span>`;
+        if (r.rank === 1) rankBadge = `<span class="badge badge-gold" style="font-size:0.95rem">🥇 1</span>`;
+        else if (r.rank === 2) rankBadge = `<span class="badge" style="background:rgba(192,192,192,0.25);color:#fff;border:1px solid #c0c0c0;font-size:0.95rem">🥈 2</span>`;
+        else if (r.rank === 3) rankBadge = `<span class="badge" style="background:rgba(205,127,50,0.25);color:#F4C49A;border:1px solid #CD7F32;font-size:0.95rem">🥉 3</span>`;
+
+        const dBadge = domainColors[r.domain] || 'badge-blue';
+
+        return `
+          <tr>
+            <td>${rankBadge}</td>
+            <td>
+              <strong>${escHtml(r.team_name)}</strong>
+              <div class="text-xs text-muted">Leader: ${escHtml(r.team_leader || '—')}</div>
+            </td>
+            <td><code class="badge badge-admin font-mono">#${r.team_id}</code></td>
+            <td><span class="badge ${dBadge}">${escHtml(r.domain_display || r.domain)}</span></td>
+            <td><span class="font-mono">${r.r1_score}</span> <span class="text-xs text-muted">/ 60</span></td>
+            <td><span class="font-mono">${r.r2_score}</span> <span class="text-xs text-muted">/ 70</span></td>
+            <td><span class="font-mono">${r.r3_score}</span> <span class="text-xs text-muted">/ 70</span></td>
+            <td>
+              <strong style="color:var(--gold-light);font-size:1.1rem;font-family:'Cinzel',serif">${r.grand_total}</strong>
+              <span class="text-xs text-muted">/ 200</span>
+            </td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.5rem">
+                <div class="progress-track" style="flex:1">
+                  <div class="progress-fill" style="width:${Math.min(100, r.percentage)}%"></div>
+                </div>
+                <span class="text-xs font-mono" style="font-weight:700">${r.percentage}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-danger">Error: ${escHtml(e.message)}</td></tr>`;
+    }
+  };
+
+  // Leaderboard controls listeners
+  document.getElementById('search-leaderboard')?.addEventListener('input', () => {
+    clearTimeout(leaderboardSearchTimeout);
+    leaderboardSearchTimeout = setTimeout(loadLeaderboardView, 300);
+  });
+  document.getElementById('sort-leaderboard')?.addEventListener('change', loadLeaderboardView);
+  document.getElementById('filter-leaderboard-domain')?.addEventListener('change', loadLeaderboardView);
+  document.getElementById('filter-leaderboard-limit')?.addEventListener('change', loadLeaderboardView);
+  document.getElementById('filter-leaderboard-round')?.addEventListener('change', loadLeaderboardView);
+  document.getElementById('btn-refresh-leaderboard')?.addEventListener('click', loadLeaderboardView);
+
+  // ── CSV Exports for Evaluations & Leaderboard ──────────────────────────────
+  async function downloadCsvFromEndpoint(endpoint, defaultFilename) {
+    try {
+      showLoader();
+      const token = getToken();
+      const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const apiBase = isDev ? 'http://localhost:8000' : window.location.origin;
+
+      const resp = await fetch(`${apiBase}${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!resp.ok) throw new Error(`Export failed (${resp.status})`);
+
+      let filename = defaultFilename;
+      const disposition = resp.headers.get('Content-Disposition');
+      if (disposition && disposition.includes('filename=')) {
+        const match = disposition.match(/filename="?([^";]+)"?/);
+        if (match && match[1]) filename = match[1];
+      }
+
+      const blob = await resp.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      if (window.toast) toast.success('CSV Export downloaded successfully!');
+    } catch (e) {
+      if (window.toast) toast.error(e.message || 'CSV download failed');
+      else alert(e.message);
+    } finally {
+      hideLoader();
+    }
+  }
+
+  document.getElementById('btn-export-evaluations-csv')?.addEventListener('click', () => {
+    downloadCsvFromEndpoint('/api/admin/evaluations/export-csv', 'hogwarts_reviews_export.csv');
+  });
+
+  document.getElementById('btn-export-leaderboard-csv')?.addEventListener('click', () => {
+    downloadCsvFromEndpoint('/api/leaderboard/export-csv', 'hogwarts_leaderboard_export.csv');
   });
 
   // Initial load

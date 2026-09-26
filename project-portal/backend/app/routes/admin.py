@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
@@ -11,7 +12,7 @@ from app.models.project import Project, ProjectStatus
 from app.models.user import User, UserStatus, UserRole
 from app.models.audit_log import AuditLog
 from app.schemas.user import UserCreate, UserUpdate, UserStatusUpdate, UserPasswordReset, TeamEditPermissionRequest, BulkEditPermissionRequest, BulkPasswordResetRequest
-from app.schemas.review import ReviewCreate, ReviewUpdate
+from app.schemas.review import ReviewCreate, ReviewUpdate, ReviewRound1Submit, ReviewRound2Submit, ReviewRound3Submit
 from app.services.user_service import (
     create_user, list_users, get_user_by_id,
     update_user, update_user_status, reset_user_password, delete_user,
@@ -20,6 +21,15 @@ from app.services.user_service import (
 from app.schemas.project import AdminProjectUpdateRequest, AdminGithubUpdateRequest, AdminDomainUpdateRequest
 from app.services.project_service import list_projects_admin, get_project_by_id, admin_update_project
 from app.services.review_service import create_review, update_review, get_project_reviews
+from app.services.evaluation_service import (
+    get_all_evaluations_summary,
+    get_team_evaluation_details,
+    submit_review_round_1,
+    submit_review_round_2,
+    submit_review_round_3,
+    export_evaluations_csv,
+    export_leaderboard_csv,
+)
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -741,3 +751,148 @@ def _review_dict(review) -> dict:
         "created_at": review.created_at.isoformat(),
         "updated_at": review.updated_at.isoformat(),
     }
+
+
+# ─── Phase 3: Reviews & Evaluation Console ───────────────────────────────────
+
+@router.get("/evaluations", status_code=200)
+def admin_get_evaluations_list(
+    search: Optional[str] = Query(None),
+    domain: Optional[str] = Query(None),
+    current_round: Optional[int] = Query(None, alias="round"),
+    status: Optional[str] = Query(None),
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Retrieve all teams evaluation summary for Reviews console."""
+    items = get_all_evaluations_summary(
+        db=db,
+        search=search,
+        domain=domain,
+        round_num=current_round,
+        status_filter=status,
+    )
+    return {
+        "success": True,
+        "message": "Evaluations retrieved",
+        "data": items,
+        "total": len(items),
+    }
+
+
+@router.get("/evaluations/export-csv")
+def admin_export_evaluations_csv(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Export complete evaluation sheet with all scores, comments, and suggestions."""
+    csv_content = export_evaluations_csv(db)
+    csv_bytes = csv_content.encode("utf-8")
+    return StreamingResponse(
+        iter([csv_bytes]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="hogwarts_legacy_evaluations.csv"'}
+    )
+
+
+@router.get("/leaderboard/export-csv")
+def admin_export_leaderboard_csv(
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Export leaderboard rankings as CSV."""
+    csv_content = export_leaderboard_csv(db)
+    csv_bytes = csv_content.encode("utf-8")
+    return StreamingResponse(
+        iter([csv_bytes]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="hogwarts_legacy_leaderboard.csv"'}
+    )
+
+
+@router.get("/teams/{team_id}/evaluations", status_code=200)
+def admin_get_team_evaluations(
+    team_id: int,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Get complete evaluation record across R1, R2, R3 for a specific team."""
+    data = get_team_evaluation_details(db, team_id)
+    return {
+        "success": True,
+        "message": "Team evaluations retrieved",
+        "data": data,
+    }
+
+
+@router.post("/round-1", status_code=200)
+@router.post("/teams/{team_id}/evaluations/round-1", status_code=200)
+def admin_submit_round_1(
+    data: ReviewRound1Submit,
+    team_id: Optional[int] = None,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Save draft or submit final evaluation for Review Round 1 (Max 60)."""
+    if not team_id:
+        raise HTTPException(status_code=400, detail="team_id is required")
+    rev = submit_review_round_1(db, team_id, data, admin)
+    return {
+        "success": True,
+        "message": "Review Round 1 saved as draft" if data.is_draft else "Review Round 1 submitted successfully",
+        "data": {
+            "id": rev.id,
+            "total_score": rev.total_score,
+            "status": rev.status,
+            "is_locked": rev.is_locked,
+        },
+    }
+
+
+@router.post("/round-2", status_code=200)
+@router.post("/teams/{team_id}/evaluations/round-2", status_code=200)
+def admin_submit_round_2(
+    data: ReviewRound2Submit,
+    team_id: Optional[int] = None,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Save draft or submit final evaluation for Review Round 2 (Max 70)."""
+    if not team_id:
+        raise HTTPException(status_code=400, detail="team_id is required")
+    rev = submit_review_round_2(db, team_id, data, admin)
+    return {
+        "success": True,
+        "message": "Review Round 2 saved as draft" if data.is_draft else "Review Round 2 submitted successfully",
+        "data": {
+            "id": rev.id,
+            "total_score": rev.total_score,
+            "status": rev.status,
+            "is_locked": rev.is_locked,
+        },
+    }
+
+
+@router.post("/round-3", status_code=200)
+@router.post("/teams/{team_id}/evaluations/round-3", status_code=200)
+def admin_submit_round_3(
+    data: ReviewRound3Submit,
+    team_id: Optional[int] = None,
+    admin: User = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """Save draft or submit final evaluation for Review Round 3 (Max 70)."""
+    if not team_id:
+        raise HTTPException(status_code=400, detail="team_id is required")
+    rev = submit_review_round_3(db, team_id, data, admin)
+    return {
+        "success": True,
+        "message": "Review Round 3 saved as draft" if data.is_draft else "Review Round 3 submitted successfully",
+        "data": {
+            "id": rev.id,
+            "total_score": rev.total_score,
+            "status": rev.status,
+            "is_locked": rev.is_locked,
+        },
+    }
+
