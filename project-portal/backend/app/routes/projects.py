@@ -50,12 +50,24 @@ def _serialize_project(project) -> dict:
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
         "domain_id": project.domain_id,
-        "domain": {
-            "id": project.domain.id,
-            "name": project.domain.name,
-            "display_name": domain_map.get(project.domain.name, project.domain.name),
-        },
-        "realm": project.realm or (project.domain.name if project.domain else "AI"),
+        "domain": (
+            {
+                "id": project.domain.id,
+                "name": project.domain.name,
+                "display_name": domain_map.get(project.domain.name, project.domain.name),
+            }
+            if project.domain
+            else (
+                {
+                    "id": u.domain.id,
+                    "name": u.domain.name,
+                    "display_name": domain_map.get(u.domain.name, u.domain.name),
+                }
+                if (u and getattr(u, "domain", None))
+                else None
+            )
+        ),
+        "realm": project.realm or (project.domain.name if project.domain else (u.domain.name if u and u.domain else "AI")),
         "problem_statement_id": str(project.problem_statement_id) if project.problem_statement_id else None,
         "problem_statement": (
             {
@@ -121,7 +133,7 @@ def _serialize_project(project) -> dict:
         "current_round": project.current_round,
         "draft_saved_at": project.draft_saved_at.isoformat() if project.draft_saved_at else None,
         "submitted_at": project.submitted_at.isoformat() if project.submitted_at else None,
-        "updated_at": project.updated_at.isoformat(),
+        "updated_at": project.updated_at.isoformat() if project.updated_at else datetime.now(timezone.utc).isoformat(),
     }
 
 

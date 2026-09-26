@@ -40,6 +40,29 @@ class TestProjectSubmission:
         assert data["project_code"].startswith("PRJ-")
         assert data["realm"] == "AI"
 
+    def test_user_final_submit_endpoint(self, client, cyber_user, domains):
+        token = get_token(client, "cyberuser", "userpass123")
+        resp = client.post(
+            "/api/projects/me/submit",
+            json={
+                "project_title": "Final Cyber Defense Solution",
+                "abstract": "Complete submission abstract for cyber project",
+                "objectives": "Secure network perimeter against threats",
+                "proposed_solution": "Deploy real-time anomaly detection",
+                "technologies": "Python, Suricata, Zeek, ELK",
+                "expected_outcome": "Automated alert dashboard",
+                "project_description": "Detailed multi-paragraph description",
+                "github_url": "https://github.com/example/cyber-project",
+            },
+            headers=auth_headers(token),
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["status"] == "SUBMITTED"
+        assert data["is_submitted"] is True
+        assert data["current_round"] == 1
+        assert data["realm"] == "CYBERSECURITY"
+
     def test_submitted_project_cannot_be_re_submitted_without_permission(self, client, ai_user, domains):
         token = get_token(client, "aiuser", "userpass123")
         # First submission

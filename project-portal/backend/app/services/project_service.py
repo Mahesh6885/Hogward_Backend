@@ -153,7 +153,12 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
     return project
 
 
-def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) -> Project:
+def submit_final_project(
+    db: Session,
+    user: User,
+    data: ProjectSubmitRequest,
+    require_github_for_oi: bool = False,
+) -> Project:
     """
     Final submission: validates all fields, marks is_submitted=True, status=SUBMITTED.
     """
@@ -178,6 +183,13 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
                 detail={"success": False, "message": "GitHub URL must start with https://github.com/", "error_code": "INVALID_GITHUB_URL"},
             )
         _check_github_unique(db, github_url, exclude_project_id=existing.id if existing else None)
+
+    is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
+    if require_github_for_oi and is_oi and not github_url:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"success": False, "message": "GitHub repository URL is mandatory for Open Innovation projects", "error_code": "GITHUB_URL_REQUIRED"},
+        )
 
     now = datetime.now(timezone.utc)
 
@@ -244,6 +256,8 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
         if data.demo_url is not None:
             existing.demo_url = data.demo_url.strip()
 
+        if not existing.domain_id and user.domain_id:
+            existing.domain_id = user.domain_id
         existing.status = ProjectStatus.SUBMITTED
         existing.is_submitted = True
         existing.submitted_at = now
@@ -266,9 +280,14 @@ def submit_final_project(db: Session, user: User, data: ProjectSubmitRequest) ->
     return project
 
 
-def submit_project(db: Session, user: User, data: ProjectSubmitRequest) -> Project:
+def submit_project(
+    db: Session,
+    user: User,
+    data: ProjectSubmitRequest,
+    require_github_for_oi: bool = False,
+) -> Project:
     """Submit project handler."""
-    return submit_final_project(db, user, data)
+    return submit_final_project(db, user, data, require_github_for_oi=require_github_for_oi)
 
 
 def get_project_by_id(db: Session, project_id: int) -> Project:
