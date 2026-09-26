@@ -294,20 +294,6 @@ def admin_reset_team_password_default(
     return {"success": True, "message": "Password reset to default successfully", "data": {"id": user.id, "username": user.username}}
 
 
-@router.post("/teams/{user_id}/reset-sorting-ceremony", status_code=200)
-def admin_reset_sorting_ceremony(
-    user_id: int,
-    admin: User = Depends(require_admin),
-    db: Session = Depends(get_db),
-):
-    """Reset the team's Sorting Hat Ceremony so it triggers again on their next login."""
-    user = get_user_by_id(db, user_id)
-    user.sorting_ceremony_completed = False
-    db.commit()
-    db.refresh(user)
-    return {"success": True, "message": "Sorting Hat ceremony reset successfully", "data": _user_dict(user)}
-
-
 @router.post("/bulk/edit-permission", status_code=200)
 def admin_bulk_edit_permission(
     data: BulkEditPermissionRequest,
@@ -666,7 +652,6 @@ def _user_dict(user: User) -> dict:
         "edit_permission_reason": getattr(user, "edit_permission_reason", None),
         "edit_permission_granted_at": user.edit_permission_granted_at.isoformat() if getattr(user, "edit_permission_granted_at", None) else None,
         "password_reset_required": getattr(user, "password_reset_required", False),
-        "sorting_ceremony_completed": getattr(user, "sorting_ceremony_completed", False),
         "created_at": user.created_at.isoformat(),
         "updated_at": user.updated_at.isoformat(),
     }

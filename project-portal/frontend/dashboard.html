@@ -13,14 +13,11 @@
 </head>
 <body>
 
-<!-- ── Layered Animated Hogwarts Environment ── -->
-<div class="hogwarts-bg-env" aria-hidden="true">
-  <div class="hogwarts-stars"></div>
-  <div class="hogwarts-rays"></div>
-  <div class="hogwarts-castle-silhouette"></div>
-  <div class="hogwarts-fog"></div>
-  <div class="hogwarts-lightning" id="ambient-lightning"></div>
-</div>
+<!-- Stars decorative layer -->
+<div class="stars-layer" aria-hidden="true"></div>
+
+<!-- Fog layer -->
+<div class="fog-layer" aria-hidden="true"></div>
 
 <!-- Flying owl -->
 <svg class="flying-owl" aria-hidden="true" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -41,7 +38,7 @@
   <div class="inactivity-card">
     <div class="inactivity-icon">🕯️</div>
     <div class="inactivity-title" id="inactivity-title">Are You Still There?</div>
-    <div class="inactivity-msg">Your magical session will expire due to inactivity. For security, you will be signed out in:</div>
+    <div class="inactivity-msg">Your session will expire due to inactivity. For security, you will be signed out in:</div>
     <div class="inactivity-timer-val" id="inactivity-countdown">60</div>
     <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
       <button class="btn btn-primary" id="inactivity-stay-btn" onclick="window.__hwSessionExtend && window.__hwSessionExtend()">
@@ -67,12 +64,11 @@
     <button class="mobile-drawer-close" id="drawer-close" aria-label="Close navigation">✕</button>
   </div>
   <div class="mobile-drawer-nav" id="mobile-drawer-nav">
-    <button class="mobile-drawer-item active" data-drawer-view="home"><span class="icon">🏰</span> Great Hall</button>
-    <button class="mobile-drawer-item" data-drawer-view="project"><span class="icon">📜</span> Chamber of Ideas</button>
-    <button class="mobile-drawer-item" data-drawer-view="timeline"><span class="icon">⌛</span> Time Turner</button>
-    <button class="mobile-drawer-item" data-drawer-view="reviews"><span class="icon">⚖️</span> Ministry Chamber</button>
-    <button class="mobile-drawer-item" data-drawer-view="leaderboard"><span class="icon">🏆</span> House Cup</button>
-    <button class="mobile-drawer-item" data-drawer-view="team"><span class="icon">🧙</span> Wizard Roster</button>
+    <button class="mobile-drawer-item active" data-drawer-view="home"><span class="icon">🏠</span> Dashboard</button>
+    <button class="mobile-drawer-item" data-drawer-view="project"><span class="icon">📁</span> My Project</button>
+    <button class="mobile-drawer-item" data-drawer-view="timeline"><span class="icon">⏱️</span> Timeline</button>
+    <button class="mobile-drawer-item" data-drawer-view="reviews"><span class="icon">📝</span> Review History</button>
+    <button class="mobile-drawer-item" data-drawer-view="team"><span class="icon">👥</span> Team Details</button>
   </div>
   <div class="mobile-drawer-footer">
     <button class="btn btn-danger btn-full" id="drawer-logout-btn">🚪 Sign Out</button>
@@ -93,33 +89,33 @@
   <div class="navbar-actions">
     <div id="domain-badge" class="badge badge-domain-ai" aria-label="Team domain"></div>
 
-    <!-- Live Session Timer -->
+    <!-- Session Timer -->
     <div class="nav-session-timer" id="nav-session-timer" aria-label="Session timer" title="Session remaining time">
       <span class="timer-dot"></span>
       <span id="session-timer-val">30:00</span>
     </div>
 
-    <!-- Owl Post Center -->
+    <!-- Notification Bell -->
     <div class="nav-notification-wrap" id="notif-wrap">
-      <button class="owl-post-btn" id="notif-bell-btn" aria-label="Owl Post" aria-haspopup="true" aria-expanded="false" onclick="toggleNotificationDropdown()" title="Owl Post Center">
-        🦉
+      <button class="nav-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" onclick="toggleNotificationDropdown()">
+        🔔
         <span class="nav-bell-badge hidden" id="notif-badge">0</span>
       </button>
-      <div class="owl-post-dropdown" id="notif-dropdown" role="menu">
-        <div class="owl-post-header">
-          <span>📜 Owl Post Center</span>
-          <button style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:0.75rem;font-family:'Cinzel',serif" onclick="clearAllNotifications()">Dismiss All</button>
+      <div class="notification-dropdown" id="notif-dropdown" role="menu">
+        <div class="notification-header">
+          <span>📬 Notifications</span>
+          <button style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem" onclick="clearAllNotifications()">Clear All</button>
         </div>
         <div class="notification-list" id="notif-list">
-          <div class="owl-post-item unread">
+          <div class="notification-item">
             <span class="notif-icon">⚡</span>
             <div>
-              <div class="notif-title" style="font-weight:600;color:#F8E9A1">Welcome to Hogwarts Legacy 5.0</div>
-              <div class="notif-time" style="font-size:0.75rem;color:var(--text-muted)">Just now</div>
+              <div class="notif-title">Welcome to Hogwarts Legacy 5.0</div>
+              <div class="notif-time">Just now</div>
             </div>
           </div>
         </div>
-        <div class="notification-footer" style="padding:0.5rem 1rem;background:rgba(5,5,5,0.7);text-align:center"><span style="color:var(--text-muted);font-size:0.72rem;font-style:italic">Ministry Enchanted Deliveries</span></div>
+        <div class="notification-footer"><a href="#" style="color:var(--gold)">View All</a></div>
       </div>
     </div>
 
@@ -127,7 +123,7 @@
       <div class="navbar-avatar" id="nav-avatar" aria-hidden="true">T</div>
       <div>
         <div class="text-sm" style="font-weight:700" id="nav-team-name">Loading…</div>
-        <div class="text-xs text-muted" id="nav-role">WIZARD TEAM</div>
+        <div class="text-xs text-muted" id="nav-role">TEAM ACCOUNT</div>
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" id="logout-btn" aria-label="Sign out">Sign Out</button>
@@ -139,54 +135,27 @@
 
 <!-- ── Layout ─────────────────────────────────────────────────────────── -->
 <div class="layout-shell">
-  <!-- Marauder's Map Navigation Sidebar -->
+  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-section" style="font-family:'Cinzel',serif;letter-spacing:0.1em;color:var(--gold)">Marauder's Map</div>
+    <div class="sidebar-section">Navigation</div>
     <nav class="sidebar-nav">
       <button class="sidebar-item active" data-view="home" id="nav-home">
-        <span class="icon">🏰</span> Great Hall
+        <span class="icon">🏠</span> Dashboard
       </button>
       <button class="sidebar-item" data-view="project" id="nav-project">
-        <span class="icon">📜</span> Chamber of Ideas
+        <span class="icon">📁</span> My Project
       </button>
       <button class="sidebar-item" data-view="timeline" id="nav-timeline">
-        <span class="icon">⌛</span> Time Turner
+        <span class="icon">⏱️</span> Timeline
       </button>
       <button class="sidebar-item" data-view="reviews" id="nav-reviews">
-        <span class="icon">⚖️</span> Ministry Chamber
-      </button>
-      <button class="sidebar-item" data-view="leaderboard" id="nav-leaderboard">
-        <span class="icon">🏆</span> House Cup Rankings
+        <span class="icon">📝</span> Review History
       </button>
       <button class="sidebar-item" data-view="team" id="nav-team">
-        <span class="icon">🧙</span> Wizard Roster
+        <span class="icon">👥</span> Team Details
       </button>
     </nav>
   </aside>
-
-  <!-- Mobile Bottom Magical Navigation -->
-  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
-    <button class="mobile-nav-tab active" data-tab="home" onclick="switchView('home')">
-      <span class="tab-icon">🏰</span>
-      <span>Great Hall</span>
-    </button>
-    <button class="mobile-nav-tab" data-tab="project" onclick="switchView('project')">
-      <span class="tab-icon">📜</span>
-      <span>Chamber</span>
-    </button>
-    <button class="mobile-nav-tab" data-tab="reviews" onclick="switchView('reviews')">
-      <span class="tab-icon">⚖️</span>
-      <span>Reviews</span>
-    </button>
-    <button class="mobile-nav-tab" data-tab="leaderboard" onclick="switchView('leaderboard')">
-      <span class="tab-icon">🏆</span>
-      <span>House Cup</span>
-    </button>
-    <button class="mobile-nav-tab" data-tab="team" onclick="switchView('team')">
-      <span class="tab-icon">🧙</span>
-      <span>Roster</span>
-    </button>
-  </nav>
 
   <!-- Main Content -->
   <main class="main-content">
@@ -198,51 +167,21 @@
       <div class="hero-banner" id="hero-banner">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem">
           <div class="hero-content">
-            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem">
-              <span id="hero-house-badge" class="badge" style="font-family:'Cinzel',serif;font-weight:700;font-size:0.8rem;padding:0.35rem 0.85rem">🦁 GRYFFINDOR</span>
-              <span class="hero-greeting" style="margin:0">⚡ Great Hall Sanctuary</span>
-            </div>
-            <h1 class="hero-team-name" style="font-size:2rem;margin-bottom:0.5rem">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
+            <div class="hero-greeting">⚡ Welcome Back, Champion</div>
+            <h1 class="hero-team-name">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
             <div class="hero-meta">
               <div class="hero-meta-item"><span>🎯</span><span>Domain: <strong id="hero-domain">—</strong></span></div>
-              <div class="hero-meta-item"><span>📋</span><span>Project Code: <strong id="hero-code" class="font-mono">—</strong></span></div>
-              <div class="hero-meta-item"><span>🔄</span><span>Spell Status: <strong id="hero-status">—</strong></span></div>
+              <div class="hero-meta-item"><span>📋</span><span>Code: <strong id="hero-code" class="font-mono">—</strong></span></div>
+              <div class="hero-meta-item"><span>🔄</span><span>Status: <strong id="hero-status">—</strong></span></div>
             </div>
             <p class="hero-quote" id="hero-quote">"It does not do to dwell on dreams and forget to live." — Albus Dumbledore</p>
           </div>
           <div class="hero-right">
-            <!-- Time Turner Concentric Rotating Gyroscope -->
-            <div id="hero-countdown" aria-label="Time Turner Countdown"></div>
+            <div class="countdown-widget" aria-label="Hackathon countdown">
+              <div class="countdown-widget-title">⏰ Hackathon Countdown</div>
+              <div id="hero-countdown"></div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Spell Energy Progress Meter -->
-      <div class="spell-meter-wrap" aria-label="Spell Energy Progress Meter">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-          <span style="font-family:'Cinzel',serif;color:#D4AF37;font-size:0.92rem;letter-spacing:0.12em;font-weight:700">⚡ SPELL ENERGY METER</span>
-          <span id="spell-meter-pct" style="font-family:'Cinzel',serif;font-weight:700;color:#F8E9A1">Draft Spell (25%)</span>
-        </div>
-        <div class="spell-meter-stages">
-          <div class="spell-stage active" id="stage-draft">
-            <div class="spell-stage-icon">📜</div>
-            <span>Draft Spell</span>
-          </div>
-          <div class="spell-stage" id="stage-submitted">
-            <div class="spell-stage-icon">✨</div>
-            <span>Submitted Spell</span>
-          </div>
-          <div class="spell-stage" id="stage-review">
-            <div class="spell-stage-icon">⚖️</div>
-            <span>Review Spell</span>
-          </div>
-          <div class="spell-stage" id="stage-final">
-            <div class="spell-stage-icon">🏆</div>
-            <span>Final Spell</span>
-          </div>
-        </div>
-        <div class="spell-bar-track">
-          <div class="spell-bar-beam" id="spell-meter-beam" style="width: 25%"></div>
         </div>
       </div>
 
@@ -1071,53 +1010,6 @@
       </div>
     </div>
 
-    <!-- ── VIEW 6: HOUSE CUP RANKINGS / LEADERBOARD ────────────────────── -->
-    <div id="view-leaderboard" class="fade-in hidden">
-      <div class="page-header">
-        <div class="page-header-top">
-          <h1 class="page-title">🏆 House Cup <span class="gradient-text">Rankings</span></h1>
-          <button class="btn btn-secondary btn-sm" onclick="window.loadUserLeaderboard && window.loadUserLeaderboard()">🔄 Refresh Standings</button>
-        </div>
-        <p class="text-muted">Live cumulative rankings from Ministry Evaluation Rounds (R1 + R2 + R3).</p>
-      </div>
-
-      <!-- Magical Podium for Top 3 Teams -->
-      <div class="house-cup-podium mb-4" id="user-leaderboard-podium" style="display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:1.5rem;align-items:end;margin-bottom:2rem">
-        <!-- Populated via JS -->
-      </div>
-
-      <!-- Domain / House Filter Tabs -->
-      <div class="filter-bar mb-3" style="display:flex;gap:0.5rem;flex-wrap:wrap">
-        <button class="btn btn-sm btn-primary user-filter-tab active" data-filter="all" onclick="filterUserLeaderboard('all', this)">All Houses</button>
-        <button class="btn btn-sm btn-ghost user-filter-tab" data-filter="AI" onclick="filterUserLeaderboard('AI', this)">🦁 Gryffindor (AI)</button>
-        <button class="btn btn-sm btn-ghost user-filter-tab" data-filter="CYBERSECURITY" onclick="filterUserLeaderboard('CYBERSECURITY', this)">🐍 Slytherin (Cybersecurity)</button>
-        <button class="btn btn-sm btn-ghost user-filter-tab" data-filter="OPEN_INNOVATION" onclick="filterUserLeaderboard('OPEN_INNOVATION', this)">🦅 Ravenclaw (Open Innovation)</button>
-      </div>
-
-      <!-- Enchanted Ranking Scroll Table -->
-      <div class="table-card" style="box-shadow: 0 0 25px rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.3);">
-        <div class="table-responsive">
-          <table class="table" id="user-leaderboard-table">
-            <thead>
-              <tr>
-                <th style="width:70px">Rank</th>
-                <th>Team Name</th>
-                <th>House / Domain</th>
-                <th>Round 1 (/60)</th>
-                <th>Round 2 (/70)</th>
-                <th>Round 3 (/70)</th>
-                <th>Grand Total (/200)</th>
-                <th>Percentage</th>
-              </tr>
-            </thead>
-            <tbody id="user-leaderboard-body">
-              <tr><td colspan="8" class="text-center py-4 text-muted">Loading live House Cup standings…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </main>
 </div>
 
@@ -1186,7 +1078,7 @@
   import { api } from './js/api.js';
   import { toast } from './js/toast.js';
   import { initParticles } from './js/particles.js';
-  import { showLoader, hideLoader, initCountdown, showSuccessAnimation, initTimeTurner, runSortingCeremony, initGoldenSnitch, showProjectSubmissionOwl, playMagicalSound } from './js/theme.js';
+  import { showLoader, hideLoader, initCountdown, showSuccessAnimation } from './js/theme.js';
   import { SessionManager, secureLogout } from './js/security.js';
 
   const user = requireUser();
@@ -1198,11 +1090,8 @@
   // ── Loader on page init ──
   showLoader('Loading your dashboard…');
 
-  // ── Concentric Rotating Time Turner ──
-  initTimeTurner('hero-countdown');
-
-  // ── Interactive Flying Golden Snitch ──
-  initGoldenSnitch();
+  // ── Countdown timer in hero ──
+  initCountdown('hero-countdown');
 
   // ── Session Timeout Manager ──
   const sessionMgr = new SessionManager(
@@ -1283,12 +1172,7 @@
     document.querySelectorAll('[data-view]').forEach(el => el.classList.remove('active'));
     document.querySelector(`[data-view="${view}"]`)?.classList.add('active');
 
-    // Sync mobile bottom navigation tabs
-    document.querySelectorAll('.mobile-nav-tab').forEach(tab => {
-      tab.classList.toggle('active', tab.dataset.tab === view);
-    });
-
-    ['home', 'project', 'timeline', 'reviews', 'leaderboard', 'team'].forEach(v => {
+    ['home', 'project', 'timeline', 'reviews', 'team'].forEach(v => {
       const el = document.getElementById(`view-${v}`);
       if (el) el.classList.add('hidden');
     });
@@ -1300,137 +1184,12 @@
     else if (view === 'project') loadProjectDetails();
     else if (view === 'timeline') loadTimeline();
     else if (view === 'reviews') loadReviews();
-    else if (view === 'leaderboard') window.loadUserLeaderboard?.();
     else if (view === 'team') loadTeamView();
   };
 
   document.querySelectorAll('[data-view]').forEach(btn => {
     btn.addEventListener('click', () => switchView(btn.dataset.view));
   });
-
-  // ── House Cup Leaderboard Logic ──
-  let allLeaderboardData = [];
-
-  window.loadUserLeaderboard = async function() {
-    const podiumEl = document.getElementById('user-leaderboard-podium');
-    const tbodyEl = document.getElementById('user-leaderboard-body');
-    if (tbodyEl) {
-      tbodyEl.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner"></span> Summoning House Cup standings…</td></tr>';
-    }
-
-    try {
-      const res = await api.get('/api/leaderboard');
-      allLeaderboardData = res.data?.rankings || res.data || [];
-      renderLeaderboardPodium(allLeaderboardData);
-      renderLeaderboardTable(allLeaderboardData);
-    } catch (err) {
-      if (tbodyEl) {
-        tbodyEl.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-error">Could not retrieve rankings: ${escHtml(err.message)}</td></tr>`;
-      }
-    }
-  };
-
-  window.filterUserLeaderboard = function(domain, btn) {
-    document.querySelectorAll('.user-filter-tab').forEach(b => {
-      b.classList.remove('btn-primary', 'active');
-      b.classList.add('btn-ghost');
-    });
-    btn.classList.add('btn-primary', 'active');
-    btn.classList.remove('btn-ghost');
-
-    let filtered = allLeaderboardData;
-    if (domain !== 'all') {
-      filtered = allLeaderboardData.filter(t => {
-        const d = (t.domain_name || t.realm || t.domain?.name || '').toUpperCase();
-        return d.includes(domain.toUpperCase());
-      });
-    }
-    renderLeaderboardTable(filtered);
-  };
-
-  function renderLeaderboardPodium(rankings) {
-    const podium = document.getElementById('user-leaderboard-podium');
-    if (!podium) return;
-    if (!rankings || rankings.length === 0) {
-      podium.innerHTML = '';
-      return;
-    }
-    const top3 = rankings.slice(0, 3);
-    const r1 = top3[0] || null;
-    const r2 = top3[1] || null;
-    const r3 = top3[2] || null;
-
-    const renderCard = (team, rank, height, badgeColor) => {
-      if (!team) return `<div style="visibility:hidden"></div>`;
-      const domainName = (team.domain_name || team.realm || 'Domain').toUpperCase();
-      let house = 'Gryffindor';
-      let crest = '🦁';
-      if (domainName.includes('CYBER')) { house = 'Slytherin'; crest = '🐍'; }
-      else if (domainName.includes('INNOVATION')) { house = 'Ravenclaw'; crest = '🦅'; }
-
-      return `
-        <div class="podium-card rank-${rank}" style="background:linear-gradient(180deg, rgba(20,25,45,0.9), rgba(10,12,24,0.95)); border:2px solid ${badgeColor}; border-radius:12px; padding:1.25rem 1rem; text-align:center; position:relative; min-height:${height}; display:flex; flex-direction:column; justify-content:center; align-items:center; box-shadow:0 0 25px ${badgeColor}33;">
-          <div style="position:absolute; top:-16px; background:${badgeColor}; color:#000; font-family:'Cinzel',serif; font-weight:900; font-size:0.85rem; padding:2px 14px; border-radius:20px; box-shadow:0 0 10px ${badgeColor}">#${rank}</div>
-          <div style="font-size:2rem; margin-bottom:0.25rem">${crest}</div>
-          <div style="font-family:'Cinzel',serif; font-weight:700; color:#fff; font-size:1.05rem; margin-bottom:0.25rem">${escHtml(team.team_name || team.name)}</div>
-          <div style="font-size:0.78rem; color:#D4AF37; margin-bottom:0.5rem">${house} House · ${escHtml(domainName)}</div>
-          <div style="font-family:'Cinzel',serif; font-size:1.35rem; font-weight:800; color:${badgeColor}">${team.cumulative_score != null ? team.cumulative_score : (team.total_score || 0)} <span style="font-size:0.8rem; color:var(--text-muted)">/ 200</span></div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.2rem">${team.percentage != null ? team.percentage.toFixed(1) : ((team.total_score || 0)/2).toFixed(1)}% Score</div>
-        </div>
-      `;
-    };
-
-    podium.innerHTML = `
-      ${renderCard(r2, 2, '210px', '#C0C0C0')}
-      ${renderCard(r1, 1, '250px', '#FFD700')}
-      ${renderCard(r3, 3, '180px', '#CD7F32')}
-    `;
-  }
-
-  function renderLeaderboardTable(rankings) {
-    const tbody = document.getElementById('user-leaderboard-body');
-    if (!tbody) return;
-    if (!rankings || rankings.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No rankings registered yet.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = rankings.map((t, idx) => {
-      const rank = idx + 1;
-      const domainName = (t.domain_name || t.realm || 'Domain').toUpperCase();
-      let house = '🦁 Gryffindor';
-      if (domainName.includes('CYBER')) house = '🐍 Slytherin';
-      else if (domainName.includes('INNOVATION')) house = '🦅 Ravenclaw';
-
-      const r1 = t.round_1_score != null ? t.round_1_score : '—';
-      const r2 = t.round_2_score != null ? t.round_2_score : '—';
-      const r3 = t.round_3_score != null ? t.round_3_score : '—';
-      const total = t.cumulative_score != null ? t.cumulative_score : (t.total_score || 0);
-      const pct = t.percentage != null ? t.percentage.toFixed(1) + '%' : ((total/2).toFixed(1) + '%');
-
-      const isCurrentTeam = cachedTeam && (t.team_id === cachedTeam.id || t.team_name === cachedTeam.team_name);
-
-      return `
-        <tr style="${isCurrentTeam ? 'background:rgba(212,175,55,0.12); font-weight:700;' : ''}">
-          <td style="font-family:'Cinzel',serif; font-weight:800; color:${rank <= 3 ? '#D4AF37' : 'inherit'}">
-            ${rank === 1 ? '🥇 1' : rank === 2 ? '🥈 2' : rank === 3 ? '🥉 3' : rank}
-          </td>
-          <td>
-            <div style="display:flex; align-items:center; gap:0.5rem">
-              <span>${escHtml(t.team_name || t.name)}</span>
-              ${isCurrentTeam ? '<span class="badge badge-yellow text-xs">Your Team</span>' : ''}
-            </div>
-          </td>
-          <td><span class="badge ${house.includes('Gryffindor') ? 'badge-blue' : (house.includes('Slytherin') ? 'badge-cyan' : 'badge-orange')}">${house}</span></td>
-          <td class="font-mono">${r1}</td>
-          <td class="font-mono">${r2}</td>
-          <td class="font-mono">${r3}</td>
-          <td class="font-mono" style="font-weight:700; color:#D4AF37">${total}</td>
-          <td class="font-mono">${pct}</td>
-        </tr>
-      `;
-    }).join('');
-  }
 
   let currentProblemStatement = '';
   let currentProblemTitle = '';
@@ -1709,57 +1468,6 @@
     setStep('step-final',     'step-final-label',     isComplete,  false, null);
   }
 
-  // ── Spell Energy Progress Meter ──────────────────────────────────────────
-  function updateSpellMeter(prj) {
-    const beam = document.getElementById('spell-meter-beam');
-    const pctLabel = document.getElementById('spell-meter-pct');
-    const stageDraft = document.getElementById('stage-draft');
-    const stageSub = document.getElementById('stage-submitted');
-    const stageRev = document.getElementById('stage-review');
-    const stageFin = document.getElementById('stage-final');
-    if (!beam) return;
-
-    let pct = 25;
-    let label = 'Draft Spell (25%)';
-
-    const isSubmitted = prj?.is_submitted === true || (prj?.status && prj?.status !== 'DRAFT');
-    const isCompleted = prj?.status === 'COMPLETED';
-    const isUnderReview = isSubmitted && (prj?.status === 'UNDER_REVIEW' || (prj?.current_round && prj?.current_round >= 1));
-
-    if (isCompleted) {
-      pct = 100;
-      label = 'Final Spell Completed! (100%)';
-      stageDraft?.classList.add('completed');
-      stageSub?.classList.add('completed');
-      stageRev?.classList.add('completed');
-      stageFin?.classList.add('completed', 'active');
-    } else if (isUnderReview) {
-      pct = 75;
-      label = `Review Spell Active (Round ${prj?.current_round || 1}) (75%)`;
-      stageDraft?.classList.add('completed');
-      stageSub?.classList.add('completed');
-      stageRev?.classList.add('active');
-      stageFin?.classList.remove('completed', 'active');
-    } else if (isSubmitted) {
-      pct = 50;
-      label = 'Submitted Spell (50%)';
-      stageDraft?.classList.add('completed');
-      stageSub?.classList.add('completed', 'active');
-      stageRev?.classList.remove('completed', 'active');
-      stageFin?.classList.remove('completed', 'active');
-    } else {
-      pct = 25;
-      label = 'Draft Spell (25%)';
-      stageDraft?.classList.add('active');
-      stageSub?.classList.remove('completed', 'active');
-      stageRev?.classList.remove('completed', 'active');
-      stageFin?.classList.remove('completed', 'active');
-    }
-
-    beam.style.width = `${pct}%`;
-    if (pctLabel) pctLabel.textContent = label;
-  }
-
   // ── Initialize Dashboard ─────────────────────────────────────────────────
   async function initDashboard() {
     showState('loading');
@@ -1769,47 +1477,6 @@
       if (teamResp && teamResp.data) {
         cachedTeam = teamResp.data;
         populateNavbarAndSummary(cachedTeam);
-
-        // Apply House Identity
-        const dName = cachedTeam.domain?.name || cachedTeam.domain?.display_name || '';
-        document.body.classList.remove('house-gryffindor', 'house-slytherin', 'house-ravenclaw');
-        const badgeEl = document.getElementById('hero-house-badge');
-        const quoteEl = document.getElementById('hero-quote');
-
-        if (dName.toUpperCase().includes('CYBER')) {
-          document.body.classList.add('house-slytherin');
-          if (badgeEl) {
-            badgeEl.textContent = '🐍 SLYTHERIN HOUSE';
-            badgeEl.className = 'badge badge-cyan';
-          }
-          if (quoteEl) quoteEl.textContent = '"Slytherin will help you on the way to greatness." — The Sorting Hat';
-        } else if (dName.toUpperCase().includes('INNOVATION')) {
-          document.body.classList.add('house-ravenclaw');
-          if (badgeEl) {
-            badgeEl.textContent = '🦅 RAVENCLAW HOUSE';
-            badgeEl.className = 'badge badge-orange';
-          }
-          if (quoteEl) quoteEl.textContent = '"Wit beyond measure is man\'s greatest treasure." — Rowena Ravenclaw';
-        } else {
-          document.body.classList.add('house-gryffindor');
-          if (badgeEl) {
-            badgeEl.textContent = '🦁 GRYFFINDOR HOUSE';
-            badgeEl.className = 'badge badge-blue';
-          }
-          if (quoteEl) quoteEl.textContent = '"Where dwell the brave at heart, their daring, nerve, and chivalry set Gryffindors apart." — The Sorting Hat';
-        }
-
-        // Sorting Hat Ceremony (first-login cinematic experience, runs once per team)
-        if (cachedTeam.sorting_ceremony_completed === false) {
-          runSortingCeremony(cachedTeam.team_name || cachedTeam.name || 'Wizards', dName, async () => {
-            try {
-              await api.post('/api/projects/me/complete-sorting-ceremony');
-              cachedTeam.sorting_ceremony_completed = true;
-            } catch (err) {
-              console.warn('Could not complete sorting ceremony API:', err);
-            }
-          });
-        }
       }
 
       // 2. Fetch project
@@ -1818,7 +1485,6 @@
         cachedProject = prjResp.data;
         updateProgressWidget(cachedProject);
         updateSummaryCard(cachedProject);
-        updateSpellMeter(cachedProject);
 
         if (cachedProject.is_submitted || cachedProject.status !== 'DRAFT') {
           showState('has-project');
@@ -1829,7 +1495,6 @@
         cachedProject = null;
         updateProgressWidget(null);
         updateSummaryCard(null);
-        updateSpellMeter(null);
         handleNotSubmittedFlow();
       }
       // 3. Populate Home problem statement card
@@ -2537,12 +2202,12 @@
     try {
       const res = await api.post('/api/projects/me/submit', payload);
       cachedProject = res.data;
-      // Owl Post flies across carrying parchment to the Ministry of Magic
-      showProjectSubmissionOwl(() => {
-        toast.lumos('Your spell has been delivered to the Ministry of Magic!');
-        loadProjectDetails();
-        initDashboard();
-      });
+      // Magical success animation instead of alert()
+      showSuccessAnimation('🎉 Project Submitted Successfully! Your proposal is now locked for review.');
+      toast.magic('⚡ Congratulations! Project submitted!');
+      // Transition immediately to read-only view
+      loadProjectDetails();
+      initDashboard();
     } catch (err) {
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = `<span>⚠️</span><span>Submission failed: ${escHtml(err.message)}</span>`;
@@ -3031,7 +2696,6 @@
       if (badge) badge.classList.add('hidden');
     }
   }
-  window.toggleNotificationDropdown = toggleNotificationDropdown;
 
   function addNotification(icon, title, time) {
     _hwNotifications.unshift({ icon, title, time: time || new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) });

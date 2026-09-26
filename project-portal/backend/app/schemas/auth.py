@@ -21,7 +21,6 @@ class LoginResponseUser(BaseModel):
     domain: str | None
     edit_permission: bool = False
     edit_permission_reason: str | None = None
-    sorting_ceremony_completed: bool = False
 
     model_config = {"from_attributes": True}
 

@@ -1520,16 +1520,13 @@
   import { api, getToken } from './js/api.js';
   import { toast } from './js/toast.js';
   import { initParticles } from './js/particles.js';
-  import { showLoader, hideLoader, showCinematicLoader } from './js/theme.js';
+  import { showLoader, hideLoader } from './js/theme.js';
   import { SessionManager, secureLogout } from './js/security.js';
 
   window.toast = toast;
 
   const user = requireAdmin();
   if (!user) throw new Error('Not authorized');
-
-  // Patronus Loading Screen for Ministry Console
-  showCinematicLoader('PATRONUS', 'The Ministry of Magic is preparing the Review Chamber.');
 
   document.getElementById('nav-name').textContent = user.name;
   document.getElementById('logout-btn').addEventListener('click', logout);
@@ -1838,8 +1835,6 @@
       `).join('');
     } catch (e) {
       showAlert(`Dashboard error: ${e.message}`, 'error');
-    } finally {
-      hideLoader(400);
     }
   }
 
@@ -1903,10 +1898,9 @@
                 <button class="btn btn-ghost btn-sm" onclick="viewTeamModal(${u.id})">View</button>
                 <button class="btn btn-ghost btn-sm" onclick="editTeamModal(${u.id})">Edit</button>
                 <button class="btn btn-sm" style="${u.edit_permission ? 'color:var(--accent-red)' : 'color:var(--accent-green)'}" onclick="toggleEditPermission(${u.id}, ${u.edit_permission})">
-                  ${u.edit_permission ? '🔒 Colloportus' : '✨ Alohomora'}
+                  ${u.edit_permission ? '🔒 Lock' : '✏️ Unlock'}
                 </button>
-                <button class="btn btn-ghost btn-sm" title="Reset Default Password" onclick="resetTeamPasswordDefault(${u.id}, '${escHtml(u.username)}')">🔑 Pwd</button>
-                <button class="btn btn-ghost btn-sm" title="Reset Sorting Hat Ceremony" onclick="resetTeamCeremony(${u.id}, '${escHtml(teamName)}')">🎩 Hat</button>
+                <button class="btn btn-ghost btn-sm" onclick="resetTeamPasswordDefault(${u.id}, '${escHtml(u.username)}')">🔑 Pwd</button>
                 <button class="btn btn-ghost btn-sm text-danger" onclick="deleteTeam(${u.id}, '${escHtml(teamName)}')">Delete</button>
               </div>
             </td>
@@ -2042,24 +2036,19 @@
     }
   });
 
-  // Toggle edit permission for individual team (Alohomora / Colloportus)
+  // Toggle edit permission for individual team
   window.toggleEditPermission = async function(userId, currentPerm) {
     const newPerm = !currentPerm;
     let reason = null;
     if (newPerm) {
-      reason = prompt('Cast Alohomora — Enter reason for granting edit permission to this team (or leave blank):');
+      reason = prompt('Optional: Enter reason for granting edit permission:');
     } else {
-      if (!confirm('Cast Colloportus — Revoke editing permission and lock this team\'s project?')) return;
+      if (!confirm('Revoke editing permission for this team?')) return;
     }
     try {
       await api.patch(`/api/admin/teams/${userId}/edit-permission`, { edit_permission: newPerm, reason: reason || null });
-      if (newPerm) {
-        toast.alohomora ? toast.alohomora('✨ Alohomora! Project unlocked for team editing.') : toast.success('✨ Alohomora! Project unlocked.');
-      } else {
-        toast.colloportus ? toast.colloportus('🔒 Colloportus! Project locked from editing.') : toast.success('🔒 Colloportus! Project locked.');
-      }
+      toast.success(newPerm ? '✏️ Edit permission granted!' : '🔒 Edit permission revoked');
       loadTeams();
-      if (typeof loadProjects === 'function') loadProjects();
     } catch (e) { toast.error(e.message); }
   };
 
@@ -2068,22 +2057,8 @@
     if (!confirm(`Reset password for '${username}' to 'hogwarts-legacy'?`)) return;
     try {
       await api.post(`/api/admin/teams/${userId}/reset-password`, {});
-      toast.lumos ? toast.lumos(`Password reset to 'hogwarts-legacy' for ${username}`) : toast.success(`Password reset to 'hogwarts-legacy' for ${username}`);
+      toast.success(`Password reset to 'hogwarts-legacy' for ${username}`);
     } catch (e) { toast.error(e.message); }
-  };
-
-  // Reset Sorting Hat Ceremony for any team
-  window.resetTeamCeremony = async function(userId, teamName) {
-    if (!confirm(`Reset the first-login Sorting Hat Ceremony for '${teamName}'? This will allow them to experience the Great Hall cinematic ceremony again on next login.`)) return;
-    try {
-      await api.post(`/api/admin/teams/${userId}/reset-sorting-ceremony`);
-      toast.lumos ? toast.lumos(`Sorting Hat Ceremony reset for '${teamName}'!`) : toast.success(`Sorting Hat Ceremony reset for '${teamName}'!`);
-      const modalView = document.getElementById('modal-view-team');
-      if (modalView && modalView.classList.contains('open')) closeModal('modal-view-team');
-      loadTeams();
-    } catch (e) {
-      toast.expelliarmus ? toast.expelliarmus(e.message) : toast.error(e.message);
-    }
   };
 
   // Member count updater
@@ -2344,13 +2319,8 @@
           </div>
         </div>
 
-        <div style="margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
-          <div>
-            <button class="btn btn-secondary btn-sm" onclick="resetTeamCeremony(${t.id}, '${escHtml(t.team_name || t.name)}')">🎩 Reset Sorting Ceremony</button>
-          </div>
-          <div>
-            <button class="btn btn-primary btn-sm" onclick="closeModal('modal-view-team'); openEvaluateTeamModal(${t.id})">⭐ Open Evaluation Console</button>
-          </div>
+        <div style="margin-top:1.5rem;text-align:right">
+          <button class="btn btn-primary btn-sm" onclick="closeModal('modal-view-team'); openEvaluateTeamModal(${t.id})">⭐ Open Evaluation Console</button>
         </div>
       `;
       openModal('modal-view-team');

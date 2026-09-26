@@ -91,18 +91,11 @@ function escapeHtml(str) {
 
 // ── Public API ──────────────────────────────────────────────────────────────
 export const toast = {
-  success:     (msg, duration = 4000) => createToast(`✨ Lumos: ${msg}`, 'success', duration),
-  error:       (msg, duration = 5000) => createToast(`⚡ Expelliarmus: ${msg}`, 'error', duration),
-  warning:     (msg, duration = 4500) => createToast(msg, 'warning', duration),
-  info:        (msg, duration = 4000) => createToast(msg, 'info', duration),
-  magic:       (msg, duration = 5000) => createToast(msg, 'magic', duration),
-
-  // Signature Spell Toasts
-  lumos:       (msg, duration = 4000) => createToast(`✨ Lumos: ${msg}`, 'magic', duration),
-  expelliarmus:(msg, duration = 5000) => createToast(`⚡ Expelliarmus: ${msg}`, 'error', duration),
-  incendio:    (msg, duration = 4500) => createToast(`🔥 Incendio: ${msg}`, 'warning', duration),
-  alohomora:   (msg, duration = 4500) => createToast(`🔓 Alohomora: ${msg}`, 'magic', duration),
-  colloportus: (msg, duration = 4500) => createToast(`🔒 Colloportus: ${msg}`, 'info', duration),
+  success: (msg, duration = 4000) => createToast(msg, 'success', duration),
+  error:   (msg, duration = 5000) => createToast(msg, 'error',   duration),
+  warning: (msg, duration = 4500) => createToast(msg, 'warning', duration),
+  info:    (msg, duration = 4000) => createToast(msg, 'info',    duration),
+  magic:   (msg, duration = 5000) => createToast(msg, 'magic',   duration),
 };
 
 // ── Inject Styles ───────────────────────────────────────────────────────────
