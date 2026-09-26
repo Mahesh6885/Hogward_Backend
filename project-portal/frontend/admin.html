@@ -753,6 +753,26 @@
   </div>
 </div>
 
+<!-- ── MODAL: VIEW SECTION DETAIL ─────────────────────────────────── -->
+<div class="modal-overlay modal-stacked" id="modal-view-section-detail" style="z-index: 260">
+  <div class="modal" style="max-width:780px">
+    <div class="modal-header">
+      <div>
+        <span class="text-xs text-muted font-mono" id="admin-section-modal-category">PROJECT SPECIFICATION</span>
+        <h3 class="modal-title mt-1" id="admin-section-modal-title">Section Details</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-view-section-detail')">&times;</button>
+    </div>
+    <div class="doc-scroll-container mb-3" id="admin-section-modal-body" style="max-height:520px;font-size:0.95rem;line-height:1.75;padding:1rem;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:var(--radius-md)">
+      <!-- Populated via JS -->
+    </div>
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-admin-copy-section-content" onclick="window.copyAdminModalSectionContent(this)">📋 Copy Content</button>
+      <button type="button" class="btn btn-primary" onclick="closeModal('modal-view-section-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── MODAL: ADMIN PROJECT DETAILS & REVIEW ───────────────────────────── -->
 <div class="modal-overlay" id="modal-review-project">
   <div class="modal" style="max-width:860px">
@@ -962,8 +982,151 @@
     btn.addEventListener('click', () => switchAdminView(btn.dataset.view));
   });
 
-  window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
-  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+  window.openModal = function(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.add('open');
+    document.body.classList.add('modal-open');
+  };
+  window.closeModal = function(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+    if (!document.querySelector('.modal-overlay.open')) {
+      document.body.classList.remove('modal-open');
+    }
+  };
+
+  // Close modals on backdrop click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        window.closeModal(overlay.id);
+      }
+    });
+  });
+
+  // Render rich formatted description matching the user portal experience
+  window.renderFormattedDescription = function(rawText) {
+    if (!rawText || !rawText.trim()) {
+      return '<div class="text-muted">No detailed description provided.</div>';
+    }
+    const lines = rawText.split('\n');
+    let html = '';
+    let inList = false;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += '<div style="height:0.5rem"></div>';
+        return;
+      }
+
+      // Check for Header / Section divider
+      if (trimmed.startsWith('===') || trimmed.startsWith('##') || /^[0-9]+\.\s+[A-Z\s]{4,}/.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        const cleanTitle = trimmed.replace(/^(=+|-+|#+)\s*/, '').replace(/\s*(=+|-+|#+)$/, '');
+        html += `<h4 style="color:var(--text-primary);margin-top:1.25rem;margin-bottom:0.5rem;font-size:1.05rem;font-weight:700;border-bottom:1px solid var(--border);padding-bottom:0.35rem">${escHtml(cleanTitle)}</h4>`;
+        return;
+      }
+
+      // Check for DO's
+      if (trimmed.startsWith('✓') || /^DO\b/i.test(trimmed) || /^\(DO\)/i.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<div style="background:rgba(34,197,94,0.1);border-left:3px solid #22c55e;color:var(--text-primary);padding:0.4rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.35rem;font-size:0.875rem"><strong style="color:#22c55e">✓ DO:</strong> ${escHtml(trimmed.replace(/^(✓|DO:?|\(DO\))\s*/i, ''))}</div>`;
+        return;
+      }
+
+      // Check for DON'T's
+      if (trimmed.startsWith('✗') || /^DON'?T\b/i.test(trimmed) || /^\(DON'?T\)/i.test(trimmed)) {
+        if (inList) { html += '</ul>'; inList = false; }
+        html += `<div style="background:rgba(239,68,68,0.1);border-left:3px solid #ef4444;color:var(--text-primary);padding:0.4rem 0.75rem;border-radius:var(--radius-sm);margin-bottom:0.35rem;font-size:0.875rem"><strong style="color:#ef4444">✗ DON'T:</strong> ${escHtml(trimmed.replace(/^(✗|DON'?T:?|\(DON'?T\))\s*/i, ''))}</div>`;
+        return;
+      }
+
+      // Check for Bullet points
+      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+        if (!inList) { html += '<ul style="margin:0 0 0.5rem 1.25rem;padding:0">'; inList = true; }
+        html += `<li style="margin-bottom:0.25rem;font-size:0.875rem">${escHtml(trimmed.replace(/^[•\-\*]\s*/, ''))}</li>`;
+        return;
+      }
+
+      // Normal paragraph
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p style="margin:0 0 0.5rem 0;font-size:0.875rem;line-height:1.6">${escHtml(trimmed)}</p>`;
+    });
+
+    if (inList) { html += '</ul>'; }
+    return html;
+  };
+
+  // Section Detail Modal Inspector for Admin Review Console
+  window.viewAdminSectionModal = function(fieldKey, fieldTitle, categoryLabel) {
+    const p = window.currentModalProject || {};
+    let content = '';
+
+    if (fieldKey === 'problem_statement') {
+      const psObj = p.problem_statement;
+      content = (psObj && (psObj.description || psObj.detailed_description)) || p.detailed_description || p.problem_description || (typeof p.problem_statement === 'string' ? p.problem_statement : '') || '';
+      if (!content || content === '—') {
+        const psTitle = p.problem_statement_title || (psObj ? psObj.title : '') || p.project_title || '';
+        content = psTitle ? `Title: ${psTitle}\n\n(No detailed description provided)` : '';
+      }
+    } else if (fieldKey === 'abstract') {
+      content = p.abstract || '';
+    } else if (fieldKey === 'objectives') {
+      content = p.objectives || '';
+    } else if (fieldKey === 'proposed_solution') {
+      content = p.proposed_solution || '';
+    } else if (fieldKey === 'technologies') {
+      content = p.technologies || p.technology_stack || '';
+    } else if (fieldKey === 'expected_outcome') {
+      content = p.expected_outcome || '';
+    } else if (fieldKey === 'project_description') {
+      content = p.project_description || '';
+    }
+
+    const titleEl = document.getElementById('admin-section-modal-title');
+    const catEl = document.getElementById('admin-section-modal-category');
+    const bodyEl = document.getElementById('admin-section-modal-body');
+
+    if (titleEl) titleEl.textContent = fieldTitle || 'Section Details';
+    if (catEl) catEl.textContent = categoryLabel || 'PROJECT SPECIFICATION';
+
+    if (!bodyEl) return;
+
+    if (!content || !content.trim() || content === '—') {
+      bodyEl.innerHTML = `<div class="text-muted text-center py-4" style="font-style:italic">No content provided yet for this section.</div>`;
+    } else if (fieldKey === 'problem_statement') {
+      bodyEl.innerHTML = `<div style="white-space:pre-wrap;word-break:break-word;line-height:1.75;font-size:0.95rem;color:var(--text-primary)">${escHtml(content)}</div>`;
+    } else if (fieldKey === 'project_description') {
+      bodyEl.innerHTML = window.renderFormattedDescription(content);
+    } else if (fieldKey === 'technologies' && content.includes(',')) {
+      const chips = content.split(',').map(t => t.trim()).filter(Boolean);
+      bodyEl.innerHTML = `
+        <p class="text-sm text-muted mb-2">Configured Technology Stack components:</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+          ${chips.map(c => `<span class="badge badge-blue" style="font-size:0.9rem;padding:0.4rem 0.75rem">${escHtml(c)}</span>`).join('')}
+        </div>
+      `;
+    } else {
+      bodyEl.innerHTML = `<div style="white-space:pre-line;word-break:break-word;line-height:1.7">${escHtml(content)}</div>`;
+    }
+
+    window.openModal('modal-view-section-detail');
+  };
+
+  window.copyAdminModalSectionContent = function(btn) {
+    const bodyEl = document.getElementById('admin-section-modal-body');
+    const text = bodyEl?.innerText || '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied to Clipboard!';
+      setTimeout(() => { btn.textContent = orig; }, 2000);
+    }).catch(() => {
+      showAlert('Failed to copy to clipboard', 'error');
+    });
+  };
 
   window.copyText = function(elementId, btnEl) {
     const text = document.getElementById(elementId)?.textContent;
@@ -1670,7 +1833,7 @@
           </div>
         </div>
 
-        <!-- Assigned Official Problem Statement Card for Reviewer -->
+        <!-- Assigned Official Problem Statement Card with [ View Full Scope ] -->
         <div class="enchanted-parchment-card mb-3">
           <div class="ps-card-header">
             <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
@@ -1678,36 +1841,76 @@
               <span class="badge ${realmBadgeClass}">${psRealm === 'AI' ? '⚡ AI Realm' : '🛡️ Cybersecurity Realm'}</span>
               <span class="badge ${diffBadgeClass}">${escHtml(psDiff)}</span>
             </div>
-            <span class="text-xs text-muted" style="font-family:'Cinzel',serif">Assigned Official Statement</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('problem_statement', '🎯 Official Problem Statement', 'OFFICIAL CHALLENGE')">
+              🔍 [ View ] Full Scope
+            </button>
           </div>
-          <div class="ps-title-text" style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--gold-light);margin:0.75rem 0 0.5rem 0">${escHtml(psTitle)}</div>
-          <div class="ps-description-box" style="max-height:240px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;font-size:0.875rem;color:var(--text-secondary);background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.85rem">${escHtml(psDesc)}</div>
+          <div class="ps-title-text" style="font-family:'Cinzel',serif;font-size:1.15rem;font-weight:700;color:var(--gold-light);margin:0.5rem 0">${escHtml(psTitle)}</div>
+          <div class="ps-description-box" style="max-height:80px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.6;font-size:0.875rem;color:var(--text-secondary);background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:0">${escHtml(psDesc)}</div>
         </div>
 
+        <!-- Project Abstract Card with [ View ] -->
         <div class="card mb-3" style="padding:1.25rem">
-          <h4 style="font-weight:700;margin-bottom:0.5rem">Project Abstract</h4>
-          <p class="text-sm text-secondary">${escHtml(p.abstract || 'None provided')}</p>
-        </div>
-
-        <div class="grid-2 mb-3">
-          <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Objectives</h4>
-            <p class="text-sm text-secondary">${escHtml(p.objectives || 'None provided')}</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+            <h4 style="font-weight:700;margin:0">📄 Project Abstract</h4>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('abstract', '📄 Project Abstract', 'PROJECT ABSTRACT')">
+              🔍 [ View ]
+            </button>
           </div>
-          <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Proposed Solution</h4>
-            <p class="text-sm text-secondary">${escHtml(p.proposed_solution || 'None provided')}</p>
+          <div style="max-height:72px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5;font-size:0.875rem;color:var(--text-secondary)">
+            ${escHtml(p.abstract || 'None provided')}
           </div>
         </div>
 
+        <!-- Objectives & Proposed Solution Grid with [ View ] -->
         <div class="grid-2 mb-3">
           <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Technologies</h4>
-            <p class="text-sm text-secondary">${escHtml(p.technologies || 'None provided')}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+              <h4 style="font-weight:700;margin:0">📌 Objectives</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('objectives', '📌 Objectives', 'TARGET OBJECTIVES')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div style="max-height:72px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5;font-size:0.875rem;color:var(--text-secondary)">
+              ${escHtml(p.objectives || 'None provided')}
+            </div>
           </div>
           <div class="card" style="padding:1.25rem">
-            <h4 style="font-weight:700;margin-bottom:0.5rem">Expected Outcome</h4>
-            <p class="text-sm text-secondary">${escHtml(p.expected_outcome || 'None provided')}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+              <h4 style="font-weight:700;margin:0">💡 Proposed Solution</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('proposed_solution', '💡 Proposed Solution', 'ARCHITECTURE & SOLUTION')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div style="max-height:72px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5;font-size:0.875rem;color:var(--text-secondary)">
+              ${escHtml(p.proposed_solution || 'None provided')}
+            </div>
+          </div>
+        </div>
+
+        <!-- Technologies & Expected Outcome Grid with [ View ] -->
+        <div class="grid-2 mb-3">
+          <div class="card" style="padding:1.25rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+              <h4 style="font-weight:700;margin:0">🛠️ Technologies</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('technologies', '🛠️ Technology Stack', 'TECH STACK')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div style="max-height:72px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5;font-size:0.875rem;color:var(--text-secondary)">
+              ${escHtml(p.technologies || p.technology_stack || 'None provided')}
+            </div>
+          </div>
+          <div class="card" style="padding:1.25rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+              <h4 style="font-weight:700;margin:0">🏆 Expected Outcome</h4>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('expected_outcome', '🏆 Expected Outcome', 'DELIVERABLES & METRICS')">
+                🔍 [ View ]
+              </button>
+            </div>
+            <div style="max-height:72px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.5;font-size:0.875rem;color:var(--text-secondary)">
+              ${escHtml(p.expected_outcome || 'None provided')}
+            </div>
           </div>
         </div>
 
@@ -1718,9 +1921,17 @@
           </div>
         ` : ''}
 
-        <div class="card mb-3">
-          <h4 style="font-weight:700;margin-bottom:0.5rem">Full Project Description</h4>
-          <div class="doc-scroll-container">${escHtml(p.project_description || 'No detailed description provided.')}</div>
+        <!-- Full Project Description Card with [ View Full Scope ] -->
+        <div class="card mb-3" style="padding:1.25rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem">
+            <h4 style="font-weight:700;margin:0">📖 Detailed Project Description</h4>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="window.viewAdminSectionModal('project_description', '📖 Detailed Project Description', 'FULL SPECIFICATIONS')">
+              🔍 [ View ] Full Scope
+            </button>
+          </div>
+          <div style="max-height:75px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.6;font-size:0.875rem;color:var(--text-secondary)">
+            ${escHtml(p.project_description || 'No detailed description provided.')}
+          </div>
         </div>
 
         <h4 style="font-weight:700;margin-bottom:0.75rem">Evaluation &amp; Review History</h4>

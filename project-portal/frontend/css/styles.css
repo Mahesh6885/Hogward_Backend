@@ -1835,11 +1835,21 @@ html, body {
   #projects-table-body td:nth-child(1)::before { content: "Code"; }
   #projects-table-body td:nth-child(2)::before { content: "Team"; }
   #projects-table-body td:nth-child(3)::before { content: "Domain"; }
-  #projects-table-body td:nth-child(4)::before { content: "Title"; }
-  #projects-table-body td:nth-child(5)::before { content: "Round"; }
-  #projects-table-body td:nth-child(6)::before { content: "Status"; }
-  #projects-table-body td:nth-child(7)::before { content: "Submitted"; }
-  #projects-table-body td:nth-child(8)::before { content: "Actions"; width: 100%; margin-bottom: 0.25rem; }
+  #projects-table-body td:nth-child(4)::before { content: "Problem Code"; }
+  #projects-table-body td:nth-child(5)::before { content: "Statement Title"; }
+  #projects-table-body td:nth-child(6)::before { content: "Round"; }
+  #projects-table-body td:nth-child(7)::before { content: "Status"; }
+  #projects-table-body td:nth-child(8)::before { content: "Submitted"; }
+  #projects-table-body td:nth-child(9)::before { content: "Action"; width: 100%; margin-bottom: 0.25rem; }
+
+  /* Labels for Problem Statements table */
+  #ps-table-body td:nth-child(1)::before { content: "Code"; }
+  #ps-table-body td:nth-child(2)::before { content: "Realm"; }
+  #ps-table-body td:nth-child(3)::before { content: "Title"; }
+  #ps-table-body td:nth-child(4)::before { content: "Description"; }
+  #ps-table-body td:nth-child(5)::before { content: "Difficulty"; }
+  #ps-table-body td:nth-child(6)::before { content: "Status"; }
+  #ps-table-body td:nth-child(7)::before { content: "Actions"; width: 100%; margin-bottom: 0.25rem; }
 
   .table-actions {
     width: 100% !important;
@@ -1855,16 +1865,32 @@ html, body {
     font-size: 0.8rem !important;
   }
 
-  /* Modals */
-  .modal-overlay { padding: 0.5rem !important; }
+  /* Body scroll lock when modal is open */
+  body.modal-open {
+    overflow: hidden !important;
+    touch-action: none;
+  }
+
+  /* Modals on Mobile */
+  .modal-overlay {
+    padding: 0.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
   .modal {
     padding: 1.15rem 0.9rem !important;
     width: 100% !important;
     max-width: 96vw !important;
-    max-height: 90vh !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+    margin: 0.75rem auto !important;
     border-radius: var(--radius-lg) !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .modal-overlay.modal-stacked {
+    z-index: 260 !important;
   }
   .modal-form {
     width: 100% !important;
@@ -1881,6 +1907,41 @@ html, body {
   .modal-title { font-size: 1.05rem !important; }
   .modal-footer { flex-direction: column-reverse !important; gap: 0.5rem !important; }
   .modal-footer .btn { width: 100% !important; }
+
+  /* Mobile Grid Items & Overflow Safety */
+  .grid-1 > *, .grid-2 > *, .grid-3 > *, .grid-4 > *, 
+  .card, .stat-card, .doc-scroll-container, .enchanted-parchment-card {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    word-break: break-word !important;
+  }
+  .table td, .table td * {
+    max-width: 100% !important;
+    word-break: break-word !important;
+  }
+  .flying-owl { display: none !important; }
+  .fog-layer { left: 0 !important; width: 100vw !important; }
+
+  /* Mobile Navbar Elements to Prevent Horizontal Jitter / Overflow */
+  .navbar-user { display: none !important; }
+  #logout-btn { display: none !important; }
+  .nav-session-timer { display: none !important; }
+  .navbar {
+    overflow: hidden !important;
+  }
+  .navbar-brand {
+    max-width: calc(100vw - 110px) !important;
+    overflow: hidden !important;
+  }
+  .navbar-title {
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .navbar-title .badge {
+    display: none !important;
+  }
 
   /* Mobile Drawer slide-in */
   .mobile-drawer {
