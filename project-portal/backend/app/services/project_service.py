@@ -314,10 +314,31 @@ def list_projects_admin(
     query = db.query(Project)
     if user_id:
         query = query.filter(Project.user_id == user_id)
-    if realm:
-        query = query.filter(Project.realm == realm)
-    elif domain:
-        query = query.filter(or_(Project.realm == domain, Project.domain.has(name=domain)))
+    target_filter = realm or domain
+    if target_filter:
+        tf_upper = target_filter.strip().upper()
+        if tf_upper in ("AI", "CYBERSECURITY"):
+            query = query.filter(
+                or_(
+                    Project.realm == tf_upper,
+                    Project.domain.has(name=tf_upper),
+                    Project.user.has(User.domain.has(name=tf_upper)),
+                )
+            )
+        elif tf_upper in ("OPEN_INNOVATION", "OPEN INNOVATION"):
+            query = query.filter(
+                or_(
+                    Project.domain.has(name=DomainName.OPEN_INNOVATION.value),
+                    Project.user.has(User.domain.has(name=DomainName.OPEN_INNOVATION.value)),
+                )
+            )
+        else:
+            query = query.filter(
+                or_(
+                    Project.domain.has(name=target_filter),
+                    Project.user.has(User.domain.has(name=target_filter)),
+                )
+            )
     if status_filter:
         query = query.filter(Project.status == status_filter)
     if round_filter is not None:
