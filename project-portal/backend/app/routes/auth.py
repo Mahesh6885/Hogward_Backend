@@ -44,6 +44,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
                 domain=domain_display,
                 edit_permission=getattr(user, "edit_permission", False),
                 edit_permission_reason=getattr(user, "edit_permission_reason", None),
+                sorting_ceremony_completed=getattr(user, "sorting_ceremony_completed", False),
             ),
         ),
     )
@@ -65,5 +66,6 @@ def get_me(current_user: User = Depends(get_current_user)):
             domain=domain_display,
             edit_permission=getattr(current_user, "edit_permission", False),
             edit_permission_reason=getattr(current_user, "edit_permission_reason", None),
+            sorting_ceremony_completed=getattr(current_user, "sorting_ceremony_completed", False),
         ),
     )

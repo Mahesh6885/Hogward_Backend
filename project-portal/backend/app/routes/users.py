@@ -38,6 +38,7 @@ def _user_dict(user: User) -> dict:
         "domain": domain_basic,
         "role": user.role,
         "status": user.status,
+        "sorting_ceremony_completed": getattr(user, "sorting_ceremony_completed", False),
         "created_at": user.created_at.isoformat(),
         "updated_at": user.updated_at.isoformat(),
     }

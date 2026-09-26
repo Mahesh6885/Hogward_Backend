@@ -49,6 +49,7 @@ class User(Base):
     edit_permission_granted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     session_last_active: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     password_reset_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    sorting_ceremony_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False

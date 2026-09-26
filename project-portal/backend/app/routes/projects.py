@@ -294,3 +294,21 @@ def get_my_project_evaluations(
         "message": "Team evaluations retrieved",
         "data": data,
     }
+
+
+# ─── Sorting Hat Ceremony ─────────────────────────────────────────────────────
+
+@router.post("/me/complete-sorting-ceremony", status_code=200)
+def complete_sorting_ceremony(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Mark the Sorting Hat Ceremony as completed for this team in PostgreSQL."""
+    current_user.sorting_ceremony_completed = True
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "success": True,
+        "message": "Sorting Hat ceremony completed successfully",
+        "data": {"sorting_ceremony_completed": True},
+    }

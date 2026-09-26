@@ -114,6 +114,7 @@ def auto_migrate_schema(engine: Engine) -> None:
                 ("edit_permission_granted_at", dt_type),
                 ("session_last_active", dt_type),
                 ("password_reset_required", "BOOLEAN DEFAULT FALSE"),
+                ("sorting_ceremony_completed", "BOOLEAN DEFAULT FALSE"),
             ]
             for col_name, col_def in user_cols_to_add:
                 if col_name.lower() not in existing_user_cols:

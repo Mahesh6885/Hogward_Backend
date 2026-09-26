@@ -27,26 +27,43 @@
 </head>
 <body>
 
-<!-- Stars decorative layer -->
-<div class="stars-layer" aria-hidden="true"></div>
+<!-- ── Layered Animated Hogwarts Environment ── -->
+<div class="hogwarts-bg-env" aria-hidden="true">
+  <div class="hogwarts-stars"></div>
+  <div class="hogwarts-rays"></div>
+  <div class="hogwarts-castle-silhouette"></div>
+  <div class="hogwarts-fog"></div>
+  <div class="hogwarts-lightning" id="ambient-lightning"></div>
+</div>
 
-<!-- Fog layer -->
-<div class="fog-layer" aria-hidden="true"></div>
+<!-- Flying Owl -->
+<svg class="flying-owl" aria-hidden="true" viewBox="0 0 64 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:fixed;top:18%;right:-70px;width:55px;height:32px;z-index:1;animation:owlFly 22s linear infinite">
+  <ellipse cx="32" cy="22" rx="14" ry="12" fill="#D4AF37" opacity="0.8"/>
+  <ellipse cx="22" cy="14" rx="9" ry="7" fill="#D4AF37" opacity="0.85"/>
+  <ellipse cx="42" cy="14" rx="9" ry="7" fill="#D4AF37" opacity="0.85"/>
+  <circle cx="26" cy="12" r="3" fill="#fff" opacity="0.95"/>
+  <circle cx="38" cy="12" r="3" fill="#fff" opacity="0.95"/>
+  <circle cx="26.5" cy="12.5" r="1.5" fill="#111"/>
+  <circle cx="38.5" cy="12.5" r="1.5" fill="#111"/>
+  <polygon points="32,17 29,22 35,22" fill="#9B7D20"/>
+  <path d="M4 28 Q16 10 22 18" stroke="#D4AF37" stroke-width="2" fill="none" opacity="0.7"/>
+  <path d="M60 28 Q48 10 42 18" stroke="#D4AF37" stroke-width="2" fill="none" opacity="0.7"/>
+</svg>
 
-<!-- Floating Candles (decorative) -->
-<div class="floating-candle" aria-hidden="true" style="left:5%;top:15%;animation-delay:0s;animation-duration:5s"></div>
-<div class="floating-candle" aria-hidden="true" style="left:12%;top:60%;animation-delay:1.2s;animation-duration:6.5s;height:28px;width:11px"></div>
-<div class="floating-candle" aria-hidden="true" style="right:8%;top:25%;animation-delay:0.5s;animation-duration:7s"></div>
-<div class="floating-candle" aria-hidden="true" style="right:15%;top:70%;animation-delay:2s;animation-duration:5.5s;height:40px"></div>
-<div class="floating-candle" aria-hidden="true" style="left:3%;top:80%;animation-delay:3s;animation-duration:8s;height:22px;width:9px;opacity:0.5"></div>
-<div class="floating-candle" aria-hidden="true" style="right:4%;top:50%;animation-delay:1.8s;animation-duration:6s;height:30px;opacity:0.45"></div>
+<!-- Floating Candles -->
+<div class="floating-candle" aria-hidden="true" style="left:6%;top:14%;animation-delay:0s;animation-duration:5s"></div>
+<div class="floating-candle" aria-hidden="true" style="left:14%;top:58%;animation-delay:1.2s;animation-duration:6.5s;height:28px;width:11px"></div>
+<div class="floating-candle" aria-hidden="true" style="right:9%;top:22%;animation-delay:0.5s;animation-duration:7s"></div>
+<div class="floating-candle" aria-hidden="true" style="right:16%;top:68%;animation-delay:2s;animation-duration:5.5s;height:38px"></div>
+<div class="floating-candle" aria-hidden="true" style="left:4%;top:78%;animation-delay:3s;animation-duration:8s;height:22px;width:9px;opacity:0.6"></div>
+<div class="floating-candle" aria-hidden="true" style="right:5%;top:48%;animation-delay:1.8s;animation-duration:6s;height:30px;opacity:0.55"></div>
 
 <!-- ── Login Layout ────────────────────────────────────────────────────── -->
 <div class="login-page" id="login-page-root">
 
   <!-- LEFT PANEL — Hogwarts Artwork -->
   <div class="login-left" aria-hidden="true">
-    <div class="login-castle" role="img" aria-label="Hogwarts Castle">🏰</div>
+    <div class="login-castle" role="img" aria-label="Hogwarts Castle Entrance">🏰</div>
     <div class="login-left-content">
       <div class="login-left-title">HOGWARTS LEGACY</div>
       <div class="login-left-edition">5.0</div>
@@ -64,11 +81,11 @@
       </blockquote>
 
       <!-- Floating orb decorations -->
-      <div style="margin-top:2rem;display:flex;gap:1rem;justify-content:center;opacity:0.4">
-        <span style="font-size:1.5rem;animation:castleFloat 3s ease-in-out infinite">✨</span>
-        <span style="font-size:1.5rem;animation:castleFloat 4s ease-in-out infinite 0.5s">🪄</span>
-        <span style="font-size:1.5rem;animation:castleFloat 3.5s ease-in-out infinite 1s">⭐</span>
-        <span style="font-size:1.5rem;animation:castleFloat 4.5s ease-in-out infinite 1.5s">🦉</span>
+      <div style="margin-top:2rem;display:flex;gap:1.25rem;justify-content:center;opacity:0.6">
+        <span style="font-size:1.6rem;animation:castleFloat 3s ease-in-out infinite">✨</span>
+        <span style="font-size:1.6rem;animation:castleFloat 4s ease-in-out infinite 0.5s">🪄</span>
+        <span style="font-size:1.6rem;animation:castleFloat 3.5s ease-in-out infinite 1s">⭐</span>
+        <span style="font-size:1.6rem;animation:castleFloat 4.5s ease-in-out infinite 1.5s">🦉</span>
       </div>
     </div>
   </div>
@@ -83,7 +100,7 @@
       <div class="mobile-login-dept">Dept. of Integrated M.Tech CSE (AI &amp; ML)<br>Erode Sengunthar Engineering College</div>
     </div>
 
-    <div class="login-card fade-in">
+    <div class="login-card fade-in" style="box-shadow: 0 0 45px rgba(212, 175, 55, 0.2), 0 10px 40px rgba(0, 0, 0, 0.9); border: 1px solid rgba(212, 175, 55, 0.35);">
 
       <!-- Logo -->
       <div class="login-logo" aria-hidden="true">
@@ -91,12 +108,12 @@
       </div>
 
       <!-- Branding -->
-      <h1 class="login-title">Team Portal</h1>
-      <p class="login-subtitle">Enter your credentials to access the hackathon</p>
+      <h1 class="login-title">Castle Entrance</h1>
+      <p class="login-subtitle">Enter your wizard credentials to cross the threshold</p>
 
       <!-- Session-expired notice (shown via URL param) -->
       <div id="session-expired-notice" class="login-attempts-warning" style="display:none;margin-bottom:1rem">
-        ⏳ Your session expired. Please login again.
+        ⏳ Your magical session has expired. Enter the castle again.
       </div>
 
       <!-- Error Alert -->
@@ -155,21 +172,23 @@
             />
             <button
               type="button"
-              class="pw-toggle"
+              class="pw-toggle hogwarts-eye-toggle"
               id="pw-toggle"
               aria-label="Show password"
               aria-pressed="false"
               tabindex="0"
+              title="Cast Revelio / Obscuro"
             >
-              <!-- Eye open -->
-              <svg id="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <!-- Glowing Hogwarts Eye Open -->
+              <svg id="eye-open" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" style="filter: drop-shadow(0 0 4px #D4AF37);">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <circle cx="12" cy="12" r="3.5" fill="#D4AF37"/>
+                <circle cx="12" cy="12" r="1.5" fill="#050505"/>
               </svg>
-              <!-- Eye closed (hidden initially) -->
-              <svg id="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+              <!-- Glowing Hogwarts Eye Closed -->
+              <svg id="eye-closed" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" style="display:none; filter: drop-shadow(0 0 2px rgba(212,175,55,0.5));">
                 <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="#D4AF37" stroke-width="2.2"/>
               </svg>
             </button>
           </div>
@@ -179,17 +198,17 @@
           </div>
         </div>
 
-        <!-- Remember Me / 5-Hour Session -->
+        <!-- Remember Me -->
         <div class="login-options">
           <label class="remember-me" for="remember-me">
             <input type="checkbox" id="remember-me" name="remember-me" checked />
-            <span>Keep me signed in for 5 hours</span>
+            <span>Remember Me (Secure Session)</span>
           </label>
         </div>
 
-        <!-- Submit -->
-        <button class="btn btn-primary btn-lg btn-full" type="submit" id="login-btn" aria-label="Sign in to the portal">
-          ⚡ Enter the Portal
+        <!-- Submit Button: Enter the Castle -->
+        <button class="btn btn-primary btn-lg btn-full" type="submit" id="login-btn" aria-label="Enter the Castle" style="background: var(--gold-gradient); color: #050505; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);">
+          🏰 Enter the Castle
         </button>
       </form>
 
@@ -346,10 +365,9 @@
 
     // Disable button
     btn.disabled = true;
-    btn.innerHTML = '<span class="hw-spinner"></span>Entering the portal…';
+    btn.innerHTML = '<span class="hw-spinner"></span>Entering the castle…';
 
     try {
-      showLoader('Authenticating…');
       const user = await login(username, password);
 
       // Record success — clear lockout
@@ -359,19 +377,22 @@
       if (rememberMe) {
         saveRememberedUsername(username);
       } else {
-        secureLogout(false);  // clears remembered if unchecked
-        // Re-set tokens (login already set them via auth.js)
-        // We only want to remove the remembered username
+        secureLogout(false);
         localStorage.removeItem('hw_remembered_username');
       }
 
-      hideLoader(200);
-      updateLoaderMessage('Welcome, ' + (user.team_name || user.username) + '!');
-      toast.magic('⚡ Welcome to Hogwarts Legacy 5.0!');
+      // Cinematic Creature Loading Experience
+      const domainRole = user.role === 'ADMIN' ? 'ADMIN' : (user.domain || 'AI');
+      import('./js/theme.js').then(({ showCinematicLoader, playMagicalSound }) => {
+        showCinematicLoader(domainRole);
+        playMagicalSound('fanfare');
+      });
+
+      toast.lumos('Welcome to the Wizarding World, ' + (user.team_name || user.username) + '!');
 
       setTimeout(() => {
         window.location.href = user.role === 'ADMIN' ? 'admin.html' : 'dashboard.html';
-      }, 1200);
+      }, 1800);
 
     } catch (err) {
       hideLoader(0);
@@ -379,15 +400,16 @@
 
       if (loginSecurity.isLocked()) {
         showLockout();
-        toast.error('Account locked after too many failed attempts.');
+        toast.expelliarmus('Account locked after too many failed attempts.');
       } else {
-        // Never reveal which field — generic message
+        // Generic message
         showError('Invalid username or password.');
         showAttemptWarn(attempts);
+        toast.expelliarmus('Invalid credentials. Spell blocked.');
       }
 
       btn.disabled = false;
-      btn.innerHTML = '⚡ Enter the Portal';
+      btn.innerHTML = '🏰 Enter the Castle';
     }
   });
 
