@@ -47,20 +47,26 @@ class TestCreateReview:
         assert resp.status_code == 400
         assert "round" in resp.json()["message"].lower()
 
-    def test_duplicate_round_review_prevented(self, client, admin_user, ai_user, domains):
+    def test_multiple_round_reviews_allowed(self, client, admin_user, ai_user, domains):
         project_id, _ = _get_project_id(client, "aiuser", "userpass123")
         token = get_token(client, "admin", "adminpass123")
-        client.post(
+        r1 = client.post(
             f"/api/admin/projects/{project_id}/reviews",
-            json={"round_number": 1, "review_text": "First review submission.", "status": "PASSED"},
+            json={"round_number": 1, "review_text": "First review submission.", "status": "NEEDS_IMPROVEMENT"},
             headers=auth_headers(token),
         )
-        resp = client.post(
+        assert r1.status_code == 201
+
+        r2 = client.post(
             f"/api/admin/projects/{project_id}/reviews",
-            json={"round_number": 1, "review_text": "Duplicate review attempt.", "status": "NEEDS_IMPROVEMENT"},
+            json={"round_number": 1, "review_text": "Second review attempt for same round.", "status": "REJECTED"},
             headers=auth_headers(token),
         )
-        assert resp.status_code == 409
+        assert r2.status_code == 201
+        assert r2.json()["data"]["status"] == "REJECTED"
+
+        resp = client.get(f"/api/admin/projects/{project_id}/reviews", headers=auth_headers(token))
+        assert len(resp.json()["data"]) == 2
 
     def test_review_advances_round_on_pass(self, client, admin_user, ai_user, domains):
         project_id, user_token = _get_project_id(client, "aiuser", "userpass123")

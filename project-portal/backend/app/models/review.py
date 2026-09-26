@@ -18,9 +18,6 @@ class ReviewStatus(str, enum.Enum):
 
 class Review(Base):
     __tablename__ = "reviews"
-    __table_args__ = (
-        UniqueConstraint("project_id", "round_number", name="uq_reviews_project_round"),
-    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     project_id: Mapped[int] = mapped_column(

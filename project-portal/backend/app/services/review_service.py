@@ -42,42 +42,59 @@ def create_review(db: Session, project_id: int, data: ReviewCreate, admin: User,
             },
         )
 
-    # Prevent duplicate reviews for same project+round (must use PUT to update, or upsert=True)
-    existing_review = db.query(Review).filter(
-        Review.project_id == project_id,
-        Review.round_number == data.round_number,
-    ).first()
-    if existing_review:
-        if not upsert:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "success": False,
-                    "message": f"A review for round {data.round_number} already exists. Use PUT to update.",
-                    "error_code": "REVIEW_EXISTS",
-                    "existing_review_id": existing_review.id,
-                },
+    # If upsert requested, update the most recent review for this round
+    if upsert:
+        existing_review = db.query(Review).filter(
+            Review.project_id == project_id,
+            Review.round_number == data.round_number,
+        ).order_by(Review.id.desc()).first()
+        if existing_review:
+            existing_review.admin_id = admin.id
+            existing_review.review_text = data.review_text.strip()
+            existing_review.suggested_improvements = (
+                data.suggested_improvements.strip() if data.suggested_improvements else None
             )
-        # Upsert branch: update existing review in-place
-        existing_review.admin_id = admin.id
-        existing_review.review_text = data.review_text.strip()
-        existing_review.suggested_improvements = (
-            data.suggested_improvements.strip() if data.suggested_improvements else None
-        )
-        existing_review.status = data.status
-        _update_project_after_review(db, project, existing_review)
+            existing_review.status = data.status
+            _update_project_after_review(db, project, existing_review)
 
-        log = AuditLog(
-            admin_id=admin.id,
-            action="UPDATE_REVIEW",
-            target_type="project",
-            target_id=project_id,
-            description=f"Admin '{admin.username}' updated review for project '{project.project_code}' round {data.round_number} — status: {data.status.value}",
-        )
-        db.add(log)
-        db.commit()
-        db.refresh(existing_review)
-        return existing_review
+            log = AuditLog(
+                admin_id=admin.id,
+                action="UPDATE_REVIEW",
+                target_type="project",
+                target_id=project_id,
+                description=f"Admin '{admin.username}' updated review for project '{project.project_code}' round {data.round_number} — status: {data.status.value}",
+            )
+            db.add(log)
+            db.commit()
+            db.refresh(existing_review)
+            return existing_review
+
+    # Otherwise create a new review record (allows multiple reviews per round)
+    review = Review(
+        project_id=project_id,
+        admin_id=admin.id,
+        round_number=data.round_number,
+        review_text=data.review_text.strip(),
+        suggested_improvements=data.suggested_improvements.strip() if data.suggested_improvements else None,
+        status=data.status,
+    )
+    db.add(review)
+    db.flush()
+
+    # Update project status
+    _update_project_after_review(db, project, review)
+
+    log = AuditLog(
+        admin_id=admin.id,
+        action="CREATE_REVIEW",
+        target_type="project",
+        target_id=project_id,
+        description=f"Admin '{admin.username}' submitted review for project '{project.project_code}' round {data.round_number} — status: {data.status.value}",
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(review)
+    return review
 
     review = Review(
         project_id=project_id,

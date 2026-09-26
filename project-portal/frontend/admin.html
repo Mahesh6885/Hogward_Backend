@@ -823,24 +823,33 @@
     <!-- Review Submission Form -->
     <div class="card" style="border-top:2px solid var(--accent-blue)">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-        <h4 style="font-weight:700;margin:0" id="review-form-title">Submit Review for Current Round</h4>
+        <h4 style="font-weight:700;margin:0" id="review-form-title">Submit Review or Re-edit Evaluation</h4>
         <span class="badge badge-blue" id="review-round-badge">Review Controls</span>
       </div>
       <div id="review-existing-note" class="alert alert-info alert-hidden mb-3" style="font-size:0.85rem">
-        <span>ℹ️</span><span>A review for this round already exists. Submitting will update the evaluation and project status.</span>
+        <span>ℹ️</span><span id="review-existing-note-text">Select a past review to re-edit, or submit a new evaluation. Multiple reviews per round are fully supported.</span>
       </div>
       <form id="form-submit-review" class="modal-form">
         <input type="hidden" id="review-project-id" />
-        <input type="hidden" id="review-project-round" />
         <input type="hidden" id="review-existing-id" />
-        <div class="form-group">
-          <label class="form-label" for="review-status">Review Status Decision *</label>
-          <select class="form-input" id="review-status" required>
-            <option value="PASSED">Passed (Advance to next round or complete)</option>
-            <option value="NEEDS_IMPROVEMENT">Needs Improvement (Requires revisions)</option>
-            <option value="IN_REVIEW">In Review (Keep currently under review)</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
+        <div class="grid-2">
+          <div class="form-group">
+            <label class="form-label" for="review-project-round">Review Round *</label>
+            <select class="form-input" id="review-project-round" required>
+              <option value="1">Round 1</option>
+              <option value="2">Round 2</option>
+              <option value="3">Round 3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="review-status">Review Status Decision *</label>
+            <select class="form-input" id="review-status" required>
+              <option value="PASSED">Passed (Advance to next round or complete)</option>
+              <option value="NEEDS_IMPROVEMENT">Needs Improvement (Requires revisions)</option>
+              <option value="IN_REVIEW">In Review (Keep currently under review)</option>
+              <option value="REJECTED">Rejected</option>
+            </select>
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label" for="review-text">Admin Feedback &amp; Evaluation * (min 10 chars)</label>
@@ -851,9 +860,16 @@
           <textarea class="form-textarea" id="review-improvements" rows="3" placeholder="Actionable guidance and recommended next steps..."></textarea>
         </div>
         <div id="modal-review-alert" class="alert alert-hidden"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-ghost" onclick="closeModal('modal-review-project')">Close</button>
-          <button type="submit" class="btn btn-primary" id="btn-submit-review-action">Submit Review</button>
+        <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+          <div id="editing-mode-badge" style="display:none;align-items:center;gap:0.5rem">
+            <span class="badge badge-purple">✏️ Re-editing Review #<span id="editing-review-id-label"></span></span>
+            <button type="button" class="btn btn-ghost btn-xs" id="btn-cancel-edit-mode">Cancel Re-edit</button>
+          </div>
+          <div style="display:flex;gap:0.5rem;margin-left:auto;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost" onclick="closeModal('modal-review-project')">Close</button>
+            <button type="button" class="btn btn-secondary" id="btn-update-existing-review" style="display:none">💾 Update Selected Review</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-review-action">➕ Submit New Review</button>
+          </div>
         </div>
       </form>
     </div>
@@ -1735,32 +1751,30 @@
 
       window.currentModalProject = p;
       document.getElementById('review-project-id').value = p.id;
-      document.getElementById('review-project-round').value = p.current_round;
+      document.getElementById('review-project-round').value = String(p.current_round || 1);
+      document.getElementById('review-existing-id').value = '';
+      document.getElementById('review-status').value = 'PASSED';
+      document.getElementById('review-text').value = '';
+      document.getElementById('review-improvements').value = '';
       document.getElementById('modal-review-alert').classList.add('alert-hidden');
 
-      // Check if a review already exists for the project's current round
-      const existingRoundReview = (p.reviews || []).find(r => r.round_number === p.current_round);
-      const existingIdInput = document.getElementById('review-existing-id');
-      const formTitle = document.getElementById('review-form-title');
-      const submitBtn = document.getElementById('btn-submit-review-action');
-      const existingNote = document.getElementById('review-existing-note');
+      const editBadge = document.getElementById('editing-mode-badge');
+      if (editBadge) editBadge.style.display = 'none';
+      const btnUpdate = document.getElementById('btn-update-existing-review');
+      if (btnUpdate) btnUpdate.style.display = 'none';
+      const btnSubmit = document.getElementById('btn-submit-review-action');
+      if (btnSubmit) btnSubmit.textContent = '➕ Submit New Review';
 
-      if (existingRoundReview) {
-        if (existingIdInput) existingIdInput.value = existingRoundReview.id;
-        document.getElementById('review-status').value = existingRoundReview.status || 'REJECTED';
-        document.getElementById('review-text').value = existingRoundReview.review_text || '';
-        document.getElementById('review-improvements').value = existingRoundReview.suggested_improvements || '';
-        if (formTitle) formTitle.textContent = `Update Review for Round ${p.current_round}`;
-        if (submitBtn) submitBtn.textContent = `💾 Save Review (Round ${p.current_round})`;
-        if (existingNote) existingNote.classList.remove('alert-hidden');
-      } else {
-        if (existingIdInput) existingIdInput.value = '';
-        document.getElementById('review-status').value = 'PASSED';
-        document.getElementById('review-text').value = '';
-        document.getElementById('review-improvements').value = '';
-        if (formTitle) formTitle.textContent = `Submit Review for Current Round (Round ${p.current_round || 1})`;
-        if (submitBtn) submitBtn.textContent = 'Submit Review';
-        if (existingNote) existingNote.classList.add('alert-hidden');
+      const existingNote = document.getElementById('review-existing-note');
+      if (existingNote) {
+        const count = (p.reviews || []).length;
+        if (count > 0) {
+          existingNote.classList.remove('alert-hidden');
+          const noteText = document.getElementById('review-existing-note-text');
+          if (noteText) noteText.textContent = `This project has ${count} review(s) recorded. You can submit another evaluation below, or click '✏️ Edit' on any history card above to re-edit a past review.`;
+        } else {
+          existingNote.classList.add('alert-hidden');
+        }
       }
 
       // Populate Admin Overrides Form
@@ -1784,16 +1798,93 @@
     const review = (p?.reviews || []).find(r => r.id === reviewId);
     if (!review) return;
     document.getElementById('review-existing-id').value = review.id;
-    document.getElementById('review-project-round').value = review.round_number;
+    document.getElementById('review-project-round').value = String(review.round_number);
     document.getElementById('review-status').value = review.status;
     document.getElementById('review-text').value = review.review_text || '';
     document.getElementById('review-improvements').value = review.suggested_improvements || '';
-    document.getElementById('review-form-title').textContent = `Update Review for Round ${review.round_number}`;
-    document.getElementById('btn-submit-review-action').textContent = `💾 Save Review (Round ${review.round_number})`;
+    document.getElementById('review-form-title').textContent = `Re-editing Round ${review.round_number} Review`;
+
+    const editBadge = document.getElementById('editing-mode-badge');
+    if (editBadge) {
+      editBadge.style.display = 'flex';
+      const label = document.getElementById('editing-review-id-label');
+      if (label) label.textContent = `${review.id} (Round ${review.round_number})`;
+    }
+    const btnUpdate = document.getElementById('btn-update-existing-review');
+    if (btnUpdate) btnUpdate.style.display = 'inline-block';
+    const btnSubmit = document.getElementById('btn-submit-review-action');
+    if (btnSubmit) btnSubmit.textContent = `➕ Submit as New Review`;
+
     const noteEl = document.getElementById('review-existing-note');
     if (noteEl) noteEl.classList.remove('alert-hidden');
     document.getElementById('form-submit-review').scrollIntoView({ behavior: 'smooth' });
   };
+
+  window.cancelEditReviewMode = function() {
+    const p = window.currentModalProject;
+    document.getElementById('review-existing-id').value = '';
+    document.getElementById('review-project-round').value = String(p?.current_round || 1);
+    document.getElementById('review-status').value = 'PASSED';
+    document.getElementById('review-text').value = '';
+    document.getElementById('review-improvements').value = '';
+    document.getElementById('review-form-title').textContent = `Submit Review or Re-edit Evaluation`;
+
+    const editBadge = document.getElementById('editing-mode-badge');
+    if (editBadge) editBadge.style.display = 'none';
+    const btnUpdate = document.getElementById('btn-update-existing-review');
+    if (btnUpdate) btnUpdate.style.display = 'none';
+    const btnSubmit = document.getElementById('btn-submit-review-action');
+    if (btnSubmit) btnSubmit.textContent = `➕ Submit New Review`;
+  };
+
+  const cancelEditBtn = document.getElementById('btn-cancel-edit-mode');
+  if (cancelEditBtn) {
+    cancelEditBtn.addEventListener('click', window.cancelEditReviewMode);
+  }
+
+  // Handle explicit Update Selected Review button
+  const btnUpdateReview = document.getElementById('btn-update-existing-review');
+  if (btnUpdateReview) {
+    btnUpdateReview.addEventListener('click', async () => {
+      const projectId = document.getElementById('review-project-id').value;
+      const existingReviewId = document.getElementById('review-existing-id').value;
+      const alertEl = document.getElementById('modal-review-alert');
+      const textVal = document.getElementById('review-text').value.trim();
+      const statusVal = document.getElementById('review-status').value;
+      const improvementsVal = document.getElementById('review-improvements').value.trim() || null;
+
+      if (!existingReviewId) return;
+      if (textVal.length < 10) {
+        alertEl.className = 'alert alert-error';
+        alertEl.innerHTML = `<span>⚠️</span><span>Admin feedback must be at least 10 characters.</span>`;
+        alertEl.classList.remove('alert-hidden');
+        return;
+      }
+
+      btnUpdateReview.disabled = true;
+      btnUpdateReview.textContent = 'Updating…';
+
+      try {
+        await api.put(`/api/admin/projects/${projectId}/reviews/${existingReviewId}`, {
+          status: statusVal,
+          review_text: textVal,
+          suggested_improvements: improvementsVal,
+        });
+        if (window.toast) toast.success(`Review #${existingReviewId} updated!`);
+        showAlert(`Review updated successfully! Project status is now ${statusVal}.`);
+        loadProjects();
+        loadDashboard();
+        openReviewModal(projectId);
+      } catch (err) {
+        alertEl.className = 'alert alert-error';
+        alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
+        alertEl.classList.remove('alert-hidden');
+      } finally {
+        btnUpdateReview.disabled = false;
+        btnUpdateReview.textContent = '💾 Update Selected Review';
+      }
+    });
+  }
 
   document.getElementById('form-admin-edit-project').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1803,10 +1894,12 @@
     btn.disabled = true;
     btn.textContent = 'Saving…';
 
+    const githubVal = document.getElementById('admin-edit-github').value.trim();
+
     const payload = {
       project_title: document.getElementById('admin-edit-title').value.trim() || null,
       domain: document.getElementById('admin-edit-domain').value,
-      github_url: document.getElementById('admin-edit-github').value.trim() || null,
+      github_url: githubVal || null,
       status: document.getElementById('admin-edit-status').value,
       current_round: parseInt(document.getElementById('admin-edit-round').value, 10),
     };
@@ -1814,8 +1907,9 @@
     try {
       await api.put(`/api/admin/projects/${projectId}`, payload);
       alertEl.className = 'alert alert-success';
-      alertEl.innerHTML = `<span>✅</span><span>Project locked fields updated successfully!</span>`;
+      alertEl.innerHTML = `<span>✅</span><span>Project locked fields updated successfully! Status: ${escHtml(payload.status)}</span>`;
       alertEl.classList.remove('alert-hidden');
+      if (window.toast) toast.success(`Project ${payload.status} successfully!`);
       loadProjects();
       loadDashboard();
       // Re-fetch project details to update read-only cards
@@ -1833,51 +1927,33 @@
   document.getElementById('form-submit-review').addEventListener('submit', async (e) => {
     e.preventDefault();
     const projectId = document.getElementById('review-project-id').value;
-    const currentRound = parseInt(document.getElementById('review-project-round').value, 10);
-    const existingReviewId = document.getElementById('review-existing-id')?.value;
+    const roundVal = parseInt(document.getElementById('review-project-round').value, 10);
     const alertEl = document.getElementById('modal-review-alert');
     const btn = document.getElementById('btn-submit-review-action');
     btn.disabled = true;
     btn.textContent = 'Saving…';
 
     const payload = {
-      round_number: currentRound,
+      round_number: roundVal,
       status: document.getElementById('review-status').value,
       review_text: document.getElementById('review-text').value.trim(),
       suggested_improvements: document.getElementById('review-improvements').value.trim() || null,
     };
 
     try {
-      if (existingReviewId) {
-        await api.put(`/api/admin/projects/${projectId}/reviews/${existingReviewId}`, {
-          status: payload.status,
-          review_text: payload.review_text,
-          suggested_improvements: payload.suggested_improvements,
-        });
-        closeModal('modal-review-project');
-        showAlert(`Review for Round ${currentRound} successfully updated!`);
-      } else {
-        try {
-          await api.post(`/api/admin/projects/${projectId}/reviews`, payload);
-        } catch (postErr) {
-          if (postErr.message && postErr.message.includes('already exists')) {
-            await api.post(`/api/admin/projects/${projectId}/reviews?upsert=true`, payload);
-          } else {
-            throw postErr;
-          }
-        }
-        closeModal('modal-review-project');
-        showAlert(`Review for Round ${currentRound} successfully submitted!`);
-      }
+      await api.post(`/api/admin/projects/${projectId}/reviews`, payload);
+      if (window.toast) toast.success(`Round ${roundVal} review submitted!`);
+      showAlert(`Review for Round ${roundVal} successfully submitted! Project status is now ${payload.status}.`);
       loadProjects();
       loadDashboard();
+      openReviewModal(projectId);
     } catch (err) {
       alertEl.className = 'alert alert-error';
       alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(err.message)}</span>`;
       alertEl.classList.remove('alert-hidden');
     } finally {
       btn.disabled = false;
-      btn.textContent = existingReviewId ? `💾 Save Review (Round ${currentRound})` : 'Submit Review';
+      btn.textContent = '➕ Submit New Review';
     }
   });
 

@@ -154,6 +154,13 @@ def auto_migrate_schema(engine: Engine) -> None:
                         except Exception as ex:
                             print(f"  [MIGRATION] Drop {legacy_col} notice: {ex}")
 
+                # Drop unique constraint on reviews(project_id, round_number) to allow multiple reviews per round
+                try:
+                    conn.execute(text("ALTER TABLE reviews DROP CONSTRAINT IF EXISTS uq_reviews_project_round;"))
+                    print("  [MIGRATION] Dropped uq_reviews_project_round constraint if present.")
+                except Exception as ex:
+                    print(f"  [MIGRATION] Drop uq_reviews_project_round notice: {ex}")
+
             # Clean default null values
             try:
                 conn.execute(text("UPDATE users SET edit_permission = FALSE WHERE edit_permission IS NULL;"))
