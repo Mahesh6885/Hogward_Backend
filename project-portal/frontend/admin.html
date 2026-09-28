@@ -3,8 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hogwarts Legacy 5.0 — Ministry & Arbiter Console</title>
+  <title>Hogwarts Legacy 5.0 | Admin Console</title>
   <meta name="description" content="Administrator console for Hogwarts Legacy 5.0 National Hackathon." />
+
+  <!-- Favicon & Touch Icons -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico?v=5.0" />
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png?v=5.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=5.0" />
+  <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png?v=5.0" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=5.0" />
+  <link rel="manifest" href="site.webmanifest?v=5.0" />
+  <meta name="theme-color" content="#D4AF37" />
+  <meta name="msapplication-TileColor" content="#0d0d11" />
+  <meta name="msapplication-TileImage" content="android-chrome-192x192.png?v=5.0" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=MedievalSharp&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
@@ -1548,6 +1560,15 @@
   };
 
   // ── Navigation ────────────────────────────────────────────────────────────
+  const adminViewTitles = {
+    dashboard: 'Hogwarts Legacy 5.0 | Admin Console',
+    teams: 'Hogwarts Legacy 5.0 | Teams',
+    projects: 'Hogwarts Legacy 5.0 | Projects & Reviews',
+    'problem-statements': 'Hogwarts Legacy 5.0 | Problem Statements',
+    reviews: 'Hogwarts Legacy 5.0 | Reviews',
+    leaderboard: 'Hogwarts Legacy 5.0 | Leaderboard'
+  };
+
   let currentView = 'dashboard';
   window.switchAdminView = function(view) {
     document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
@@ -1555,6 +1576,8 @@
     document.getElementById(`view-${currentView}`).classList.add('hidden');
     currentView = view;
     document.getElementById(`view-${view}`).classList.remove('hidden');
+
+    document.title = adminViewTitles[view] || 'Hogwarts Legacy 5.0 | Admin Console';
 
     if (view === 'dashboard') loadDashboard();
     else if (view === 'teams') loadTeams();
