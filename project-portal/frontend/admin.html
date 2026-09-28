@@ -34,6 +34,142 @@
       font-size: 0.875rem;
     }
     .pagination-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+
+    /* ── Projects & Reviews Responsive Table Fixes ── */
+    .projects-table-wrapper {
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      max-width: 100% !important;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(212, 175, 55, 0.4) rgba(0, 0, 0, 0.2);
+      -webkit-overflow-scrolling: touch;
+    }
+    .projects-table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: auto;
+    }
+    .projects-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(13, 17, 23, 0.98);
+      backdrop-filter: blur(8px);
+      white-space: nowrap;
+    }
+    .projects-table th.col-prj-code, .projects-table td.col-prj-code { width: 110px; min-width: 100px; white-space: nowrap; }
+    .projects-table th.col-team-name, .projects-table td.col-team-name { min-width: 130px; max-width: 180px; word-break: break-word; }
+    .projects-table th.col-domain, .projects-table td.col-domain { width: 90px; white-space: nowrap; }
+    .projects-table th.col-prob-code, .projects-table td.col-prob-code { width: 105px; white-space: nowrap; }
+    .projects-table th.col-title, .projects-table td.col-title { min-width: 160px; max-width: 230px; }
+    .projects-table .title-cell-clamp { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .projects-table th.col-round, .projects-table td.col-round { width: 95px; white-space: nowrap; text-align: center; }
+    .projects-table th.col-status, .projects-table td.col-status { width: 115px; white-space: nowrap; text-align: center; }
+    .projects-table th.col-date, .projects-table td.col-date { width: 110px; white-space: nowrap; }
+    .projects-table th.col-actions, .projects-table td.col-actions {
+      min-width: 190px;
+      width: 200px;
+      text-align: right;
+      padding-right: 1.25rem !important;
+      vertical-align: middle;
+    }
+    .project-actions-group {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+    .project-actions-group .btn {
+      white-space: nowrap;
+      padding: 0.38rem 0.65rem;
+      font-size: 0.78rem;
+      line-height: 1.25;
+      border-radius: var(--radius-sm);
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .project-actions-group .btn-action-details {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(184, 148, 30, 0.95));
+      color: #0b0c10;
+      font-weight: 600;
+      border: 1px solid rgba(212, 175, 55, 0.8);
+    }
+    .project-actions-group .btn-action-details:hover {
+      background: linear-gradient(135deg, #f5d77f, #d4af37);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    }
+    .project-actions-group .btn-action-evaluate {
+      background: rgba(212, 175, 55, 0.12);
+      color: var(--gold-light);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      font-weight: 600;
+    }
+    .project-actions-group .btn-action-evaluate:hover {
+      background: rgba(212, 175, 55, 0.25);
+      border-color: var(--gold);
+      color: #fff;
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    @media (max-width: 768px) {
+      .projects-table { min-width: 0 !important; width: 100% !important; }
+      .projects-table th.col-title, .projects-table td.col-title, .projects-table .title-cell-clamp {
+        max-width: 100% !important;
+        white-space: normal !important;
+        text-overflow: clip !important;
+        word-break: break-word !important;
+      }
+      .projects-table th.col-actions, .projects-table td.col-actions {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0.75rem 0 0.25rem 0 !important;
+        border-bottom: none !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+      }
+      .projects-table td.col-actions::before {
+        content: "Action" !important;
+        font-family: 'Cinzel', serif !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.05em !important;
+        color: var(--text-muted) !important;
+        text-transform: uppercase !important;
+        margin-bottom: 0.4rem !important;
+        display: block !important;
+        width: 100% !important;
+        text-align: left !important;
+      }
+      .project-actions-group {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        align-items: stretch !important;
+        justify-content: stretch !important;
+      }
+      .project-actions-group .btn {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        padding: 0.65rem 1rem !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        min-height: 40px !important;
+        box-sizing: border-box !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -335,19 +471,19 @@
         </select>
       </div>
 
-      <div class="table-wrapper">
-        <table class="table">
+      <div class="table-wrapper projects-table-wrapper">
+        <table class="table projects-table">
           <thead>
             <tr>
-              <th>Project Code</th>
-              <th>Team Name</th>
-              <th>Domain</th>
-              <th>Problem Code</th>
-              <th>Problem Statement Title</th>
-              <th>Review Round</th>
-              <th>Project Status</th>
-              <th>Submission Date</th>
-              <th>Action</th>
+              <th class="col-prj-code">Project Code</th>
+              <th class="col-team-name">Team Name</th>
+              <th class="col-domain">Domain</th>
+              <th class="col-prob-code">Problem Code</th>
+              <th class="col-title">Problem Statement Title</th>
+              <th class="col-round text-center">Review Round</th>
+              <th class="col-status text-center">Project Status</th>
+              <th class="col-date">Submission Date</th>
+              <th class="col-actions">Action</th>
             </tr>
           </thead>
           <tbody id="projects-table-body">
@@ -2491,20 +2627,20 @@
 
         return `
           <tr>
-            <td><code style="color:var(--accent-blue)">${escHtml(p.project_code)}</code></td>
-            <td><strong>${escHtml(teamName)}</strong></td>
-            <td><span class="badge ${dBadge}">${escHtml(dName)}</span></td>
-            <td><code class="badge badge-gold font-mono">${escHtml(pCode)}</code></td>
-            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(psTitle)}">${escHtml(psTitle)}</td>
-            <td><span class="badge badge-purple">Round ${curRound}</span></td>
-            <td><span class="badge ${sBadge}">${prjStatus}</span></td>
-            <td class="text-xs text-muted">${submittedDate}</td>
-            <td>
-              <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
-                <button class="btn btn-primary btn-sm" onclick="openReviewModal(${p.id})">
+            <td class="col-prj-code" data-label="Project Code"><code style="color:var(--accent-blue)">${escHtml(p.project_code)}</code></td>
+            <td class="col-team-name" data-label="Team Name"><strong>${escHtml(teamName)}</strong></td>
+            <td class="col-domain" data-label="Domain"><span class="badge ${dBadge}">${escHtml(dName)}</span></td>
+            <td class="col-prob-code" data-label="Problem Code"><code class="badge badge-gold font-mono">${escHtml(pCode)}</code></td>
+            <td class="col-title" data-label="Statement Title" title="${escHtml(psTitle)}"><div class="title-cell-clamp">${escHtml(psTitle)}</div></td>
+            <td class="col-round text-center" data-label="Round"><span class="badge badge-purple">Round ${curRound}</span></td>
+            <td class="col-status text-center" data-label="Status"><span class="badge ${sBadge}">${prjStatus}</span></td>
+            <td class="col-date text-xs text-muted" data-label="Submitted">${submittedDate}</td>
+            <td class="col-actions" data-label="Action">
+              <div class="project-actions-group">
+                <button class="btn btn-primary btn-sm btn-action-details" onclick="openReviewModal(${p.id})">
                   Details →
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="openEvaluateTeamModal(${p.user_id || (p.user && p.user.id)})" title="Evaluate this team">
+                <button class="btn btn-secondary btn-sm btn-action-evaluate" onclick="openEvaluateTeamModal(${p.user_id || (p.user && p.user.id)})" title="Evaluate this team">
                   ⭐ Evaluate
                 </button>
               </div>

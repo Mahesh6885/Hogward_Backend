@@ -762,7 +762,27 @@ html, body {
   backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) rgba(0, 0, 0, 0.2);
+}
+.table-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.35);
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.6);
 }
 .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .table th {
@@ -771,9 +791,12 @@ html, body {
   font-size: 0.7rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--gold-dark);
-  background: rgba(8,8,8,0.6);
+  background: rgba(13, 17, 23, 0.96);
   border-bottom: 1px solid var(--border);
   font-family: 'Cinzel', serif;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 .table td {
   padding: 0.875rem 1rem;
@@ -1840,7 +1863,37 @@ html, body {
   #projects-table-body td:nth-child(6)::before { content: "Round"; }
   #projects-table-body td:nth-child(7)::before { content: "Status"; }
   #projects-table-body td:nth-child(8)::before { content: "Submitted"; }
-  #projects-table-body td:nth-child(9)::before { content: "Action"; width: 100%; margin-bottom: 0.25rem; }
+  #projects-table-body td:nth-child(9)::before { content: "Action"; width: 100%; margin-bottom: 0.4rem; }
+  #projects-table-body td:nth-child(9),
+  .projects-table td.col-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0.75rem 0 0.25rem 0 !important;
+    border-bottom: none !important;
+  }
+  .project-actions-group {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: stretch !important;
+  }
+  .project-actions-group .btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    min-height: 40px !important;
+    box-sizing: border-box !important;
+  }
 
   /* Labels for Problem Statements table */
   #ps-table-body td:nth-child(1)::before { content: "Code"; }
@@ -2180,7 +2233,7 @@ html, body {
 }
 
 /* ── Enhanced Card Glassmorphism ───────────────────────────────────── */
-.card, .stat-card, .doc-section, .form-block-card, .table-wrapper {
+.card, .stat-card, .doc-section, .form-block-card {
   background: var(--bg-card);
   backdrop-filter: blur(14px);
   border: 1px solid var(--border);
@@ -2190,10 +2243,144 @@ html, body {
   box-sizing: border-box;
   max-width: 100%;
 }
+.table-wrapper {
+  background: var(--bg-card);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
 .card:hover, .stat-card:hover, .form-block-card:hover {
   transform: translateY(-2px);
   border-color: rgba(212,175,55,0.45);
   box-shadow: 0 8px 24px rgba(0,0,0,0.65), 0 0 14px rgba(212,175,55,0.15);
+}
+
+/* ── Projects & Reviews Responsive Table Fixes ───────────────────────── */
+.projects-table-wrapper {
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  max-width: 100% !important;
+  position: relative;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) rgba(0, 0, 0, 0.2);
+  -webkit-overflow-scrolling: touch;
+}
+.projects-table {
+  width: 100%;
+  min-width: 1040px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+.projects-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: rgba(13, 17, 23, 0.98);
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+.projects-table th.col-prj-code,
+.projects-table td.col-prj-code {
+  width: 110px;
+  min-width: 100px;
+  white-space: nowrap;
+}
+.projects-table th.col-team-name,
+.projects-table td.col-team-name {
+  min-width: 130px;
+  max-width: 180px;
+  word-break: break-word;
+}
+.projects-table th.col-domain,
+.projects-table td.col-domain {
+  width: 90px;
+  white-space: nowrap;
+}
+.projects-table th.col-prob-code,
+.projects-table td.col-prob-code {
+  width: 105px;
+  white-space: nowrap;
+}
+.projects-table th.col-title,
+.projects-table td.col-title {
+  min-width: 160px;
+  max-width: 230px;
+}
+.projects-table .title-cell-clamp {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.projects-table th.col-round,
+.projects-table td.col-round {
+  width: 95px;
+  white-space: nowrap;
+}
+.projects-table th.col-status,
+.projects-table td.col-status {
+  width: 115px;
+  white-space: nowrap;
+}
+.projects-table th.col-date,
+.projects-table td.col-date {
+  width: 110px;
+  white-space: nowrap;
+}
+.projects-table th.col-actions,
+.projects-table td.col-actions {
+  min-width: 190px;
+  width: 200px;
+  text-align: right;
+  padding-right: 1.25rem !important;
+  vertical-align: middle;
+}
+.project-actions-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.project-actions-group .btn {
+  white-space: nowrap;
+  padding: 0.38rem 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.project-actions-group .btn-action-details {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(184, 148, 30, 0.95));
+  color: #0b0c10;
+  font-weight: 600;
+  border: 1px solid rgba(212, 175, 55, 0.8);
+}
+.project-actions-group .btn-action-details:hover {
+  background: linear-gradient(135deg, #f5d77f, #d4af37);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+}
+.project-actions-group .btn-action-evaluate {
+  background: rgba(212, 175, 55, 0.12);
+  color: var(--gold-light);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  font-weight: 600;
+}
+.project-actions-group .btn-action-evaluate:hover {
+  background: rgba(212, 175, 55, 0.25);
+  border-color: var(--gold);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 /* ── Responsive Notification Dropdown ──────────────────────────────── */
