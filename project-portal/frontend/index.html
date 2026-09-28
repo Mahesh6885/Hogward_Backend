@@ -38,6 +38,113 @@
     .stars-layer {
       animation: fogDrift 8s ease-in-out infinite;
     }
+
+    /* ── Hogwarts-Themed Alerts ── */
+    .hw-alert {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem;
+      padding: 0.95rem 1.15rem;
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+      line-height: 1.45;
+      backdrop-filter: blur(14px);
+      box-sizing: border-box;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    .hw-alert.hw-alert-show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .hw-alert.alert-hidden {
+      display: none !important;
+    }
+    .hw-alert-icon {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 0.15rem;
+    }
+    .hw-alert-icon svg {
+      display: block;
+    }
+    .hw-alert-body {
+      flex: 1;
+      min-width: 0;
+    }
+    .hw-alert-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+      text-transform: uppercase;
+    }
+    .hw-alert-msg {
+      font-size: 0.84rem;
+      font-weight: 400;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+    .hw-alert-close {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: inherit;
+      opacity: 0.6;
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 0 0 0.5rem;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .hw-alert-close:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+    .hw-alert-network {
+      background: linear-gradient(135deg, rgba(16, 36, 68, 0.95), rgba(10, 24, 46, 0.98));
+      border: 1px solid rgba(59, 130, 246, 0.55);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(59, 130, 246, 0.35);
+      color: #bfdbfe;
+    }
+    .hw-alert-network .hw-alert-title { color: #93c5fd; }
+    .hw-alert-network .hw-alert-icon { color: #60a5fa; }
+
+    .hw-alert-auth {
+      background: linear-gradient(135deg, rgba(58, 16, 20, 0.95), rgba(38, 10, 14, 0.98));
+      border: 1px solid rgba(239, 68, 68, 0.55);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(220, 38, 38, 0.32);
+      color: #fecaca;
+    }
+    .hw-alert-auth .hw-alert-title { color: #fca5a5; }
+    .hw-alert-auth .hw-alert-icon { color: #f87171; }
+
+    .hw-alert-server {
+      background: linear-gradient(135deg, rgba(62, 42, 10, 0.95), rgba(42, 28, 6, 0.98));
+      border: 1px solid rgba(245, 158, 11, 0.6);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 18px rgba(217, 119, 6, 0.38);
+      color: #fef3c7;
+    }
+    .hw-alert-server .hw-alert-title { color: #fde68a; }
+    .hw-alert-server .hw-alert-icon { color: #fbbf24; }
+
+    .hw-alert-validation {
+      background: linear-gradient(135deg, rgba(46, 36, 14, 0.95), rgba(30, 22, 8, 0.98));
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 14px rgba(212, 175, 55, 0.25);
+      color: #fef9c3;
+    }
+    .hw-alert-validation .hw-alert-title { color: var(--gold-light); }
+    .hw-alert-validation .hw-alert-icon { color: var(--gold); }
   </style>
 </head>
 
@@ -118,25 +225,14 @@
         <h1 class="login-title">Team Portal</h1>
         <p class="login-subtitle">Enter your credentials to access the hackathon</p>
 
-        <!-- Session-expired notice (shown via URL param) -->
-        <div id="session-expired-notice" class="login-attempts-warning" style="display:none;margin-bottom:1rem">
-          ⏳ Your session expired. Please login again.
-        </div>
-
-        <!-- Error Alert -->
-        <div id="alert" class="alert alert-error alert-hidden" role="alert" aria-live="assertive">
-          <span aria-hidden="true">⚠️</span>
-          <span id="alert-msg"></span>
-        </div>
-
-        <!-- Lockout Warning -->
-        <div id="lockout-warning" class="login-attempts-warning" role="alert" aria-live="polite">
-          🔒 <span id="lockout-msg">Account temporarily locked. Try again later.</span>
-        </div>
-
-        <!-- Attempt warning -->
-        <div id="attempt-warning" class="login-attempts-warning" role="alert" aria-live="polite">
-          ⚠️ <span id="attempt-msg">Invalid credentials.</span>
+        <!-- Hogwarts Magical Alert Banner -->
+        <div id="alert" class="hw-alert alert-hidden" role="alert" aria-live="assertive">
+          <div class="hw-alert-icon" id="alert-icon" aria-hidden="true"></div>
+          <div class="hw-alert-body">
+            <div class="hw-alert-title" id="alert-title"></div>
+            <div class="hw-alert-msg" id="alert-msg"></div>
+          </div>
+          <button type="button" class="hw-alert-close" id="alert-close" aria-label="Close alert">&times;</button>
         </div>
 
         <!-- Login Form -->
@@ -208,7 +304,7 @@
   <script type="module">
     import { getToken, getUser } from './js/api.js';
     import { login } from './js/auth.js';
-    import { loginSecurity, sanitizeInput, cleanForApi, saveRememberedUsername, getRememberedUsername, secureLogout } from './js/security.js';
+    import { cleanForApi, saveRememberedUsername, getRememberedUsername, secureLogout } from './js/security.js';
     import { toast } from './js/toast.js';
     import { showLoader, hideLoader } from './js/theme.js';
     import { initParticles } from './js/particles.js';
@@ -216,11 +312,86 @@
     // ── Init particles (subtle on login page) ──
     initParticles({ count: window.innerWidth < 768 ? 20 : 40, opacity: 0.4 });
 
+    // ── DOM refs ──
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('login-btn');
+    const alertEl = document.getElementById('alert');
+    const alertIcon = document.getElementById('alert-icon');
+    const alertTitle = document.getElementById('alert-title');
+    const alertMsg = document.getElementById('alert-msg');
+    const alertClose = document.getElementById('alert-close');
+    const userInput = document.getElementById('username');
+    const pwInput = document.getElementById('password');
+    const pwToggle = document.getElementById('pw-toggle');
+    const eyeOpen = document.getElementById('eye-open');
+    const eyeClosed = document.getElementById('eye-closed');
+
+    // ── Alert Manager (Single alert, auto-dismiss 5-6s) ──
+    let alertTimer = null;
+
+    function showAlert(type, message, title = '') {
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+        alertTimer = null;
+      }
+
+      alertEl.classList.remove('hw-alert-network', 'hw-alert-auth', 'hw-alert-server', 'hw-alert-validation', 'alert-hidden', 'hw-alert-show');
+
+      let iconHtml = '';
+      let defaultTitle = '';
+
+      if (type === 'network') {
+        alertEl.classList.add('hw-alert-network');
+        iconHtml = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>`;
+        defaultTitle = 'Network Disruption';
+      } else if (type === 'auth') {
+        alertEl.classList.add('hw-alert-auth');
+        iconHtml = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+        defaultTitle = 'Authentication Failed';
+      } else if (type === 'server') {
+        alertEl.classList.add('hw-alert-server');
+        iconHtml = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M3 10h18"></path><path d="M5 6l7-3 7 3"></path><path d="M4 10v11"></path><path d="M20 10v11"></path><path d="M8 14v4"></path><path d="M12 14v4"></path><path d="M16 14v4"></path></svg>`;
+        defaultTitle = 'Ministry Server Notice';
+      } else {
+        alertEl.classList.add('hw-alert-validation');
+        iconHtml = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+        defaultTitle = 'Validation Notice';
+      }
+
+      alertIcon.innerHTML = iconHtml;
+      alertTitle.textContent = title || defaultTitle;
+      alertMsg.textContent = message;
+
+      void alertEl.offsetWidth; // Force reflow
+      alertEl.classList.add('hw-alert-show');
+      alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      alertTimer = setTimeout(() => {
+        hideAlert();
+      }, 5500);
+    }
+
+    function hideAlert() {
+      if (alertTimer) {
+        clearTimeout(alertTimer);
+        alertTimer = null;
+      }
+      alertEl.classList.remove('hw-alert-show');
+      setTimeout(() => {
+        if (!alertEl.classList.contains('hw-alert-show')) {
+          alertEl.classList.add('alert-hidden');
+        }
+      }, 250);
+    }
+
+    if (alertClose) {
+      alertClose.addEventListener('click', hideAlert);
+    }
+
     // ── Session expired notice ──
     const params = new URLSearchParams(window.location.search);
     if (params.get('expired') === '1') {
-      document.getElementById('session-expired-notice').style.display = 'block';
-      // Clear the param from URL without reload
+      showAlert('validation', 'Your session has expired. Please login again to continue.', 'Session Expired');
       history.replaceState({}, '', window.location.pathname);
     }
 
@@ -237,23 +408,9 @@
     // ── Autofill remembered username ──
     const rememberedUser = getRememberedUsername();
     if (rememberedUser) {
-      document.getElementById('username').value = rememberedUser;
+      userInput.value = rememberedUser;
       document.getElementById('remember-me').checked = true;
     }
-
-    // ── DOM refs ──
-    const form = document.getElementById('login-form');
-    const btn = document.getElementById('login-btn');
-    const alertEl = document.getElementById('alert');
-    const alertMsg = document.getElementById('alert-msg');
-    const lockoutWarn = document.getElementById('lockout-warning');
-    const lockoutMsg = document.getElementById('lockout-msg');
-    const attemptWarn = document.getElementById('attempt-warning');
-    const attemptMsg = document.getElementById('attempt-msg');
-    const pwInput = document.getElementById('password');
-    const pwToggle = document.getElementById('pw-toggle');
-    const eyeOpen = document.getElementById('eye-open');
-    const eyeClosed = document.getElementById('eye-closed');
 
     // ── Password visibility toggle ──
     pwToggle.addEventListener('click', () => {
@@ -266,7 +423,6 @@
       pwInput.focus();
     });
 
-    // Keyboard support for toggle
     pwToggle.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pwToggle.click(); }
     });
@@ -286,122 +442,93 @@
       pwInput.addEventListener('blur', () => { capsWarning.style.display = 'none'; });
     }
 
-    // ── Alert helpers ──
-    function showError(msg) {
-      alertMsg.textContent = msg;
-      alertEl.classList.remove('alert-hidden');
-      alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    function hideError() { alertEl.classList.add('alert-hidden'); }
+    // ── Form submit with Alohomora UX & Exact Error Classification ──
+    let isSubmitting = false;
 
-    function showLockout() {
-      lockoutMsg.textContent = `Account locked for ${loginSecurity.getRemainingLockoutFormatted()}. Too many failed attempts.`;
-      lockoutWarn.classList.add('visible');
-      attemptWarn.classList.remove('visible');
-      btn.disabled = true;
-      btn.textContent = '🔒 Account Locked';
-    }
-
-    function showAttemptWarn(attempts) {
-      const left = loginSecurity.attemptsLeft();
-      attemptMsg.textContent = `Invalid username or password. ${left} attempt${left !== 1 ? 's' : ''} remaining.`;
-      attemptWarn.classList.add('visible');
-    }
-
-    // ── Check lockout on load ──
-    if (loginSecurity.isLocked()) {
-      showLockout();
-      // Poll until lockout expires
-      const lockPoll = setInterval(() => {
-        if (!loginSecurity.isLocked()) {
-          clearInterval(lockPoll);
-          lockoutWarn.classList.remove('visible');
-          attemptWarn.classList.remove('visible');
-          btn.disabled = false;
-          btn.innerHTML = '⚡ Enter the Portal';
-          toast.info('Account unlocked. You may now login.');
-        } else {
-          lockoutMsg.textContent = `Account locked for ${loginSecurity.getRemainingLockoutFormatted()}. Too many failed attempts.`;
-        }
-      }, 10000);
-    }
-
-    // ── Form submit ──
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideError();
+      if (isSubmitting) return;
 
-      // Lockout check
-      if (loginSecurity.isLocked()) { showLockout(); return; }
+      hideAlert();
 
-      // Read & sanitize
-      const rawUser = document.getElementById('username').value;
-      const rawPass = document.getElementById('password').value;
-      const username = cleanForApi(rawUser);  // only trim for API
-      const password = rawPass;               // never modify passwords
+      // Read & clean
+      const rawUser = userInput.value;
+      const rawPass = pwInput.value;
+      const username = cleanForApi(rawUser);
+      const password = rawPass;
 
-      if (!username || !password) {
-        showError('Please enter your username and password.');
+      // Friendly validation
+      if (!username) {
+        showAlert('validation', 'Please enter your username or email.', 'Missing Username');
+        userInput.focus();
         return;
       }
 
-      // Remember me
+      if (!password) {
+        showAlert('validation', 'Please enter your password.', 'Missing Password');
+        pwInput.focus();
+        return;
+      }
+
+      // Lock UI into Alohomora loading state
+      isSubmitting = true;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="hw-spinner"></span>Casting Alohomora...';
+
       const rememberMe = document.getElementById('remember-me').checked;
 
-      // Disable button
-      btn.disabled = true;
-      btn.innerHTML = '<span class="hw-spinner"></span>Entering the portal…';
-
       try {
-        showLoader('Authenticating…');
         const user = await login(username, password);
 
-        // Record success — clear lockout
-        loginSecurity.recordSuccess();
-
-        // Handle remember me
+        // Remember Me handling
         if (rememberMe) {
           saveRememberedUsername(username);
         } else {
-          secureLogout(false);  // clears remembered if unchecked
-          // Re-set tokens (login already set them via auth.js)
-          // We only want to remove the remembered username
+          secureLogout(false);
           localStorage.removeItem('hw_remembered_username');
         }
 
-        hideLoader(200);
-        updateLoaderMessage('Welcome, ' + (user.team_name || user.username) + '!');
+        // Magical success feedback
+        btn.innerHTML = '✨ Alohomora Unlocked!';
         toast.magic('⚡ Welcome to Hogwarts Legacy 5.0!');
 
         setTimeout(() => {
           window.location.href = user.role === 'ADMIN' ? 'admin.html' : 'dashboard.html';
-        }, 1200);
+        }, 1000);
 
       } catch (err) {
-        hideLoader(0);
-        const attempts = loginSecurity.recordFailure();
-
-        if (loginSecurity.isLocked()) {
-          showLockout();
-          toast.error('Account locked after too many failed attempts.');
-        } else {
-          // Never reveal which field — generic message
-          showError('Invalid username or password.');
-          showAttemptWarn(attempts);
-        }
-
+        // Unlock button
+        isSubmitting = false;
         btn.disabled = false;
         btn.innerHTML = '⚡ Enter the Portal';
+
+        // Keep username unchanged, clear only password, and focus password input
+        pwInput.value = '';
+        pwInput.focus();
+
+        // Specific Error Classification
+        if (err.isTimeout) {
+          showAlert('network', 'Connection timed out. Please check your network and try again.', 'Connection Timeout');
+        } else if (err.isNetwork || !navigator.onLine) {
+          showAlert('network', 'Unable to connect to the Ministry of Magic servers. Please check your internet connection and try again.', 'Network Error');
+        } else if (err.status === 401) {
+          showAlert('auth', 'Incorrect username or password. Please try again.', 'Authentication Failed');
+        } else if (err.status === 422) {
+          showAlert('validation', err.message || 'Please check your username and password.', 'Validation Error');
+        } else if (err.status === 403) {
+          showAlert('auth', err.message || 'Account is inactive. Contact administrator.', 'Account Inactive');
+        } else if (err.status >= 500) {
+          showAlert('server', 'The Hogwarts Portal is temporarily unavailable. Please try again in a few moments.', 'Ministry Server Notice');
+        } else {
+          const msg = (err.message || '').toLowerCase();
+          if (msg.includes('network') || msg.includes('fetch') || msg.includes('offline') || msg.includes('connect')) {
+            showAlert('network', 'Unable to connect to the Ministry of Magic servers. Please check your internet connection and try again.', 'Network Error');
+          } else {
+            showAlert('server', 'The Hogwarts Portal is temporarily unavailable. Please try again in a few moments.', 'Ministry Server Notice');
+          }
+        }
       }
     });
-
-    // ── Suppress duplicate submits on double-click ──
-    let submitting = false;
-    form.addEventListener('submit', () => {
-      if (submitting) return false;
-      submitting = true;
-      setTimeout(() => submitting = false, 3000);
-    }, true);
 
     // Import updateLoaderMessage separately to avoid scope issues
     import('./js/theme.js').then(({ updateLoaderMessage }) => {

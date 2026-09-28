@@ -9,62 +9,30 @@
 import { toast } from './toast.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
-const MAX_ATTEMPTS    = 5;
-const LOCKOUT_MS      = 15 * 60 * 1000;   // 15 minutes
 const SESSION_IDLE_MS = 30 * 60 * 1000;   // 30 minutes
 const WARN_BEFORE_MS  = 60 * 1000;        // warn 60s before expiry
-const ATTEMPTS_KEY    = 'hw_login_attempts';
-const LOCKOUT_KEY     = 'hw_lockout_until';
 
-// ── Login Attempt Tracking ───────────────────────────────────────────────────
+// Clean up any legacy lockout or attempt keys from previous versions
+try {
+  localStorage.removeItem('hw_login_attempts');
+  localStorage.removeItem('hw_lockout_until');
+} catch {}
+
+// ── Login Attempt Tracking (Removed - Unlimited Retries) ──────────────────────
 export const loginSecurity = {
-  getAttempts() {
-    return parseInt(localStorage.getItem(ATTEMPTS_KEY) || '0', 10);
-  },
-
-  getLockoutUntil() {
-    return parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10);
-  },
-
-  isLocked() {
-    const until = this.getLockoutUntil();
-    if (until && Date.now() < until) return true;
-    if (until && Date.now() >= until) {
-      // Lockout expired — clear it
-      localStorage.removeItem(LOCKOUT_KEY);
-      localStorage.removeItem(ATTEMPTS_KEY);
-    }
-    return false;
-  },
-
-  getRemainingLockoutMs() {
-    return Math.max(0, this.getLockoutUntil() - Date.now());
-  },
-
-  getRemainingLockoutFormatted() {
-    const ms   = this.getRemainingLockoutMs();
-    const mins = Math.ceil(ms / 60000);
-    return `${mins} minute${mins !== 1 ? 's' : ''}`;
-  },
-
-  recordFailure() {
-    const attempts = this.getAttempts() + 1;
-    localStorage.setItem(ATTEMPTS_KEY, attempts);
-    if (attempts >= MAX_ATTEMPTS) {
-      const until = Date.now() + LOCKOUT_MS;
-      localStorage.setItem(LOCKOUT_KEY, until);
-    }
-    return attempts;
-  },
-
+  getAttempts() { return 0; },
+  getLockoutUntil() { return 0; },
+  isLocked() { return false; },
+  getRemainingLockoutMs() { return 0; },
+  getRemainingLockoutFormatted() { return '0 minutes'; },
+  recordFailure() { return 0; },
   recordSuccess() {
-    localStorage.removeItem(ATTEMPTS_KEY);
-    localStorage.removeItem(LOCKOUT_KEY);
+    try {
+      localStorage.removeItem('hw_login_attempts');
+      localStorage.removeItem('hw_lockout_until');
+    } catch {}
   },
-
-  attemptsLeft() {
-    return Math.max(0, MAX_ATTEMPTS - this.getAttempts());
-  },
+  attemptsLeft() { return Infinity; },
 };
 
 // ── Input Sanitization ───────────────────────────────────────────────────────

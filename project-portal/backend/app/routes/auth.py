@@ -14,11 +14,26 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 @router.post("/login", response_model=LoginResponse, status_code=200)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     """Authenticate with username + password. Returns JWT access token."""
-    user = authenticate_user(db, data.username.strip(), data.password)
+    if not data.username or not data.username.strip() or not data.password:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"success": False, "message": "Username and password are required.", "error_code": "VALIDATION_ERROR"},
+        )
+
+    try:
+        user = authenticate_user(db, data.username.strip(), data.password)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={"success": False, "message": "The Hogwarts Portal is temporarily unavailable. Please try again in a few moments.", "error_code": "SERVER_ERROR"},
+        )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={"success": False, "message": "Invalid username or password", "error_code": "INVALID_CREDENTIALS"},
+            detail={"success": False, "message": "Incorrect username or password. Please try again.", "error_code": "INVALID_CREDENTIALS"},
         )
 
     if user.status != UserStatus.ACTIVE:

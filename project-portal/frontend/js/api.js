@@ -34,9 +34,9 @@ export function setUser(user) {
 }
 
 /**
- * Core fetch wrapper. Throws on HTTP errors.
+ * Core fetch wrapper with timeout and robust error categorization.
  */
-async function request(method, path, body = null, requireAuth = true) {
+async function request(method, path, body = null, requireAuth = true, timeoutMs = 12000) {
   const headers = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -54,17 +54,61 @@ async function request(method, path, body = null, requireAuth = true) {
   const opts = { method, headers, cache: 'no-store' };
   if (body !== null) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${API_BASE}${path}`, opts);
+  // Set timeout controller
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  opts.signal = controller.signal;
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, opts);
+  } catch (netErr) {
+    clearTimeout(timeoutId);
+    if (netErr.name === 'AbortError') {
+      const timeoutErr = new Error('Connection timed out. Please check your network and try again.');
+      timeoutErr.isTimeout = true;
+      timeoutErr.isNetwork = true;
+      throw timeoutErr;
+    }
+    const networkErr = new Error('Unable to connect to the Ministry of Magic servers. Please check your internet connection and try again.');
+    networkErr.isNetwork = true;
+    networkErr.originalError = netErr;
+    throw networkErr;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   const data = await res.json().catch(() => ({}));
 
   if (res.status === 401) {
-    clearToken();
-    window.location.href = 'index.html';
-    throw new Error('Session expired');
+    if (requireAuth) {
+      clearToken();
+      window.location.href = 'index.html?expired=1';
+      throw new Error('Session expired');
+    } else {
+      // 401 on unauthenticated route (like /login) means invalid credentials
+      const extractedMsg = data.message ||
+        (typeof data.detail === 'string' ? data.detail : data.detail?.message) ||
+        'Incorrect username or password. Please try again.';
+      const authErr = new Error(extractedMsg);
+      authErr.status = 401;
+      authErr.data = data;
+      throw authErr;
+    }
   }
 
   if (!res.ok) {
-    const msg = data.message || data.detail || `HTTP ${res.status}`;
+    let msg = data.message ||
+      (typeof data.detail === 'string' ? data.detail : data.detail?.message);
+
+    if (!msg) {
+      if (res.status >= 500) {
+        msg = 'The Hogwarts Portal is temporarily unavailable. Please try again in a few moments.';
+      } else {
+        msg = `HTTP ${res.status}`;
+      }
+    }
+
     const err = new Error(msg);
     err.status = res.status;
     err.data = data;
