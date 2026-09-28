@@ -82,16 +82,30 @@ export class HogwartsClock {
     const mins = Math.floor((s % 3600) / 60);
     const secs = s % 60;
 
-    const formattedTime = `${String(hrs).padStart(2, '0')} : ${String(mins).padStart(2, '0')} : ${String(secs).padStart(2, '0')}`;
+    const formattedTime = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    const formattedWithSpaces = `${String(hrs).padStart(2, '0')} : ${String(mins).padStart(2, '0')} : ${String(secs).padStart(2, '0')}`;
 
-    if (this.digitsEl) {
-      if (this.timerStatus === 'COMPLETED') {
-        this.digitsEl.textContent = '00 : 00 : 00';
+    // 1. Participant Dashboard live overlay handling
+    // When NOT_STARTED: clock image already contains original glowing 24:00:00. Hide overlay to prevent any duplication.
+    // When RUNNING/PAUSED/COMPLETED: display visual live countdown inside the clock image container.
+    const liveOverlay = this.overlayEl || document.getElementById('clock-live-overlay');
+    const liveDigits = this.digitsEl || document.getElementById('clock-live-digits');
+
+    if (liveOverlay) {
+      if (this.timerStatus === 'NOT_STARTED') {
+        liveOverlay.style.display = 'none';
       } else {
-        this.digitsEl.textContent = formattedTime;
+        liveOverlay.style.display = 'flex';
+        if (liveDigits) {
+          liveDigits.textContent = this.timerStatus === 'COMPLETED' ? '00:00:00' : formattedTime;
+        }
       }
+    } else if (liveDigits) {
+      // Admin dashboard or standalone element
+      liveDigits.textContent = this.timerStatus === 'COMPLETED' ? '00 : 00 : 00' : formattedWithSpaces;
     }
 
+    // 2. Status subtitle text
     if (this.statusTagEl) {
       if (this.timerStatus === 'NOT_STARTED') {
         this.statusTagEl.textContent = 'Awaiting Ministry of Magic Signal';
@@ -104,6 +118,7 @@ export class HogwartsClock {
       }
     }
 
+    // 3. Atmospheric Aura classes on clock container and hero banner
     const stateClasses = ['clock-not-started', 'clock-active', 'clock-paused', 'clock-completed'];
     stateClasses.forEach(cls => {
       if (this.container) this.container.classList.remove(cls);
@@ -118,7 +133,7 @@ export class HogwartsClock {
     if (this.container) this.container.classList.add(currentClass);
     if (this.heroBanner) this.heroBanner.classList.add(currentClass);
 
-    // Trigger golden celebration once when completed
+    // Trigger celebration once upon completion
     if (this.timerStatus === 'COMPLETED' && !this.celebrated) {
       this.celebrated = true;
       this.triggerCelebration();

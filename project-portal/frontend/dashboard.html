@@ -187,29 +187,26 @@
           <!-- Center: Hogwarts 24-Hour Magical Countdown Clock -->
           <div class="hero-center-clock">
             <div class="magical-clock-wrap" id="magical-clock-wrap" aria-label="Hogwarts Legacy 24-Hour Magical Clock">
-              <!-- Golden Glowing Aura / State Aura -->
+              <!-- Golden Glowing Aura / 6s Slow Pulse -->
               <div class="magical-clock-aura"></div>
               
               <!-- Floating Sparkle Particles -->
               <div class="magical-clock-sparks"></div>
 
-              <!-- Clean Transparent Clock Dial Artwork -->
+              <!-- Uncropped, Unedited Hogwarts Magical Clock Artwork with Built-in 24:00:00 -->
               <div class="magical-clock-body">
-                <img src="assets/clock_face_clean.png" alt="Hogwarts Magical Clock" class="magical-clock-face" />
-              </div>
-
-              <!-- Dynamic Glowing Digits Overlay -->
-              <div class="magical-clock-overlay">
-                <div class="clock-status-tag" id="clock-status-tag">Awaiting Ministry Signal</div>
-                <div class="clock-digital-time" id="clock-digits-val">24 : 00 : 00</div>
-                <div class="clock-time-units">
-                  <span>HRS</span>
-                  <span>MIN</span>
-                  <span>SEC</span>
+                <img src="assets/hogwarts_clock_circle.png" alt="Hogwarts Magical Clock" class="magical-clock-face" id="magical-clock-img" width="220" height="220" loading="eager" />
+                
+                <!-- Visual Active Countdown Layer (Displayed only during active countdown, hidden when NOT_STARTED) -->
+                <div class="clock-live-overlay" id="clock-live-overlay" style="display:none">
+                  <span class="clock-live-digits" id="clock-live-digits">24:00:00</span>
                 </div>
-                <div class="clock-celebration-ribbon" id="clock-celebration-ribbon">🏆 Hackathon Completed 🏆</div>
               </div>
             </div>
+
+            <!-- Ministry Status Subtitle below Clock -->
+            <div class="clock-status-tag" id="clock-status-tag">Awaiting Ministry of Magic Signal</div>
+            <div class="clock-celebration-ribbon" id="clock-celebration-ribbon">🏆 Hackathon Completed 🏆</div>
           </div>
 
           <!-- Right: Hackathon Status & Round Progress -->

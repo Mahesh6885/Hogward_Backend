@@ -1358,52 +1358,54 @@ html, body {
   z-index: 2;
 }
 .hero-center-clock {
-  flex: 0 0 auto;
+  flex: 0 0 220px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   z-index: 3;
+  text-align: center;
 }
 .hero-right {
-  flex: 0 0 280px;
-  min-width: 250px;
+  flex: 0 0 250px;
+  min-width: 220px;
   position: relative;
   z-index: 2;
   text-align: center;
 }
 
-/* ── Hogwarts 24-Hour Magical Clock Container ────────────────────────── */
+/* ── Hogwarts 24-Hour Magical Clock Container (220px Desktop) ────────── */
 .magical-clock-wrap {
   position: relative;
-  width: 360px;
-  height: 360px;
+  width: 220px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
-  filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.85));
-  transition: transform 0.4s ease, filter 0.4s ease;
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.85));
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 .magical-clock-wrap:hover {
   transform: scale(1.02);
-  filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 25px rgba(212, 175, 55, 0.35));
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 16px rgba(212, 175, 55, 0.3));
 }
 
-/* Soft Golden Magical Glow / Breathing Aura */
+/* Soft Golden Magical Glow / 6-Second Slow Pulse (No spinning) */
 .magical-clock-aura {
   position: absolute;
-  inset: -18px;
+  inset: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.08) 55%, transparent 72%);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0.06) 55%, transparent 72%);
   pointer-events: none;
   z-index: 1;
-  animation: clockAuraBreathe 3.5s ease-in-out infinite alternate;
+  animation: clockSlowPulse 6s ease-in-out infinite alternate;
 }
-@keyframes clockAuraBreathe {
-  0% { transform: scale(0.96); opacity: 0.6; }
-  100% { transform: scale(1.05); opacity: 1; }
+@keyframes clockSlowPulse {
+  0% { transform: scale(0.97); opacity: 0.5; filter: brightness(0.9); }
+  50% { transform: scale(1.03); opacity: 0.9; filter: brightness(1.15); }
+  100% { transform: scale(0.97); opacity: 0.5; filter: brightness(0.9); }
 }
 
 /* Clock Dial Body */
@@ -1423,12 +1425,13 @@ html, body {
   display: block;
   pointer-events: none;
   border-radius: 50%;
+  aspect-ratio: 1 / 1;
 }
 
-/* Floating Sparkle Particles */
+/* Floating Sparkle Particles around the Border */
 .magical-clock-sparks {
   position: absolute;
-  inset: 0;
+  inset: -6px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 3;
@@ -1438,84 +1441,72 @@ html, body {
 .magical-clock-sparks::after {
   content: '';
   position: absolute;
-  width: 4px;
-  height: 4px;
+  width: 3.5px;
+  height: 3.5px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
-  animation: sparkleOrbit 6s linear infinite;
-  opacity: 0.8;
+  box-shadow: 0 0 8px #ffd700, 0 0 16px #ffd700;
+  animation: sparkleOrbit 8s linear infinite;
+  opacity: 0.75;
 }
 .magical-clock-sparks::after {
-  animation-duration: 9s;
+  animation-duration: 12s;
   animation-direction: reverse;
-  width: 3px;
-  height: 3px;
+  width: 2.5px;
+  height: 2.5px;
 }
 @keyframes sparkleOrbit {
-  0% { transform: rotate(0deg) translateX(140px) rotate(0deg); opacity: 0.3; }
-  50% { opacity: 1; transform: rotate(180deg) translateX(155px) rotate(-180deg); }
-  100% { transform: rotate(360deg) translateX(140px) rotate(-360deg); opacity: 0.3; }
+  0% { transform: rotate(0deg) translateX(100px) rotate(0deg); opacity: 0.25; }
+  50% { opacity: 1; transform: rotate(180deg) translateX(106px) rotate(-180deg); }
+  100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); opacity: 0.25; }
 }
 
-/* Digital Overlay in Center of Clock */
-.magical-clock-overlay {
+/* Visual Active Countdown Layer inside Clock (Concealed during NOT_STARTED) */
+.clock-live-overlay {
   position: absolute;
-  top: 50%;
+  top: 43.5%;
   left: 50%;
-  transform: translate(-50%, -46%);
+  transform: translate(-50%, -50%);
+  width: 74%;
+  height: 23%;
+  background: radial-gradient(ellipse at center, rgba(7, 13, 25, 0.98) 0%, rgba(7, 13, 25, 0.94) 75%, transparent 100%);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
   z-index: 4;
-  width: 250px;
+  border-radius: 4px;
+  pointer-events: none;
 }
-
-.clock-status-tag {
+.clock-live-digits {
   font-family: 'Cinzel', serif;
-  font-size: 0.62rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--gold-light);
-  margin-bottom: 0.35rem;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9), 0 2px 4px #000;
-  transition: color 0.3s ease;
-  white-space: nowrap;
-}
-
-.clock-digital-time {
-  font-family: 'Cinzel', serif;
-  font-size: 1.85rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #ffe699;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   line-height: 1;
-  text-shadow: 0 0 14px rgba(212, 175, 55, 0.85), 0 0 28px rgba(212, 175, 55, 0.4), 0 2px 6px #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.2rem;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.9), 0 0 24px rgba(212, 175, 55, 0.5), 0 1px 3px #000;
 }
 
-.clock-time-units {
-  display: flex;
-  justify-content: space-between;
-  width: 82%;
-  margin-top: 0.35rem;
+/* Ministry Status Subtitle below Clock */
+.clock-status-tag {
   font-family: 'Cinzel', serif;
-  font-size: 0.52rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  color: rgba(212, 175, 55, 0.75);
-  text-shadow: 0 1px 3px #000;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-top: 0.6rem;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9), 0 1px 3px #000;
+  text-align: center;
+  white-space: normal;
+  max-width: 220px;
+  line-height: 1.3;
+  transition: color 0.3s ease;
 }
 
 /* State 1: Active (Running) */
 .clock-active .magical-clock-aura {
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.12) 50%, transparent 75%);
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.32) 0%, rgba(212, 175, 55, 0.1) 50%, transparent 75%);
   animation: clockPulseSecond 1s ease-in-out infinite;
 }
 @keyframes clockPulseSecond {
@@ -1524,26 +1515,26 @@ html, body {
   100% { transform: scale(0.98); opacity: 0.7; }
 }
 .hero-banner.clock-active {
-  border-color: rgba(212, 175, 55, 0.8);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 28px rgba(212, 175, 55, 0.25);
-  animation: heroActiveGlow 4s ease-in-out infinite alternate;
+  border-color: rgba(212, 175, 55, 0.75);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 24px rgba(212, 175, 55, 0.2);
+  animation: heroActiveGlow 6s ease-in-out infinite alternate;
 }
 @keyframes heroActiveGlow {
-  0% { border-color: rgba(212, 175, 55, 0.5); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.15); }
-  100% { border-color: rgba(245, 215, 127, 0.95); box-shadow: 0 8px 36px rgba(0, 0, 0, 0.8), 0 0 35px rgba(212, 175, 55, 0.35); }
+  0% { border-color: rgba(212, 175, 55, 0.5); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 18px rgba(212, 175, 55, 0.15); }
+  100% { border-color: rgba(245, 215, 127, 0.9); box-shadow: 0 8px 36px rgba(0, 0, 0, 0.8), 0 0 28px rgba(212, 175, 55, 0.3); }
 }
 
 /* State 2: Paused */
 .clock-paused .magical-clock-aura {
   background: radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(30, 64, 175, 0.12) 55%, transparent 75%);
-  animation: clockAuraBreathe 4s ease-in-out infinite alternate;
+  animation: clockSlowPulse 6s ease-in-out infinite alternate;
 }
 .clock-paused .clock-status-tag {
   color: #93c5fd !important;
 }
-.clock-paused .clock-digital-time {
+.clock-paused .clock-live-digits {
   color: #bfdbfe !important;
-  text-shadow: 0 0 16px rgba(59, 130, 246, 0.9), 0 2px 6px #000 !important;
+  text-shadow: 0 0 16px rgba(59, 130, 246, 0.9), 0 1px 3px #000 !important;
 }
 .hero-banner.clock-paused {
   border-color: rgba(59, 130, 246, 0.65);
@@ -1561,13 +1552,13 @@ html, body {
 }
 .hero-banner.clock-completed {
   border-color: var(--gold);
-  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.8), 0 0 45px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.8), 0 0 40px rgba(212, 175, 55, 0.4);
 }
 .clock-completed .clock-status-tag {
   color: #fde68a !important;
 }
 
-/* Ribbon for completed state */
+/* Celebration Ribbon */
 .clock-celebration-ribbon {
   display: none;
   margin-top: 0.4rem;
@@ -1586,6 +1577,17 @@ html, body {
 @keyframes bounceCelebration {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .magical-clock-aura,
+  .magical-clock-sparks::before,
+  .magical-clock-sparks::after,
+  .clock-celebration-ribbon,
+  .hero-banner.clock-active {
+    animation: none !important;
+  }
 }
 
 /* ── Admin Clock Control Card ─────────────────────────────────────────── */
@@ -1695,44 +1697,51 @@ html, body {
   }
 }
 
-/* Mobile adjustments for Magical 24-Hour Clock */
-@media (max-width: 768px) {
+/* Responsive sizing for Magical 24-Hour Clock (Tablet: 180px, Mobile: 140px) */
+@media (max-width: 1024px) {
   .hero-banner-grid {
     flex-direction: column !important;
     align-items: center !important;
-    gap: 1.5rem !important;
+    text-align: center !important;
+    gap: 1.25rem !important;
+  }
+  .hero-content {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .hero-meta {
+    justify-content: center !important;
   }
   .hero-center-clock {
+    order: 2 !important;
+    margin: 0.5rem auto !important;
+    flex: 0 0 auto !important;
+  }
+  .hero-right {
+    order: 3 !important;
     width: 100% !important;
-    margin: 0.5rem 0 !important;
+    max-width: 320px !important;
+    margin: 0 auto !important;
   }
   .magical-clock-wrap {
-    width: 280px !important;
-    height: 280px !important;
+    width: 180px !important;
+    height: 180px !important;
   }
-  .clock-digital-time {
-    font-size: 1.45rem !important;
-  }
-  .magical-clock-overlay {
-    width: 200px !important;
-  }
-  .clock-status-tag {
-    font-size: 0.55rem !important;
-  }
-  .clock-time-units {
-    font-size: 0.45rem !important;
+  .clock-live-digits {
+    font-size: 1.15rem !important;
   }
 }
-@media (max-width: 400px) {
+
+@media (max-width: 480px) {
   .magical-clock-wrap {
-    width: 240px !important;
-    height: 240px !important;
+    width: 140px !important;
+    height: 140px !important;
   }
-  .clock-digital-time {
-    font-size: 1.25rem !important;
+  .clock-live-digits {
+    font-size: 0.9rem !important;
   }
-  .magical-clock-overlay {
-    width: 170px !important;
+  .clock-status-tag {
+    font-size: 0.58rem !important;
   }
 }
 
