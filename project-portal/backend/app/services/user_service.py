@@ -265,35 +265,39 @@ def get_user_by_id(db: Session, user_id: int) -> User:
 
 def update_user(db: Session, user_id: int, data: UserUpdate, admin: User) -> User:
     user = get_user_by_id(db, user_id)
+    fields = data.model_fields_set
 
-    if data.team_name is not None:
-        user.team_name = data.team_name.strip()
-        user.name = data.team_name.strip()
-    elif data.name is not None:
-        user.name = data.name.strip()
+    if "team_name" in fields:
+        user.team_name = data.team_name.strip() if data.team_name else None
+        if user.team_name:
+            user.name = user.team_name
+    elif "name" in fields:
+        user.name = data.name.strip() if data.name else user.name
         if not user.team_name:
-            user.team_name = data.name.strip()
+            user.team_name = user.name
 
-    if data.team_leader is not None:
-        user.team_leader = data.team_leader.strip()
-    if data.member_one is not None:
+    if "team_leader" in fields:
+        user.team_leader = data.team_leader.strip() if data.team_leader else None
+    if "member_one" in fields:
         user.member_one = data.member_one.strip() if data.member_one else None
-    if data.member_two is not None:
+    if "member_two" in fields:
         user.member_two = data.member_two.strip() if data.member_two else None
-    if data.member_three is not None:
+    if "member_three" in fields:
         user.member_three = data.member_three.strip() if data.member_three else None
 
-    if data.college_name is not None:
-        user.college_name = data.college_name.strip() if data.college_name else None
-        user.organization = user.college_name
-    elif data.organization is not None:
-        user.organization = data.organization.strip() if data.organization else None
-        user.college_name = user.organization
+    if "college_name" in fields:
+        val = data.college_name.strip() if data.college_name else None
+        user.college_name = val
+        user.organization = val
+    elif "organization" in fields:
+        val = data.organization.strip() if data.organization else None
+        user.organization = val
+        user.college_name = val
 
-    if data.department is not None:
+    if "department" in fields:
         user.department = data.department.strip() if data.department else None
 
-    if data.email is not None:
+    if "email" in fields and data.email is not None:
         existing = db.query(User).filter(User.email == str(data.email), User.id != user_id).first()
         if existing:
             raise HTTPException(
@@ -302,12 +306,44 @@ def update_user(db: Session, user_id: int, data: UserUpdate, admin: User) -> Use
             )
         user.email = str(data.email)
 
-    if data.phone is not None:
+    if "phone" in fields:
         user.phone = data.phone.strip() if data.phone else None
 
-    if data.domain is not None:
+    if "domain" in fields and data.domain is not None:
+        from app.models.problem_statement import RealmEnum
+        from app.services.problem_statement_service import assign_balanced_problem_statement
+
         domain = get_domain_by_name(db, data.domain)
+        old_domain_id = user.domain_id
         user.domain_id = domain.id
+
+        # Keep project domain, realm, and problem statement synchronized
+        for p in user.projects:
+            p.domain_id = domain.id
+            if data.domain.value in ["AI", "CYBERSECURITY"]:
+                p.realm = RealmEnum(data.domain.value)
+                # If domain changed or realm doesn't match ps realm, assign balanced ps
+                needs_new_ps = False
+                if old_domain_id != domain.id:
+                    needs_new_ps = True
+                elif p.problem_statement_rel and p.problem_statement_rel.realm != data.domain.value:
+                    needs_new_ps = True
+                elif not p.problem_statement_id:
+                    needs_new_ps = True
+
+                if needs_new_ps:
+                    new_ps = assign_balanced_problem_statement(db, p.realm)
+                    if new_ps:
+                        p.problem_statement_id = new_ps.id
+                        p.problem_code = new_ps.problem_code
+                        p.problem_statement = new_ps.description
+                        if not p.project_title or p.project_title in ["Project", "Official Problem Statement"]:
+                            p.project_title = new_ps.title
+            elif data.domain.value == "OPEN_INNOVATION":
+                p.realm = None
+                p.problem_statement_id = None
+                p.problem_code = "OI-SELF"
+
         log = AuditLog(
             admin_id=admin.id,
             action="CHANGE_USER_DOMAIN",
@@ -317,10 +353,10 @@ def update_user(db: Session, user_id: int, data: UserUpdate, admin: User) -> Use
         )
         db.add(log)
 
-    if data.role is not None:
+    if "role" in fields and data.role is not None:
         user.role = data.role
 
-    if data.status is not None:
+    if "status" in fields and data.status is not None:
         user.status = data.status
 
     db.commit()

@@ -37,7 +37,11 @@ export function setUser(user) {
  * Core fetch wrapper. Throws on HTTP errors.
  */
 async function request(method, path, body = null, requireAuth = true) {
-  const headers = { 'Content-Type': 'application/json' };
+  const headers = {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache'
+  };
   if (requireAuth) {
     const token = getToken();
     if (!token) {
@@ -47,7 +51,7 @@ async function request(method, path, body = null, requireAuth = true) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const opts = { method, headers };
+  const opts = { method, headers, cache: 'no-store' };
   if (body !== null) opts.body = JSON.stringify(body);
 
   const res = await fetch(`${API_BASE}${path}`, opts);

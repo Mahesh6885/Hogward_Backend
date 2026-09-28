@@ -1075,7 +1075,7 @@
 <!-- ── Client Logic ────────────────────────────────────────────────────── -->
 <script type="module">
   import { requireUser, logout } from './js/auth.js';
-  import { api } from './js/api.js';
+  import { api, setUser } from './js/api.js';
   import { toast } from './js/toast.js';
   import { initParticles } from './js/particles.js';
   import { showLoader, hideLoader, initCountdown, showSuccessAnimation } from './js/theme.js';
@@ -1476,7 +1476,9 @@
       const teamResp = await api.get('/api/users/me/team').catch(() => null);
       if (teamResp && teamResp.data) {
         cachedTeam = teamResp.data;
+        setUser(cachedTeam);
         populateNavbarAndSummary(cachedTeam);
+        populateTeamView(cachedTeam);
       }
 
       // 2. Fetch project
@@ -2458,36 +2460,63 @@
   // ── Load Team Details View ───────────────────────────────────────────────
   async function loadTeamView() {
     const loading = document.getElementById('team-loading');
-    loading.classList.remove('hidden');
+    if (loading) loading.classList.remove('hidden');
 
     try {
       const res = await api.get('/api/users/me/team');
       const t = res.data;
       cachedTeam = t;
+      setUser(t);
+      populateNavbarAndSummary(t);
+      await populateTeamView(t);
+    } catch (e) {
+      toast.error(`Failed to load team details: ${e.message}`);
+    } finally {
+      if (loading) loading.classList.add('hidden');
+    }
+  }
 
-      const tName = t.team_name || t.name || t.username;
-      document.getElementById('team-view-name').textContent = tName;
-      document.getElementById('team-view-inst').textContent = `${t.department || 'Department'} · ${t.college_name || t.organization || 'Organization'}`;
+  async function populateTeamView(t) {
+    if (!t) return;
+    const tName = t.team_name || t.name || t.username;
+    const nameEl = document.getElementById('team-view-name');
+    if (nameEl) nameEl.textContent = tName;
 
-      const dName = t.domain?.display_name || t.domain?.name || 'Domain';
-      const dBadge = document.getElementById('team-view-domain-badge');
+    const instEl = document.getElementById('team-view-inst');
+    if (instEl) instEl.textContent = `${t.department || 'Department'} · ${t.college_name || t.organization || 'Organization'}`;
+
+    const dName = t.domain?.display_name || t.domain?.name || 'Domain';
+    const dBadge = document.getElementById('team-view-domain-badge');
+    if (dBadge) {
       dBadge.textContent = dName;
       dBadge.className = `badge ${domainColors[t.domain?.name] || domainColors[dName] || 'badge-blue'}`;
+    }
 
-      const sBadge = document.getElementById('team-view-status-badge');
+    const sBadge = document.getElementById('team-view-status-badge');
+    if (sBadge) {
       sBadge.textContent = t.status || 'ACTIVE';
       sBadge.className = t.status === 'ACTIVE' ? 'badge badge-green' : 'badge badge-red';
+    }
 
-      document.getElementById('team-view-leader').textContent = t.team_leader || t.name || '—';
-      document.getElementById('team-view-college').textContent = t.college_name || t.organization || '—';
-      document.getElementById('team-view-department').textContent = t.department || '—';
-      document.getElementById('team-view-email').textContent = t.email || '—';
-      document.getElementById('team-view-phone').textContent = t.phone || '—';
+    const leaderEl = document.getElementById('team-view-leader');
+    if (leaderEl) leaderEl.textContent = t.team_leader || t.name || '—';
 
-      // Roster
-      const rosterContainer = document.getElementById('team-members-container');
+    const colEl = document.getElementById('team-view-college');
+    if (colEl) colEl.textContent = t.college_name || t.organization || '—';
+
+    const deptEl = document.getElementById('team-view-department');
+    if (deptEl) deptEl.textContent = t.department || '—';
+
+    const emailEl = document.getElementById('team-view-email');
+    if (emailEl) emailEl.textContent = t.email || '—';
+
+    const phoneEl = document.getElementById('team-view-phone');
+    if (phoneEl) phoneEl.textContent = t.phone || '—';
+
+    // Roster
+    const rosterContainer = document.getElementById('team-members-container');
+    if (rosterContainer) {
       rosterContainer.innerHTML = '';
-
       const members = [
         { role: 'Team Leader', name: t.team_leader || t.name },
         { role: 'Member 1', name: t.member_one },
@@ -2508,56 +2537,72 @@
         `;
         rosterContainer.appendChild(card);
       });
+    }
 
-      // Populate Assigned Problem Statement Card in Team Details
-      try {
-        let ps = null;
-        try {
-          const psResp = await api.get('/api/problem-statements/assigned');
-          ps = psResp?.data;
-        } catch (_) {}
+    // Problem Statement Card
+    const teamPsCard = document.getElementById('team-ps-card');
+    const domainRaw = t.domain?.name || '';
+    const isOI = domainRaw === 'OPEN_INNOVATION' || domainRaw === 'Open Innovation';
 
-        if (!ps && cachedProject) {
-          ps = (typeof cachedProject.problem_statement === 'object' && cachedProject.problem_statement) || {
-            problem_code: cachedProject.problem_code,
-            realm: cachedProject.realm,
-            title: cachedProject.problem_statement_title || cachedProject.project_title,
-            description: cachedProject.problem_description || cachedProject.problem_statement_description || cachedProject.problem_statement,
-            difficulty: 'INTERMEDIATE',
-          };
-        }
-
-        if (ps) {
-          const psCode = ps.problem_code || cachedProject?.problem_code || '—';
-          const psRealm = ps.realm || cachedProject?.realm || (cachedTeam?.domain?.name || 'AI');
-          const isCyber = psRealm === 'CYBERSECURITY' || psRealm.includes('CYBER');
-          const realmBadgeClass = isCyber ? 'badge-realm-cyber' : 'badge-realm-ai';
-          const psDiff = ps.difficulty || 'INTERMEDIATE';
-          const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
-          const psTitle = ps.title || cachedProject?.problem_statement_title || cachedProject?.project_title || 'Official Challenge';
-          const psDesc = ps.description || ps.detailed_description || ps.problem_statement || cachedProject?.problem_description || cachedProject?.problem_statement_description || '—';
-
-          if (document.getElementById('team-ps-code')) document.getElementById('team-ps-code').textContent = psCode;
-          if (document.getElementById('team-ps-title')) document.getElementById('team-ps-title').textContent = `${psCode} — ${psTitle}`;
-          if (document.getElementById('team-ps-desc')) document.getElementById('team-ps-desc').textContent = psDesc;
-          if (document.getElementById('team-ps-realm-badge')) {
-            const rEl = document.getElementById('team-ps-realm-badge');
-            rEl.className = `badge ${realmBadgeClass}`;
-            rEl.textContent = isCyber ? '🛡️ Cybersecurity Realm' : '⚡ AI Realm';
-          }
-          if (document.getElementById('team-ps-diff-badge')) {
-            const dEl = document.getElementById('team-ps-diff-badge');
-            dEl.className = `badge ${diffBadgeClass}`;
-            dEl.textContent = psDiff;
-          }
-        }
-      } catch (err) {
-        console.warn('Could not populate team problem statement card:', err);
+    if (isOI) {
+      if (teamPsCard) {
+        teamPsCard.innerHTML = `
+          <div style="padding:1.25rem;color:var(--text-secondary)">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+              <span class="badge badge-orange">💡 Open Innovation</span>
+              <span class="badge badge-green">Self-Proposed Challenge</span>
+            </div>
+            <p style="margin:0;font-size:0.9rem;line-height:1.6">Your squad defines its own innovative problem statement, objectives, and technology stack under the Open Innovation track.</p>
+          </div>
+        `;
       }
-    } catch (e) {
-      toast.error(`Failed to load team details: ${e.message}`);
-    } finally {
-      loading.classList.add('hidden');
+      return;
+    }
+
+    // Populate Assigned Problem Statement Card in Team Details (AI / Cybersecurity)
+    try {
+      let ps = null;
+      try {
+        const psResp = await api.get('/api/problem-statements/assigned');
+        ps = psResp?.data;
+      } catch (_) {}
+
+      if (!ps && cachedProject) {
+        ps = (typeof cachedProject.problem_statement === 'object' && cachedProject.problem_statement) || {
+          problem_code: cachedProject.problem_code,
+          realm: cachedProject.realm,
+          title: cachedProject.problem_statement_title || cachedProject.project_title,
+          description: cachedProject.problem_description || cachedProject.problem_statement_description || cachedProject.problem_statement,
+          difficulty: 'INTERMEDIATE',
+        };
+      }
+
+      if (ps) {
+        const psCode = ps.problem_code || cachedProject?.problem_code || '—';
+        const psRealm = ps.realm || cachedProject?.realm || (t.domain?.name || 'AI');
+        const isCyber = psRealm === 'CYBERSECURITY' || psRealm.includes('CYBER');
+        const realmBadgeClass = isCyber ? 'badge-realm-cyber' : 'badge-realm-ai';
+        const psDiff = ps.difficulty || 'INTERMEDIATE';
+        const diffBadgeClass = psDiff === 'ADVANCED' ? 'badge-diff-advanced' : (psDiff === 'BEGINNER' ? 'badge-diff-beginner' : 'badge-diff-intermediate');
+        const psTitle = ps.title || cachedProject?.problem_statement_title || cachedProject?.project_title || 'Official Challenge';
+        const psDesc = ps.description || ps.detailed_description || ps.problem_statement || cachedProject?.problem_description || cachedProject?.problem_statement_description || '—';
+
+        if (document.getElementById('team-ps-code')) document.getElementById('team-ps-code').textContent = psCode;
+        if (document.getElementById('team-ps-title')) document.getElementById('team-ps-title').textContent = `${psCode} — ${psTitle}`;
+        if (document.getElementById('team-ps-desc')) document.getElementById('team-ps-desc').textContent = psDesc;
+        if (document.getElementById('team-ps-realm-badge')) {
+          const rEl = document.getElementById('team-ps-realm-badge');
+          rEl.className = `badge ${realmBadgeClass}`;
+          rEl.textContent = isCyber ? '🛡️ Cybersecurity Realm' : '⚡ AI Realm';
+        }
+        if (document.getElementById('team-ps-diff-badge')) {
+          const dEl = document.getElementById('team-ps-diff-badge');
+          dEl.className = `badge ${diffBadgeClass}`;
+          dEl.textContent = psDiff;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not populate team problem statement card:', err);
     }
   }
 
@@ -2577,6 +2622,20 @@
     });
     origSwitchView(view);
   };
+
+  // ── Auto-refresh when returning to tab/window ──
+  window.addEventListener('focus', () => {
+    initDashboard();
+    const activeView = document.querySelector('.sidebar-item.active')?.dataset.view;
+    if (activeView === 'team') loadTeamView();
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      initDashboard();
+      const activeView = document.querySelector('.sidebar-item.active')?.dataset.view;
+      if (activeView === 'team') loadTeamView();
+    }
+  });
 
   // ── Initial load ──
   initDashboard();

@@ -1,5 +1,5 @@
 """User self-service routes (read-only own data and team details)."""
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.orm import Session
 
 from app.database.database import get_db
@@ -144,8 +144,12 @@ def _serialize_review(review) -> dict:
 
 
 @router.get("/me", status_code=200)
-def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_me(response: Response, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current user/team's profile."""
+    db.refresh(current_user)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return {
         "success": True,
         "message": "User retrieved successfully",
@@ -154,8 +158,12 @@ def get_me(current_user: User = Depends(get_current_user), db: Session = Depends
 
 
 @router.get("/me/team", status_code=200)
-def get_my_team(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_my_team(response: Response, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get authenticated user's team details and members."""
+    db.refresh(current_user)
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
     return {
         "success": True,
         "message": "Team details retrieved successfully",
