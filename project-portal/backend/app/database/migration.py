@@ -182,6 +182,14 @@ def auto_migrate_schema(engine: Engine) -> None:
                 except Exception as dex:
                     print(f"  [MIGRATION] Domain {d_name} notice: {dex}")
 
+            # Ensure hackathon_timer table exists
+            try:
+                from app.models.hackathon_timer import HackathonTimer
+                HackathonTimer.__table__.create(bind=conn, checkfirst=True)
+                print("  [MIGRATION] HackathonTimer table verified.")
+            except Exception as tex:
+                print(f"  [MIGRATION] HackathonTimer table notice: {tex}")
+
             trans.commit()
             print("  [MIGRATION] PostgreSQL schema successfully synchronized and verified.")
         except Exception as e:

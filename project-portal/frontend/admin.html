@@ -246,12 +246,6 @@
     </div>
   </a>
   <div class="navbar-actions">
-    <!-- Session Timer -->
-    <div class="nav-session-timer" id="nav-session-timer" aria-label="Session timer" title="Admin session remaining">
-      <span class="timer-dot"></span>
-      <span id="session-timer-val">30:00</span>
-    </div>
-
     <!-- Notification Bell -->
     <div class="nav-notification-wrap" id="notif-wrap">
       <button class="nav-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" onclick="toggleAdminNotificationDropdown()">
@@ -331,6 +325,49 @@
           <button class="btn btn-primary" onclick="switchAdminView('projects')">Review Projects →</button>
         </div>
         <p class="text-muted">Real-time statistics across teams, domains, and project submissions.</p>
+      </div>
+
+      <!-- ── Hackathon 24-Hour Magical Clock Control Panel ────────────────── -->
+      <div class="admin-clock-card" id="admin-clock-card">
+        <div class="admin-clock-info">
+          <div class="admin-clock-art-thumb">
+            <img src="assets/clock_face_clean.png" alt="Hogwarts Clock" />
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:0.6rem">
+              <h2 class="admin-clock-title" style="margin:0">Hogwarts 24-Hour Magical Clock</h2>
+              <span id="admin-clock-badge" class="badge badge-gray">Not Started</span>
+            </div>
+            <div class="admin-clock-desc" id="admin-clock-status-tag">Global countdown synchronized across all participants</div>
+          </div>
+        </div>
+
+        <div class="admin-clock-display-wrap">
+          <div class="admin-clock-digits" id="admin-clock-digits">24 : 00 : 00</div>
+          <div class="admin-clock-units">
+            <span>HRS</span>
+            <span>MIN</span>
+            <span>SEC</span>
+          </div>
+        </div>
+
+        <div class="admin-clock-actions">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-timer-start" title="Start 24-hour hackathon timer">
+            ▶ Start Hackathon
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-timer-pause" title="Freeze timer globally">
+            ⏸ Pause
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-timer-resume" title="Resume remaining countdown">
+            ⏯ Resume
+          </button>
+          <button type="button" class="btn btn-danger btn-sm" id="btn-timer-stop" title="Complete hackathon immediately">
+            ⏹ Stop
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-timer-reset" title="Reset back to 24:00:00">
+            🔄 Reset
+          </button>
+        </div>
       </div>
 
       <div class="grid-4 mb-3">
@@ -1670,6 +1707,7 @@
   import { initParticles } from './js/particles.js';
   import { showLoader, hideLoader } from './js/theme.js';
   import { SessionManager, secureLogout } from './js/security.js';
+  import { HogwartsClock } from './js/clock.js';
 
   window.toast = toast;
 
@@ -1953,6 +1991,56 @@
   }
 
   // ── 1. DASHBOARD ──────────────────────────────────────────────────────────
+  // Hackathon Clock Control Engine
+  const adminClock = new HogwartsClock({
+    digitsEl: document.getElementById('admin-clock-digits'),
+    statusTagEl: document.getElementById('admin-clock-status-tag'),
+    onStateChange: (d) => {
+      const badge = document.getElementById('admin-clock-badge');
+      if (badge) {
+        if (d.timer_status === 'NOT_STARTED') {
+          badge.textContent = 'Not Started';
+          badge.className = 'badge badge-gray';
+        } else if (d.timer_status === 'RUNNING') {
+          badge.textContent = '● Running';
+          badge.className = 'badge badge-green';
+        } else if (d.timer_status === 'PAUSED') {
+          badge.textContent = '❚❚ Paused';
+          badge.className = 'badge badge-yellow';
+        } else if (d.timer_status === 'COMPLETED') {
+          badge.textContent = '✓ Completed';
+          badge.className = 'badge badge-gold';
+        }
+      }
+    }
+  });
+  adminClock.init();
+  window.adminClock = adminClock;
+
+  async function handleTimerAction(action, confirmMsg = null) {
+    if (confirmMsg && !confirm(confirmMsg)) return;
+    try {
+      showLoader('Applying Ministry of Magic Directive…');
+      const res = await api.post(`/api/timer/${action}`, {});
+      if (res && res.success) {
+        toast.success(res.message || `Timer action '${action}' completed successfully!`);
+        await adminClock.syncWithServer();
+      } else {
+        toast.error(res?.message || `Failed to execute ${action}`);
+      }
+    } catch (err) {
+      toast.error(err.message || `Failed to execute ${action}`);
+    } finally {
+      hideLoader(200);
+    }
+  }
+
+  document.getElementById('btn-timer-start')?.addEventListener('click', () => handleTimerAction('start'));
+  document.getElementById('btn-timer-pause')?.addEventListener('click', () => handleTimerAction('pause'));
+  document.getElementById('btn-timer-resume')?.addEventListener('click', () => handleTimerAction('resume'));
+  document.getElementById('btn-timer-stop')?.addEventListener('click', () => handleTimerAction('stop', 'Are you sure you want to STOP the hackathon? This will mark it as completed immediately.'));
+  document.getElementById('btn-timer-reset')?.addEventListener('click', () => handleTimerAction('reset', 'Reset the hackathon timer back to 24:00:00?'));
+
   async function loadDashboard() {
     try {
       const resp = await api.get('/api/admin/dashboard');

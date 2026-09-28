@@ -5,3 +5,4 @@ from app.models.problem_statement import ProblemStatement, RealmEnum, Difficulty
 from app.models.project import Project, ProjectStatus  # noqa: F401
 from app.models.review import Review, ReviewStatus, ReviewRound1, ReviewRound2, ReviewRound3  # noqa: F401
 from app.models.audit_log import AuditLog  # noqa: F401
+from app.models.hackathon_timer import HackathonTimer, TimerStatus  # noqa: F401

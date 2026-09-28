@@ -101,12 +101,6 @@
   <div class="navbar-actions">
     <div id="domain-badge" class="badge badge-domain-ai" aria-label="Team domain"></div>
 
-    <!-- Session Timer -->
-    <div class="nav-session-timer" id="nav-session-timer" aria-label="Session timer" title="Session remaining time">
-      <span class="timer-dot"></span>
-      <span id="session-timer-val">30:00</span>
-    </div>
-
     <!-- Notification Bell -->
     <div class="nav-notification-wrap" id="notif-wrap">
       <button class="nav-bell-btn" id="notif-bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" onclick="toggleNotificationDropdown()">
@@ -177,7 +171,8 @@
 
       <!-- Hero Banner -->
       <div class="hero-banner" id="hero-banner">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1.5rem">
+        <div class="hero-banner-grid">
+          <!-- Left: Team Welcome & Metadata -->
           <div class="hero-content">
             <div class="hero-greeting">⚡ Welcome Back, Champion</div>
             <h1 class="hero-team-name">Welcome, <span id="welcome-team-name" class="gradient-text">Team</span></h1>
@@ -188,6 +183,36 @@
             </div>
             <p class="hero-quote" id="hero-quote">"It does not do to dwell on dreams and forget to live." — Albus Dumbledore</p>
           </div>
+
+          <!-- Center: Hogwarts 24-Hour Magical Countdown Clock -->
+          <div class="hero-center-clock">
+            <div class="magical-clock-wrap" id="magical-clock-wrap" aria-label="Hogwarts Legacy 24-Hour Magical Clock">
+              <!-- Golden Glowing Aura / State Aura -->
+              <div class="magical-clock-aura"></div>
+              
+              <!-- Floating Sparkle Particles -->
+              <div class="magical-clock-sparks"></div>
+
+              <!-- Clean Transparent Clock Dial Artwork -->
+              <div class="magical-clock-body">
+                <img src="assets/clock_face_clean.png" alt="Hogwarts Magical Clock" class="magical-clock-face" />
+              </div>
+
+              <!-- Dynamic Glowing Digits Overlay -->
+              <div class="magical-clock-overlay">
+                <div class="clock-status-tag" id="clock-status-tag">Awaiting Ministry Signal</div>
+                <div class="clock-digital-time" id="clock-digits-val">24 : 00 : 00</div>
+                <div class="clock-time-units">
+                  <span>HRS</span>
+                  <span>MIN</span>
+                  <span>SEC</span>
+                </div>
+                <div class="clock-celebration-ribbon" id="clock-celebration-ribbon">🏆 Hackathon Completed 🏆</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Hackathon Status & Round Progress -->
           <div class="hero-right">
             <div class="countdown-widget" aria-label="Hackathon countdown">
               <div class="countdown-widget-title">⏰ Hackathon Countdown</div>
@@ -1092,6 +1117,7 @@
   import { initParticles } from './js/particles.js';
   import { showLoader, hideLoader, initCountdown, showSuccessAnimation } from './js/theme.js';
   import { SessionManager, secureLogout } from './js/security.js';
+  import { HogwartsClock } from './js/clock.js';
 
   const user = requireUser();
   if (!user) throw new Error('Not authenticated');
@@ -1102,7 +1128,12 @@
   // ── Loader on page init ──
   showLoader('Loading your dashboard…');
 
-  // ── Countdown timer in hero ──
+  // ── 24-Hour Magical Countdown Clock ──
+  const hogwartsClock = new HogwartsClock();
+  hogwartsClock.init();
+  window.hogwartsClock = hogwartsClock;
+
+  // ── Countdown timer in hero right panel ──
   initCountdown('hero-countdown');
 
   // ── Session Timeout Manager ──
