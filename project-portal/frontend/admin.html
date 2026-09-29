@@ -3703,16 +3703,23 @@
       document.getElementById('r3-team-id').value = team.id;
 
       // ── Populate Round 1 ───────────────────────────────────────────────────
-      document.getElementById('r1-score-1').value = r1.score_problem_clarity || 5;
-      document.getElementById('r1-score-2').value = r1.score_proposed_solution || 5;
-      document.getElementById('r1-score-3').value = r1.score_tech_stack || 5;
-      document.getElementById('r1-score-4').value = r1.score_idea_presentation || 5;
-      document.getElementById('r1-score-5').value = r1.score_feasibility || 5;
-      document.getElementById('r1-score-6').value = r1.score_team_confidence_qa || 5;
+      const r1s1 = r1.score_problem_clarity;
+      const r1s2 = (r1.score_proposed_solution !== undefined && r1.score_proposed_solution !== null) ? r1.score_proposed_solution : r1.score_solution_quality;
+      const r1s3 = r1.score_tech_stack;
+      const r1s4 = r1.score_idea_presentation;
+      const r1s5 = r1.score_feasibility;
+      const r1s6 = (r1.score_team_confidence_qa !== undefined && r1.score_team_confidence_qa !== null) ? r1.score_team_confidence_qa : r1.score_confidence_qa;
+
+      document.getElementById('r1-score-1').value = (r1s1 !== undefined && r1s1 !== null && r1s1 > 0) ? r1s1 : 5;
+      document.getElementById('r1-score-2').value = (r1s2 !== undefined && r1s2 !== null && r1s2 > 0) ? r1s2 : 5;
+      document.getElementById('r1-score-3').value = (r1s3 !== undefined && r1s3 !== null && r1s3 > 0) ? r1s3 : 5;
+      document.getElementById('r1-score-4').value = (r1s4 !== undefined && r1s4 !== null && r1s4 > 0) ? r1s4 : 5;
+      document.getElementById('r1-score-5').value = (r1s5 !== undefined && r1s5 !== null && r1s5 > 0) ? r1s5 : 5;
+      document.getElementById('r1-score-6').value = (r1s6 !== undefined && r1s6 !== null && r1s6 > 0) ? r1s6 : 5;
       document.getElementById('r1-evaluator').value = r1.evaluator_name || user.name || 'Chief Arbiter';
       document.getElementById('r1-date').value = r1.evaluated_at ? new Date(r1.evaluated_at).toLocaleString() : new Date().toLocaleString();
       document.getElementById('r1-comments').value = r1.comments || '';
-      document.getElementById('r1-suggestions').value = r1.suggestions_next_round || '';
+      document.getElementById('r1-suggestions').value = r1.suggestions_next_round || r1.suggestions || '';
       
       const badgeR1 = document.getElementById('badge-r1-status');
       const r1Msg = document.getElementById('r1-status-msg');
@@ -3728,13 +3735,21 @@
       updateR1Total();
 
       // ── Populate Round 2 ───────────────────────────────────────────────────
-      document.getElementById('r2-score-1').value = r2.score_planning_workflow || 5;
-      document.getElementById('r2-score-2').value = r2.score_frontend_progress || 5;
-      document.getElementById('r2-score-3').value = r2.score_backend_progress || 5;
-      document.getElementById('r2-score-4').value = r2.score_prototype_progress || 5;
-      document.getElementById('r2-score-5').value = r2.score_technical_quality || 5;
-      document.getElementById('r2-score-6').value = r2.score_team_collaboration || 5;
-      document.getElementById('r2-score-7').value = r2.score_milestone_completion || 5;
+      const r2s1 = r2.score_planning_workflow;
+      const r2s2 = r2.score_frontend_progress;
+      const r2s3 = r2.score_backend_progress;
+      const r2s4 = r2.score_prototype_progress;
+      const r2s5 = r2.score_technical_quality;
+      const r2s6 = r2.score_team_collaboration;
+      const r2s7 = r2.score_milestone_completion;
+
+      document.getElementById('r2-score-1').value = (r2s1 !== undefined && r2s1 !== null && r2s1 > 0) ? r2s1 : 5;
+      document.getElementById('r2-score-2').value = (r2s2 !== undefined && r2s2 !== null && r2s2 > 0) ? r2s2 : 5;
+      document.getElementById('r2-score-3').value = (r2s3 !== undefined && r2s3 !== null && r2s3 > 0) ? r2s3 : 5;
+      document.getElementById('r2-score-4').value = (r2s4 !== undefined && r2s4 !== null && r2s4 > 0) ? r2s4 : 5;
+      document.getElementById('r2-score-5').value = (r2s5 !== undefined && r2s5 !== null && r2s5 > 0) ? r2s5 : 5;
+      document.getElementById('r2-score-6').value = (r2s6 !== undefined && r2s6 !== null && r2s6 > 0) ? r2s6 : 5;
+      document.getElementById('r2-score-7').value = (r2s7 !== undefined && r2s7 !== null && r2s7 > 0) ? r2s7 : 5;
       document.getElementById('r2-evaluator').value = r2.evaluator_name || user.name || 'Chief Arbiter';
       document.getElementById('r2-date').value = r2.evaluated_at ? new Date(r2.evaluated_at).toLocaleString() : new Date().toLocaleString();
       document.getElementById('r2-notes').value = r2.review_notes || '';
@@ -3754,13 +3769,21 @@
       updateR2Total();
 
       // ── Populate Round 3 ───────────────────────────────────────────────────
-      document.getElementById('r3-score-1').value = r3.score_tech_stack_understanding || 5;
-      document.getElementById('r3-score-2').value = r3.score_problem_solution_fit || 5;
-      document.getElementById('r3-score-3').value = r3.score_innovation_creativity || 5;
-      document.getElementById('r3-score-4').value = r3.score_prototype_functionality || 5;
-      document.getElementById('r3-score-5').value = r3.score_solution_completeness || 5;
-      document.getElementById('r3-score-6').value = r3.score_teamwork_execution || 5;
-      document.getElementById('r3-score-7').value = r3.score_qa_handling || 5;
+      const r3s1 = (r3.score_tech_stack_understanding !== undefined && r3.score_tech_stack_understanding !== null) ? r3.score_tech_stack_understanding : r3.score_tech_understanding;
+      const r3s2 = r3.score_problem_solution_fit;
+      const r3s3 = r3.score_innovation_creativity;
+      const r3s4 = r3.score_prototype_functionality;
+      const r3s5 = r3.score_solution_completeness;
+      const r3s6 = r3.score_teamwork_execution;
+      const r3s7 = r3.score_qa_handling;
+
+      document.getElementById('r3-score-1').value = (r3s1 !== undefined && r3s1 !== null && r3s1 > 0) ? r3s1 : 5;
+      document.getElementById('r3-score-2').value = (r3s2 !== undefined && r3s2 !== null && r3s2 > 0) ? r3s2 : 5;
+      document.getElementById('r3-score-3').value = (r3s3 !== undefined && r3s3 !== null && r3s3 > 0) ? r3s3 : 5;
+      document.getElementById('r3-score-4').value = (r3s4 !== undefined && r3s4 !== null && r3s4 > 0) ? r3s4 : 5;
+      document.getElementById('r3-score-5').value = (r3s5 !== undefined && r3s5 !== null && r3s5 > 0) ? r3s5 : 5;
+      document.getElementById('r3-score-6').value = (r3s6 !== undefined && r3s6 !== null && r3s6 > 0) ? r3s6 : 5;
+      document.getElementById('r3-score-7').value = (r3s7 !== undefined && r3s7 !== null && r3s7 > 0) ? r3s7 : 5;
       document.getElementById('r3-evaluator').value = r3.evaluator_name || user.name || 'Chief Arbiter';
       document.getElementById('r3-date').value = r3.evaluated_at ? new Date(r3.evaluated_at).toLocaleString() : new Date().toLocaleString();
       document.getElementById('r3-remarks').value = r3.final_remarks || '';
@@ -3821,14 +3844,17 @@
       if (roundNum === 1) {
         teamId = parseInt(document.getElementById('r1-team-id').value, 10);
         payload.score_problem_clarity = clampScore(document.getElementById('r1-score-1').value);
-        payload.score_proposed_solution = clampScore(document.getElementById('r1-score-2').value);
+        payload.score_solution_quality = clampScore(document.getElementById('r1-score-2').value);
+        payload.score_proposed_solution = payload.score_solution_quality;
         payload.score_tech_stack = clampScore(document.getElementById('r1-score-3').value);
         payload.score_idea_presentation = clampScore(document.getElementById('r1-score-4').value);
         payload.score_feasibility = clampScore(document.getElementById('r1-score-5').value);
-        payload.score_team_confidence_qa = clampScore(document.getElementById('r1-score-6').value);
+        payload.score_confidence_qa = clampScore(document.getElementById('r1-score-6').value);
+        payload.score_team_confidence_qa = payload.score_confidence_qa;
         payload.evaluator_name = document.getElementById('r1-evaluator').value.trim() || user.name || 'Chief Arbiter';
         payload.comments = document.getElementById('r1-comments').value.trim();
-        payload.suggestions_next_round = document.getElementById('r1-suggestions').value.trim() || null;
+        payload.suggestions = document.getElementById('r1-suggestions').value.trim() || null;
+        payload.suggestions_next_round = payload.suggestions;
 
         if (!payload.comments && !isDraft) {
           throw new Error('Please provide evaluation comments before submitting Review 1.');
@@ -3851,7 +3877,8 @@
         }
       } else if (roundNum === 3) {
         teamId = parseInt(document.getElementById('r3-team-id').value, 10);
-        payload.score_tech_stack_understanding = clampScore(document.getElementById('r3-score-1').value);
+        payload.score_tech_understanding = clampScore(document.getElementById('r3-score-1').value);
+        payload.score_tech_stack_understanding = payload.score_tech_understanding;
         payload.score_problem_solution_fit = clampScore(document.getElementById('r3-score-2').value);
         payload.score_innovation_creativity = clampScore(document.getElementById('r3-score-3').value);
         payload.score_prototype_functionality = clampScore(document.getElementById('r3-score-4').value);

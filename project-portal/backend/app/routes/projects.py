@@ -140,15 +140,17 @@ def _serialize_project(project) -> dict:
 
 
 def _serialize_review(r) -> dict:
+    admin_info = {"id": r.admin.id, "name": r.admin.name, "username": r.admin.username} if r.admin else {"id": r.admin_id or 1, "name": "Chief Arbiter", "username": "admin"}
+    status_str = r.status.value if hasattr(r.status, "value") else str(r.status)
     return {
         "id": r.id,
         "project_id": r.project_id,
         "admin_id": r.admin_id,
-        "admin": {"id": r.admin.id, "name": r.admin.name, "username": r.admin.username},
+        "admin": admin_info,
         "round_number": r.round_number,
         "review_text": r.review_text,
         "suggested_improvements": r.suggested_improvements,
-        "status": r.status,
+        "status": status_str,
         "reviewed_at": r.reviewed_at.isoformat() if r.reviewed_at else r.created_at.isoformat(),
         "created_at": r.created_at.isoformat(),
         "updated_at": r.updated_at.isoformat(),

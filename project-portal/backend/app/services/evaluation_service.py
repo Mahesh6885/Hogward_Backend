@@ -12,7 +12,7 @@ from app.models.user import User, UserRole
 from app.models.project import Project, ProjectStatus
 from app.models.domain import Domain, DomainName
 from app.models.audit_log import AuditLog
-from app.models.review import ReviewRound1, ReviewRound2, ReviewRound3
+from app.models.review import ReviewRound1, ReviewRound2, ReviewRound3, Review, ReviewStatus
 from app.schemas.review import ReviewRound1Submit, ReviewRound2Submit, ReviewRound3Submit
 
 
@@ -89,10 +89,43 @@ def submit_review_round_1(db: Session, team_id: int, data: ReviewRound1Submit, a
         rev.suggestions = data.suggestions
         rev.status = "COMPLETED" if is_completed else "DRAFT"
         rev.is_locked = is_completed
+        rev.is_published = True
         rev.evaluated_at = now
 
-    if is_completed and project.current_round < 2:
-        project.current_round = 2
+    if is_completed:
+        project.is_submitted = True
+        if project.current_round < 2:
+            project.current_round = 2
+        if project.status == ProjectStatus.DRAFT:
+            project.status = ProjectStatus.UNDER_REVIEW
+
+    # Sync to legacy Review model for participant review history and project timeline
+    rev_legacy = db.query(Review).filter(
+        Review.project_id == project.id,
+        Review.round_number == 1,
+    ).order_by(Review.id.desc()).first()
+
+    rev_status = ReviewStatus.PASSED if is_completed else ReviewStatus.PENDING
+    comments_text = (data.comments or "").strip() or "Round 1 evaluation completed."
+    suggestions_text = (data.suggestions or "").strip() or None
+
+    if not rev_legacy:
+        rev_legacy = Review(
+            project_id=project.id,
+            admin_id=admin.id,
+            round_number=1,
+            review_text=comments_text,
+            suggested_improvements=suggestions_text,
+            status=rev_status,
+            reviewed_at=now,
+        )
+        db.add(rev_legacy)
+    else:
+        rev_legacy.admin_id = admin.id
+        rev_legacy.review_text = comments_text
+        rev_legacy.suggested_improvements = suggestions_text
+        rev_legacy.status = rev_status
+        rev_legacy.reviewed_at = now
 
     # Audit log
     audit = AuditLog(
@@ -155,10 +188,43 @@ def submit_review_round_2(db: Session, team_id: int, data: ReviewRound2Submit, a
         rev.improvement_suggestions = data.improvement_suggestions
         rev.status = "COMPLETED" if is_completed else "DRAFT"
         rev.is_locked = is_completed
+        rev.is_published = True
         rev.evaluated_at = now
 
-    if is_completed and project.current_round < 3:
-        project.current_round = 3
+    if is_completed:
+        project.is_submitted = True
+        if project.current_round < 3:
+            project.current_round = 3
+        if project.status in (ProjectStatus.DRAFT, ProjectStatus.IN_PROGRESS):
+            project.status = ProjectStatus.UNDER_REVIEW
+
+    # Sync to legacy Review model for participant review history and project timeline
+    rev_legacy = db.query(Review).filter(
+        Review.project_id == project.id,
+        Review.round_number == 2,
+    ).order_by(Review.id.desc()).first()
+
+    rev_status = ReviewStatus.PASSED if is_completed else ReviewStatus.PENDING
+    notes_text = (data.review_notes or "").strip() or "Round 2 evaluation completed."
+    improvements_text = (data.improvement_suggestions or "").strip() or None
+
+    if not rev_legacy:
+        rev_legacy = Review(
+            project_id=project.id,
+            admin_id=admin.id,
+            round_number=2,
+            review_text=notes_text,
+            suggested_improvements=improvements_text,
+            status=rev_status,
+            reviewed_at=now,
+        )
+        db.add(rev_legacy)
+    else:
+        rev_legacy.admin_id = admin.id
+        rev_legacy.review_text = notes_text
+        rev_legacy.suggested_improvements = improvements_text
+        rev_legacy.status = rev_status
+        rev_legacy.reviewed_at = now
 
     audit = AuditLog(
         admin_id=admin.id,
@@ -224,10 +290,46 @@ def submit_review_round_3(db: Session, team_id: int, data: ReviewRound3Submit, a
         rev.recommendation = data.recommendation
         rev.status = "COMPLETED" if is_completed else "DRAFT"
         rev.is_locked = is_completed
+        rev.is_published = True
         rev.evaluated_at = now
 
     if is_completed:
         project.status = ProjectStatus.COMPLETED
+
+    # Sync to legacy Review model for participant review history and project timeline
+    rev_legacy = db.query(Review).filter(
+        Review.project_id == project.id,
+        Review.round_number == 3,
+    ).order_by(Review.id.desc()).first()
+
+    rev_status = ReviewStatus.PASSED if is_completed else ReviewStatus.PENDING
+    remarks_text = (data.final_remarks or "").strip() or "Round 3 final evaluation completed."
+    parts = []
+    if data.strengths and data.strengths.strip():
+        parts.append(f"Strengths: {data.strengths.strip()}")
+    if data.weaknesses and data.weaknesses.strip():
+        parts.append(f"Weaknesses: {data.weaknesses.strip()}")
+    if data.recommendation and data.recommendation.strip():
+        parts.append(f"Recommendation: {data.recommendation.strip()}")
+    suggestions_text = "\n".join(parts) if parts else None
+
+    if not rev_legacy:
+        rev_legacy = Review(
+            project_id=project.id,
+            admin_id=admin.id,
+            round_number=3,
+            review_text=remarks_text,
+            suggested_improvements=suggestions_text,
+            status=rev_status,
+            reviewed_at=now,
+        )
+        db.add(rev_legacy)
+    else:
+        rev_legacy.admin_id = admin.id
+        rev_legacy.review_text = remarks_text
+        rev_legacy.suggested_improvements = suggestions_text
+        rev_legacy.status = rev_status
+        rev_legacy.reviewed_at = now
 
     audit = AuditLog(
         admin_id=admin.id,
@@ -240,6 +342,89 @@ def submit_review_round_3(db: Session, team_id: int, data: ReviewRound3Submit, a
     db.commit()
     db.refresh(rev)
     return rev
+
+
+def sync_existing_evaluations_to_reviews(db: Session) -> int:
+    """Sync any existing ReviewRound 1/2/3 records into the legacy reviews table if missing."""
+    count = 0
+    # Sync Round 1
+    r1s = db.query(ReviewRound1).all()
+    for r in r1s:
+        existing = db.query(Review).filter(Review.project_id == r.project_id, Review.round_number == 1).first()
+        if not existing:
+            rev = Review(
+                project_id=r.project_id,
+                admin_id=1,
+                round_number=1,
+                review_text=(r.comments or "").strip() or "Round 1 evaluation completed.",
+                suggested_improvements=(r.suggestions or "").strip() or None,
+                status=ReviewStatus.PASSED if r.status == "COMPLETED" else ReviewStatus.PENDING,
+                reviewed_at=r.evaluated_at or r.created_at,
+            )
+            db.add(rev)
+            count += 1
+        elif not existing.review_text or existing.review_text == "Round 1 evaluation completed.":
+            if r.comments and r.comments.strip():
+                existing.review_text = r.comments.strip()
+                existing.suggested_improvements = (r.suggestions or "").strip() or existing.suggested_improvements
+                count += 1
+
+    # Sync Round 2
+    r2s = db.query(ReviewRound2).all()
+    for r in r2s:
+        existing = db.query(Review).filter(Review.project_id == r.project_id, Review.round_number == 2).first()
+        if not existing:
+            rev = Review(
+                project_id=r.project_id,
+                admin_id=1,
+                round_number=2,
+                review_text=(r.review_notes or "").strip() or "Round 2 evaluation completed.",
+                suggested_improvements=(r.improvement_suggestions or "").strip() or None,
+                status=ReviewStatus.PASSED if r.status == "COMPLETED" else ReviewStatus.PENDING,
+                reviewed_at=r.evaluated_at or r.created_at,
+            )
+            db.add(rev)
+            count += 1
+        elif not existing.review_text or existing.review_text == "Round 2 evaluation completed.":
+            if r.review_notes and r.review_notes.strip():
+                existing.review_text = r.review_notes.strip()
+                existing.suggested_improvements = (r.improvement_suggestions or "").strip() or existing.suggested_improvements
+                count += 1
+
+    # Sync Round 3
+    r3s = db.query(ReviewRound3).all()
+    for r in r3s:
+        existing = db.query(Review).filter(Review.project_id == r.project_id, Review.round_number == 3).first()
+        parts = []
+        if r.strengths and r.strengths.strip():
+            parts.append(f"Strengths: {r.strengths.strip()}")
+        if r.weaknesses and r.weaknesses.strip():
+            parts.append(f"Weaknesses: {r.weaknesses.strip()}")
+        if r.recommendation and r.recommendation.strip():
+            parts.append(f"Recommendation: {r.recommendation.strip()}")
+        suggestions_text = "\n".join(parts) if parts else None
+
+        if not existing:
+            rev = Review(
+                project_id=r.project_id,
+                admin_id=1,
+                round_number=3,
+                review_text=(r.final_remarks or "").strip() or "Round 3 final evaluation completed.",
+                suggested_improvements=suggestions_text,
+                status=ReviewStatus.PASSED if r.status == "COMPLETED" else ReviewStatus.PENDING,
+                reviewed_at=r.evaluated_at or r.created_at,
+            )
+            db.add(rev)
+            count += 1
+        elif not existing.review_text or existing.review_text == "Round 3 final evaluation completed.":
+            if r.final_remarks and r.final_remarks.strip():
+                existing.review_text = r.final_remarks.strip()
+                existing.suggested_improvements = suggestions_text or existing.suggested_improvements
+                count += 1
+
+    if count > 0:
+        db.commit()
+    return count
 
 
 def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
@@ -294,15 +479,19 @@ def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
             "evaluator_name": r1.evaluator_name if r1 else "",
             "score_problem_clarity": r1.score_problem_clarity if r1 else 0,
             "score_solution_quality": r1.score_solution_quality if r1 else 0,
+            "score_proposed_solution": r1.score_solution_quality if r1 else 0,
             "score_tech_stack": r1.score_tech_stack if r1 else 0,
             "score_idea_presentation": r1.score_idea_presentation if r1 else 0,
             "score_feasibility": r1.score_feasibility if r1 else 0,
             "score_confidence_qa": r1.score_confidence_qa if r1 else 0,
+            "score_team_confidence_qa": r1.score_confidence_qa if r1 else 0,
             "total_score": r1.total_score if r1 else 0,
             "comments": r1.comments if r1 else "",
             "suggestions": r1.suggestions if r1 else "",
+            "suggestions_next_round": r1.suggestions if r1 else "",
             "status": r1.status if r1 else "PENDING",
             "is_locked": r1.is_locked if r1 else False,
+            "is_published": getattr(r1, "is_published", True) if r1 else True,
             "evaluated_at": r1.evaluated_at.isoformat() if r1 and r1.evaluated_at else None,
         } if r1 else None,
         "round_2": {
@@ -320,12 +509,14 @@ def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
             "improvement_suggestions": r2.improvement_suggestions if r2 else "",
             "status": r2.status if r2 else "PENDING",
             "is_locked": r2.is_locked if r2 else False,
+            "is_published": getattr(r2, "is_published", True) if r2 else True,
             "evaluated_at": r2.evaluated_at.isoformat() if r2 and r2.evaluated_at else None,
         } if r2 else None,
         "round_3": {
             "id": r3.id if r3 else None,
             "evaluator_name": r3.evaluator_name if r3 else "",
             "score_tech_understanding": r3.score_tech_understanding if r3 else 0,
+            "score_tech_stack_understanding": r3.score_tech_understanding if r3 else 0,
             "score_problem_solution_fit": r3.score_problem_solution_fit if r3 else 0,
             "score_innovation_creativity": r3.score_innovation_creativity if r3 else 0,
             "score_prototype_functionality": r3.score_prototype_functionality if r3 else 0,
@@ -339,6 +530,7 @@ def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
             "recommendation": r3.recommendation if r3 else "",
             "status": r3.status if r3 else "PENDING",
             "is_locked": r3.is_locked if r3 else False,
+            "is_published": getattr(r3, "is_published", True) if r3 else True,
             "evaluated_at": r3.evaluated_at.isoformat() if r3 and r3.evaluated_at else None,
         } if r3 else None,
     }

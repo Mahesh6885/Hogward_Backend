@@ -131,7 +131,7 @@ class ReviewRound1Submit(BaseModel):
     )
     @classmethod
     def check_score_1_to_10(cls, v: int) -> int:
-        if v < 0 or v > 10:
+        if v < 1 or v > 10:
             raise ValueError("Criteria scores must be between 1 and 10")
         return v
 
@@ -170,7 +170,7 @@ class ReviewRound2Submit(BaseModel):
     )
     @classmethod
     def check_score_1_to_10(cls, v: int) -> int:
-        if v < 0 or v > 10:
+        if v < 1 or v > 10:
             raise ValueError("Criteria scores must be between 1 and 10")
         return v
 
@@ -222,7 +222,7 @@ class ReviewRound3Submit(BaseModel):
     )
     @classmethod
     def check_score_1_to_10(cls, v: int) -> int:
-        if v < 0 or v > 10:
+        if v < 1 or v > 10:
             raise ValueError("Criteria scores must be between 1 and 10")
         return v
 

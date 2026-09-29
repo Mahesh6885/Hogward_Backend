@@ -99,8 +99,10 @@ def on_startup():
                 import_official_statements(db)
             else:
                 logging.info("Startup: Verified %d official problem statements present in database.", ps_count)
+            from app.services.evaluation_service import sync_existing_evaluations_to_reviews
+            sync_existing_evaluations_to_reviews(db)
     except Exception as e:
-        logging.error("Startup: Failed to initialize/verify official problem statements: %s", e)
+        logging.error("Startup: Failed to initialize/verify official problem statements or sync reviews: %s", e)
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(auth.router)
