@@ -35,6 +35,7 @@ def _serialize_project(project) -> dict:
         "organization": u.organization or u.college_name,
         "department": u.department,
         "edit_permission": getattr(u, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(u, "allow_problem_statement_edit", False),
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
     }
@@ -47,6 +48,7 @@ def _serialize_project(project) -> dict:
         "user_id": project.user_id,
         "user": user_data,
         "edit_permission": getattr(u, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(u, "allow_problem_statement_edit", False),
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
         "domain_id": project.domain_id,
@@ -164,7 +166,7 @@ def submit_project_endpoint(
     """
     Submit a project (legacy endpoint). Delegates to submit_final_project.
     """
-    project = submit_final_project(db, current_user, data)
+    project = submit_final_project(db, current_user, data, require_all_mandatory=False)
     return {"success": True, "message": "Project submitted successfully", "data": _serialize_project(project)}
 
 

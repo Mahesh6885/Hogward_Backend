@@ -77,12 +77,14 @@ class TeamCreate(UserCreate):
 class TeamEditPermissionRequest(BaseModel):
     edit_permission: bool
     reason: Optional[str] = None
+    allow_problem_statement_edit: Optional[bool] = False
 
 
 class BulkEditPermissionRequest(BaseModel):
     team_ids: list[int]
     edit_permission: bool
     reason: Optional[str] = None
+    allow_problem_statement_edit: Optional[bool] = False
 
 
 class BulkPasswordResetRequest(BaseModel):

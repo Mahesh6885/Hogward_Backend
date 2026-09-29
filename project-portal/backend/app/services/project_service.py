@@ -78,14 +78,15 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
             _check_github_unique(db, raw_github, exclude_project_id=existing.id if existing else None)
             github_url = raw_github
 
+    is_oi = bool(user.domain and user.domain.name in (DomainName.OPEN_INNOVATION.value, "OPEN_INNOVATION", "Open Innovation"))
+
     if existing is None:
-        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
         if is_oi:
             realm = None
             ps = None
             prefix = "OI"
-            p_title = (data.project_title or "Open Innovation Project").strip()
-            p_desc = (data.problem_statement or "").strip()
+            p_title = (data.project_title or f"{user.team_name or user.name} Project").strip() if data.project_title else None
+            p_desc = (data.problem_statement or "").strip() if data.problem_statement else None
         else:
             realm = RealmEnum.AI if (user.domain and user.domain.name == DomainName.AI.value) else RealmEnum.CYBERSECURITY
             ps = db.query(ProblemStatement).filter(ProblemStatement.realm == realm, ProblemStatement.status == True).first()
@@ -119,12 +120,19 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
         )
         db.add(project)
     else:
-        # Update existing draft
-        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
+        # Check permissions for problem statement editing if already submitted:
+        can_edit_ps = True
+        if existing.is_submitted:
+            # Only allowed if Open Innovation AND admin granted allow_problem_statement_edit
+            can_edit_ps = is_oi and getattr(user, "allow_problem_statement_edit", False)
+
         if data.project_title is not None:
-            existing.project_title = data.project_title.strip()
-        if data.problem_statement is not None and (is_oi or not existing.problem_statement_id):
+            if not existing.is_submitted or getattr(user, "edit_permission", False) or can_edit_ps:
+                existing.project_title = data.project_title.strip()
+
+        if data.problem_statement is not None and is_oi and (can_edit_ps or not existing.is_submitted):
             existing.problem_statement = data.problem_statement.strip()
+
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:
@@ -146,6 +154,7 @@ def save_project_draft(db: Session, user: User, data: ProjectDraftRequest) -> Pr
         existing.draft_saved_at = datetime.now(timezone.utc)
         if not existing.is_submitted:
             existing.status = ProjectStatus.DRAFT
+            existing.is_submitted = False
         project = existing
 
     db.commit()
@@ -158,6 +167,7 @@ def submit_final_project(
     user: User,
     data: ProjectSubmitRequest,
     require_github_for_oi: bool = False,
+    require_all_mandatory: bool = True,
 ) -> Project:
     """
     Final submission: validates all fields, marks is_submitted=True, status=SUBMITTED.
@@ -185,16 +195,61 @@ def submit_final_project(
         _check_github_unique(db, github_url, exclude_project_id=existing.id if existing else None)
 
     is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
-    if require_github_for_oi and is_oi and not github_url:
+
+    # Required field validation for Final Submission
+    missing_fields = []
+    
+    # 1. Open Innovation Problem Statement fields (always required for OI)
+    if is_oi:
+        eff_title = data.project_title or (existing.project_title if existing else None)
+        if not eff_title or len(eff_title.strip()) < 5:
+            missing_fields.append("Problem Statement Title (minimum 5 characters)")
+        eff_ps = data.problem_statement or (existing.problem_statement if existing else None)
+        if not eff_ps or len(eff_ps.strip()) < 15:
+            missing_fields.append("Problem Statement Description (minimum 15 characters)")
+        if require_github_for_oi and not github_url:
+            missing_fields.append("GitHub repository URL (mandatory for Open Innovation, starting with https://github.com/)")
+
+    # 2. General mandatory project fields
+    if require_all_mandatory or is_oi:
+        eff_abstract = data.abstract or (existing.abstract if existing else None)
+        if not eff_abstract or len(eff_abstract.strip()) < 10:
+            missing_fields.append("Project Abstract (minimum 10 characters)")
+
+        eff_solution = data.proposed_solution or (existing.proposed_solution if existing else None)
+        if not eff_solution or len(eff_solution.strip()) < 10:
+            missing_fields.append("Proposed Solution (minimum 10 characters)")
+
+        eff_tech = tech_stack or (existing.technologies if existing else None)
+        if not eff_tech or (isinstance(eff_tech, list) and len(eff_tech) == 0):
+            missing_fields.append("Technologies Used (at least one technology required)")
+
+        eff_objectives = objectives_str or (existing.objectives if existing else None)
+        if not eff_objectives or len(eff_objectives.strip()) < 10:
+            missing_fields.append("Project Objectives (minimum 10 characters)")
+
+        eff_outcome = data.expected_outcome or (existing.expected_outcome if existing else None)
+        if not eff_outcome or len(eff_outcome.strip()) < 10:
+            missing_fields.append("Expected Outcome (minimum 10 characters)")
+
+        eff_desc = data.project_description or (existing.project_description if existing else None)
+        if not eff_desc or len(eff_desc.strip()) < 15:
+            missing_fields.append("Detailed Project Description (minimum 15 characters)")
+
+    if missing_fields:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"success": False, "message": "GitHub repository URL is mandatory for Open Innovation projects", "error_code": "GITHUB_URL_REQUIRED"},
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "success": False,
+                "message": f"Mandatory fields missing for final submission: {', '.join(missing_fields)}",
+                "missing_fields": missing_fields,
+                "error_code": "REQUIRED_FIELDS_MISSING",
+            },
         )
 
     now = datetime.now(timezone.utc)
 
     if existing is None:
-        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
         if is_oi:
             realm = None
             ps = None
@@ -233,11 +288,12 @@ def submit_final_project(
         )
         db.add(project)
     else:
-        is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
+        can_edit_ps = is_oi and (not existing.is_submitted or getattr(user, "allow_problem_statement_edit", False))
         if data.project_title:
             existing.project_title = data.project_title.strip()
-        if data.problem_statement and (is_oi or not existing.problem_statement_id):
+        if is_oi and can_edit_ps and data.problem_statement:
             existing.problem_statement = data.problem_statement.strip()
+
         if data.abstract is not None:
             existing.abstract = data.abstract.strip()
         if objectives_str is not None:
@@ -264,15 +320,16 @@ def submit_final_project(
         project = existing
 
     # Revoke editing permission automatically and record audit log
-    if getattr(user, "edit_permission", False):
+    if getattr(user, "edit_permission", False) or getattr(user, "allow_problem_statement_edit", False):
         user.edit_permission = False
+        user.allow_problem_statement_edit = False
         user.edit_permission_reason = None
         db.add(AuditLog(
             action="PROJECT_RESUBMITTED",
             admin_id=None,
             target_type="project",
             target_id=project.id,
-            description=f"Team '{user.team_name}' resubmitted project {project.project_code}. Edit permission revoked automatically."
+            description=f"Team '{user.team_name}' resubmitted project {project.project_code}. Edit permissions revoked automatically."
         ))
 
     db.commit()
@@ -504,17 +561,18 @@ def get_project_problem_statement(db: Session, user: User) -> dict:
             "source": "official",
         }
 
+    is_oi = bool(user.domain and user.domain.name == DomainName.OPEN_INNOVATION.value)
     return {
         "id": str(project.problem_statement_id) if (project and project.problem_statement_id) else None,
-        "problem_code": project.problem_code if project else "—",
-        "realm": project.realm if project else (user.domain.name if user.domain else "AI"),
-        "title": project.project_title if project else "Hogwarts Legacy 5.0 Challenge",
-        "description": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
-        "detailed_description": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
-        "problem_statement": project.problem_statement if (project and project.problem_statement) else "Official problem statement scope.",
+        "problem_code": project.problem_code if project else ("OI-SELF" if is_oi else "—"),
+        "realm": project.realm if project else (user.domain.name if user.domain else ("OPEN_INNOVATION" if is_oi else "AI")),
+        "title": project.project_title if project and project.project_title else ("Open Innovation Problem Statement" if is_oi else "Hogwarts Legacy 5.0 Challenge"),
+        "description": project.problem_statement if (project and project.problem_statement) else ("" if is_oi else "Official problem statement scope."),
+        "detailed_description": project.problem_statement if (project and project.problem_statement) else ("" if is_oi else "Official problem statement scope."),
+        "problem_statement": project.problem_statement if (project and project.problem_statement) else ("" if is_oi else "Official problem statement scope."),
         "difficulty": "INTERMEDIATE",
         "status": True,
-        "source": "assigned",
+        "source": "self_defined" if is_oi else "assigned",
     }
 
 

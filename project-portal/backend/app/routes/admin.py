@@ -649,6 +649,7 @@ def _user_dict(user: User) -> dict:
         "assigned_problem_title": project_summary.get("project_title") if project_summary else None,
         "assigned_realm": project_summary.get("realm") if project_summary else None,
         "edit_permission": getattr(user, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(user, "allow_problem_statement_edit", False),
         "edit_permission_reason": getattr(user, "edit_permission_reason", None),
         "edit_permission_granted_at": user.edit_permission_granted_at.isoformat() if getattr(user, "edit_permission_granted_at", None) else None,
         "password_reset_required": getattr(user, "password_reset_required", False),
@@ -732,6 +733,7 @@ def _project_dict(project: Project) -> dict:
         "updated_at": project.updated_at.isoformat(),
         "assigned_at": project.assigned_at.isoformat() if getattr(project, "assigned_at", None) else None,
         "edit_permission": getattr(u, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(u, "allow_problem_statement_edit", False),
         "edit_permission_reason": getattr(u, "edit_permission_reason", None),
         "edit_permission_granted_at": u.edit_permission_granted_at.isoformat() if getattr(u, "edit_permission_granted_at", None) else None,
     }

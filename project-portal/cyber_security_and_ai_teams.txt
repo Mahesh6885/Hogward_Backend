@@ -1,0 +1,461 @@
+=================================================================================================================================================
+                HOGWARTS LEGACY 5.0 — CYBER SECURITY & ARTIFICIAL INTELLIGENCE TEAMS
+=================================================================================================================================================
+Total Teams: 63  |  Artificial Intelligence: 54 teams  |  Cyber Security: 9 teams
+=================================================================================================================================================
+
+No.  | Team Name              | Domain                    | Email                              | Problem Statement
+-------------------------------------------------------------------------------------------------------------------------------------------------
+1    | AINOVA                 | Artificial Intelligence   | priyadhrash7081@gmail.com          | IoT-Based Equipment Anomaly Detection
+2    | Alpha Titans           | Artificial Intelligence   | shalinishalini3943@gmail.com       | IoT-Based Equipment Anomaly Detection
+3    | Binary Titans          | Artificial Intelligence   | kirubharam3010@gmail.com           | Rover Path Planning in Simulated Terrain
+4    | Black Hat              | Artificial Intelligence   | ganbu8870@gmail.com                | AI-Powered College Helpdesk Assistant
+5    | Black Label            | Artificial Intelligence   | hare39692@gmail.com                | AI-Based Digital Habit Awareness System
+6    | BLOCKERS               | Artificial Intelligence   | dhivyesh66@gmail.com               | AI-Based Digital Habit Awareness System
+7    | BRAIN STROMERS         | Artificial Intelligence   | ncaviraj@gmail.com                 | AI-Powered College Helpdesk Assistant
+8    | BroVerse               | Artificial Intelligence   | akilrmhss@gmail.com                | AI-Based UAT Test Case Generator
+9    | Byte Storm             | Artificial Intelligence   | vkbharath30032008@gmail.com        | IoT-Based Equipment Anomaly Detection
+10   | CipherX                | Artificial Intelligence   | padmini.jeganathan@gmail.com       | Computer Vision-Based Defect Detection
+11   | Code-x                 | Artificial Intelligence   | deepika060107@gmail.com            | Rover Path Planning in Simulated Terrain
+12   | DevDynasty             | Artificial Intelligence   | vibinkuttan24@gmail.com            | AI-Powered Lead Qualification & CRM Bot
+13   | Digital Pioneers       | Artificial Intelligence   | madhupriyamadhu131679@gmail.com    | Rover Path Planning in Simulated Terrain
+14   | Eco team               | Artificial Intelligence   | prasanththangarajm@gmail.com       | AI-Based Digital Habit Awareness System
+15   | Elite-Coders           | Artificial Intelligence   | marampavandivyesh319@gmail.com     | Computer Vision-Based Defect Detection
+16   | Endurance              | Artificial Intelligence   | praveenkumar05082006@gmail.com     | AI-Based UAT Test Case Generator
+17   | Expecto_Petronum       | Artificial Intelligence   | 25cs082@kpriet.ac.in               | Tamper-Proof Academic Credential Verification
+18   | G3Nexora               | Artificial Intelligence   | 24cs070@kpriet.ac.in               | Tamper-Proof Academic Credential Verification
+19   | GEAR 5                 | Artificial Intelligence   | niranjandp29@gmail.com             | Quantum vs Classical Optimization
+20   | HACKBYTE               | Artificial Intelligence   | yathikamanimegalai@gmail.com       | Mission Failure & Recovery Simulator
+21   | Hack nest              | Artificial Intelligence   | rrajsri283@gmail.com               | AI-Based Digital Habit Awareness System
+22   | Horcrux                | Artificial Intelligence   | gxwr143@gmail.com                  | Mission Failure & Recovery Simulator
+23   | Human 2 AI             | Artificial Intelligence   | naghulpranav951@gmail.com          | Quantum vs Classical Optimization
+24   | Learnova               | Artificial Intelligence   | elakkiansaravanan@gmail.com        | AI-Based Digital Habit Awareness System
+25   | Limitless coders       | Artificial Intelligence   | devikamani953@gmail.com            | Quantum vs Classical Optimization
+26   | LogicFusion            | Artificial Intelligence   | jaishuriya721@gmail.com            | AI-Powered College Helpdesk Assistant
+27   | Logix Brains           | Artificial Intelligence   | sakthivelboobalan027@gmail.com     | Computer Vision-Based Defect Detection
+28   | MLmatrix               | Artificial Intelligence   | harinisris127@gmail.com            | Tamper-Proof Academic Credential Verification
+29   | NetRegen               | Artificial Intelligence   | 24106045@drngpit.ac.in             | AI-Powered College Helpdesk Assistant
+30   | Neural Hackers         | Artificial Intelligence   | kavishriparamasivm@gmail.com       | Mission Failure & Recovery Simulator
+31   | Neural Titans          | Artificial Intelligence   | dharsshinisaravanan09@gmail.com    | Rover Path Planning in Simulated Terrain
+32   | NEURONEX-2K26          | Artificial Intelligence   | parishithbalamurugan@gmail.com     | AI-Powered Lead Qualification & CRM Bot
+33   | NeuroTech              | Artificial Intelligence   | abishekabarna2@gmail.com           | IoT-Based Equipment Anomaly Detection
+34   | NextGen                | Artificial Intelligence   | sansatnaras@gmail.com              | Rover Path Planning in Simulated Terrain
+35   | One Piece              | Artificial Intelligence   | 2k25eee44@kiot.ac.in               | Mission Failure & Recovery Simulator
+36   | Quantum coders         | Artificial Intelligence   | shibinshankar0@gmail.com           | AI-Powered Lead Qualification & CRM Bot
+37   | RCK                    | Artificial Intelligence   | aswitha755@gmail.com               | Computer Vision-Based Defect Detection
+38   | Reg_X_                 | Artificial Intelligence   | md.asifmd46@gmail.com              | AI-Based UAT Test Case Generator
+39   | RUFES                  | Artificial Intelligence   | vevelinphebes2@gmail.com           | Mission Failure & Recovery Simulator
+40   | Smartix                | Artificial Intelligence   | rubihamayilsamy@gmail.com          | IoT-Based Equipment Anomaly Detection
+41   | StackRaiders           | Artificial Intelligence   | 24uit047@kamarajengg.edu.in        | Computer Vision-Based Defect Detection
+42   | TEAM JUGGERNAUTS       | Artificial Intelligence   | samivel096@gmail.com               | Tamper-Proof Academic Credential Verification
+43   | TEAM SRM               | Artificial Intelligence   | gobiaadav@gmail.com                | AI-Powered Lead Qualification & CRM Bot
+44   | Team Triggers          | Artificial Intelligence   | karthinathira0914@gmail.com        | AI-Based UAT Test Case Generator
+45   | Team Vizers            | Artificial Intelligence   | vigneshsri058@gmail.com            | AI-Based Digital Habit Awareness System
+46   | TechMinds              | Artificial Intelligence   | harshinisri1696@gmail.com          | IoT-Based Equipment Anomaly Detection
+47   | Tech Nova              | Artificial Intelligence   | Mageswaric33@gmail.com             | AI-Powered College Helpdesk Assistant
+48   | Techverse              | Artificial Intelligence   | chandan.gelli@gmail.com            | AI-Powered Lead Qualification & CRM Bot
+49   | Thilaga and Team       | Artificial Intelligence   | thilaga007s@gmail.com              | Rover Path Planning in Simulated Terrain
+50   | TRICODE                | Artificial Intelligence   | gokulranjan01222006@gmail.com      | Quantum vs Classical Optimization
+51   | TWINTECH               | Artificial Intelligence   | vero.ys2007@gmail.com              | Tamper-Proof Academic Credential Verification
+52   | Vibesquare             | Artificial Intelligence   | malarmannan070@gmail.com           | AI-Based UAT Test Case Generator
+53   | VisionX                | Artificial Intelligence   | tanujaelangovan038@gmail.com       | AI-Powered College Helpdesk Assistant
+54   | Xyon                   | Artificial Intelligence   | preethidharma2008@gmail.com        | Quantum vs Classical Optimization
+55   | Arcanova               | Cyber Security            | hharshina57@gmail.com              | Digital Evidence Integrity & Chain-of-Custody
+56   | Cyber titans           | Cyber Security            | ashokakm2006@gmail.com             | Intelligent SOC Alert Correlation & Attack-Chain Reconstruction
+57   | Frozon Diamonds        | Cyber Security            | ilanandhini25@gmail.com            | Software Supply-Chain Threat Detection
+58   | GENZ SQUAD             | Cyber Security            | nandhunandhu2814@gmail.com         | Insider Threat & User Behavior Analytics
+59   | Hell Fire Club         | Cyber Security            | madhusri240709@gmail.com           | IoT Behavioral Anomaly Detection
+60   | Innovexa               | Cyber Security            | gauthams436@gmail.com              | Automated Cyber Incident Investigation & Response
+61   | IQ DEFENCERS           | Cyber Security            | M82461685@gmail.com                | Ransomware Early-Warning & Automated Containment
+62   | SECURE SQUAD           | Cyber Security            | krishgokul4135@gmail.com           | Adaptive Phishing Detection & Response
+63   | Sentineliq             | Cyber Security            | saravananrohith488@gmail.com       | API Abuse Detection & Dynamic Security Gateway
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+=================================================================================================================================================
+                                        DETAILED LIST
+=================================================================================================================================================
+
+
+--- [ ARTIFICIAL INTELLIGENCE TEAMS ] ---
+
+1. Team Name:         AINOVA
+   Domain:            Artificial Intelligence
+   Email:             priyadhrash7081@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+2. Team Name:         Alpha Titans
+   Domain:            Artificial Intelligence
+   Email:             shalinishalini3943@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+3. Team Name:         Binary Titans
+   Domain:            Artificial Intelligence
+   Email:             kirubharam3010@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+4. Team Name:         Black Hat
+   Domain:            Artificial Intelligence
+   Email:             ganbu8870@gmail.com
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+5. Team Name:         Black Label
+   Domain:            Artificial Intelligence
+   Email:             hare39692@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+6. Team Name:         BLOCKERS
+   Domain:            Artificial Intelligence
+   Email:             dhivyesh66@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+7. Team Name:         BRAIN STROMERS
+   Domain:            Artificial Intelligence
+   Email:             ncaviraj@gmail.com
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+8. Team Name:         BroVerse
+   Domain:            Artificial Intelligence
+   Email:             akilrmhss@gmail.com
+   Problem Statement: AI-Based UAT Test Case Generator
+   Code:              AI-PS-01
+
+9. Team Name:         Byte Storm
+   Domain:            Artificial Intelligence
+   Email:             vkbharath30032008@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+10. Team Name:         CipherX
+   Domain:            Artificial Intelligence
+   Email:             padmini.jeganathan@gmail.com
+   Problem Statement: Computer Vision-Based Defect Detection
+   Code:              AI-PS-04
+
+11. Team Name:         Code-x
+   Domain:            Artificial Intelligence
+   Email:             deepika060107@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+12. Team Name:         DevDynasty
+   Domain:            Artificial Intelligence
+   Email:             vibinkuttan24@gmail.com
+   Problem Statement: AI-Powered Lead Qualification & CRM Bot
+   Code:              AI-PS-02
+
+13. Team Name:         Digital Pioneers
+   Domain:            Artificial Intelligence
+   Email:             madhupriyamadhu131679@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+14. Team Name:         Eco team
+   Domain:            Artificial Intelligence
+   Email:             prasanththangarajm@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+15. Team Name:         Elite-Coders
+   Domain:            Artificial Intelligence
+   Email:             marampavandivyesh319@gmail.com
+   Problem Statement: Computer Vision-Based Defect Detection
+   Code:              AI-PS-04
+
+16. Team Name:         Endurance
+   Domain:            Artificial Intelligence
+   Email:             praveenkumar05082006@gmail.com
+   Problem Statement: AI-Based UAT Test Case Generator
+   Code:              AI-PS-01
+
+17. Team Name:         Expecto_Petronum
+   Domain:            Artificial Intelligence
+   Email:             25cs082@kpriet.ac.in
+   Problem Statement: Tamper-Proof Academic Credential Verification
+   Code:              AI-PS-08
+
+18. Team Name:         G3Nexora
+   Domain:            Artificial Intelligence
+   Email:             24cs070@kpriet.ac.in
+   Problem Statement: Tamper-Proof Academic Credential Verification
+   Code:              AI-PS-08
+
+19. Team Name:         GEAR 5
+   Domain:            Artificial Intelligence
+   Email:             niranjandp29@gmail.com
+   Problem Statement: Quantum vs Classical Optimization
+   Code:              AI-PS-09
+
+20. Team Name:         HACKBYTE
+   Domain:            Artificial Intelligence
+   Email:             yathikamanimegalai@gmail.com
+   Problem Statement: Mission Failure & Recovery Simulator
+   Code:              AI-PS-03
+
+21. Team Name:         Hack nest
+   Domain:            Artificial Intelligence
+   Email:             rrajsri283@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+22. Team Name:         Horcrux
+   Domain:            Artificial Intelligence
+   Email:             gxwr143@gmail.com
+   Problem Statement: Mission Failure & Recovery Simulator
+   Code:              AI-PS-03
+
+23. Team Name:         Human 2 AI
+   Domain:            Artificial Intelligence
+   Email:             naghulpranav951@gmail.com
+   Problem Statement: Quantum vs Classical Optimization
+   Code:              AI-PS-09
+
+24. Team Name:         Learnova
+   Domain:            Artificial Intelligence
+   Email:             elakkiansaravanan@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+25. Team Name:         Limitless coders
+   Domain:            Artificial Intelligence
+   Email:             devikamani953@gmail.com
+   Problem Statement: Quantum vs Classical Optimization
+   Code:              AI-PS-09
+
+26. Team Name:         LogicFusion
+   Domain:            Artificial Intelligence
+   Email:             jaishuriya721@gmail.com
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+27. Team Name:         Logix Brains
+   Domain:            Artificial Intelligence
+   Email:             sakthivelboobalan027@gmail.com
+   Problem Statement: Computer Vision-Based Defect Detection
+   Code:              AI-PS-04
+
+28. Team Name:         MLmatrix
+   Domain:            Artificial Intelligence
+   Email:             harinisris127@gmail.com
+   Problem Statement: Tamper-Proof Academic Credential Verification
+   Code:              AI-PS-08
+
+29. Team Name:         NetRegen
+   Domain:            Artificial Intelligence
+   Email:             24106045@drngpit.ac.in
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+30. Team Name:         Neural Hackers
+   Domain:            Artificial Intelligence
+   Email:             kavishriparamasivm@gmail.com
+   Problem Statement: Mission Failure & Recovery Simulator
+   Code:              AI-PS-03
+
+31. Team Name:         Neural Titans
+   Domain:            Artificial Intelligence
+   Email:             dharsshinisaravanan09@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+32. Team Name:         NEURONEX-2K26
+   Domain:            Artificial Intelligence
+   Email:             parishithbalamurugan@gmail.com
+   Problem Statement: AI-Powered Lead Qualification & CRM Bot
+   Code:              AI-PS-02
+
+33. Team Name:         NeuroTech
+   Domain:            Artificial Intelligence
+   Email:             abishekabarna2@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+34. Team Name:         NextGen
+   Domain:            Artificial Intelligence
+   Email:             sansatnaras@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+35. Team Name:         One Piece
+   Domain:            Artificial Intelligence
+   Email:             2k25eee44@kiot.ac.in
+   Problem Statement: Mission Failure & Recovery Simulator
+   Code:              AI-PS-03
+
+36. Team Name:         Quantum coders
+   Domain:            Artificial Intelligence
+   Email:             shibinshankar0@gmail.com
+   Problem Statement: AI-Powered Lead Qualification & CRM Bot
+   Code:              AI-PS-02
+
+37. Team Name:         RCK
+   Domain:            Artificial Intelligence
+   Email:             aswitha755@gmail.com
+   Problem Statement: Computer Vision-Based Defect Detection
+   Code:              AI-PS-04
+
+38. Team Name:         Reg_X_
+   Domain:            Artificial Intelligence
+   Email:             md.asifmd46@gmail.com
+   Problem Statement: AI-Based UAT Test Case Generator
+   Code:              AI-PS-01
+
+39. Team Name:         RUFES
+   Domain:            Artificial Intelligence
+   Email:             vevelinphebes2@gmail.com
+   Problem Statement: Mission Failure & Recovery Simulator
+   Code:              AI-PS-03
+
+40. Team Name:         Smartix
+   Domain:            Artificial Intelligence
+   Email:             rubihamayilsamy@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+41. Team Name:         StackRaiders
+   Domain:            Artificial Intelligence
+   Email:             24uit047@kamarajengg.edu.in
+   Problem Statement: Computer Vision-Based Defect Detection
+   Code:              AI-PS-04
+
+42. Team Name:         TEAM JUGGERNAUTS
+   Domain:            Artificial Intelligence
+   Email:             samivel096@gmail.com
+   Problem Statement: Tamper-Proof Academic Credential Verification
+   Code:              AI-PS-08
+
+43. Team Name:         TEAM SRM
+   Domain:            Artificial Intelligence
+   Email:             gobiaadav@gmail.com
+   Problem Statement: AI-Powered Lead Qualification & CRM Bot
+   Code:              AI-PS-02
+
+44. Team Name:         Team Triggers
+   Domain:            Artificial Intelligence
+   Email:             karthinathira0914@gmail.com
+   Problem Statement: AI-Based UAT Test Case Generator
+   Code:              AI-PS-01
+
+45. Team Name:         Team Vizers
+   Domain:            Artificial Intelligence
+   Email:             vigneshsri058@gmail.com
+   Problem Statement: AI-Based Digital Habit Awareness System
+   Code:              AI-PS-10
+
+46. Team Name:         TechMinds
+   Domain:            Artificial Intelligence
+   Email:             harshinisri1696@gmail.com
+   Problem Statement: IoT-Based Equipment Anomaly Detection
+   Code:              AI-PS-06
+
+47. Team Name:         Tech Nova
+   Domain:            Artificial Intelligence
+   Email:             Mageswaric33@gmail.com
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+48. Team Name:         Techverse
+   Domain:            Artificial Intelligence
+   Email:             chandan.gelli@gmail.com
+   Problem Statement: AI-Powered Lead Qualification & CRM Bot
+   Code:              AI-PS-02
+
+49. Team Name:         Thilaga and Team
+   Domain:            Artificial Intelligence
+   Email:             thilaga007s@gmail.com
+   Problem Statement: Rover Path Planning in Simulated Terrain
+   Code:              AI-PS-05
+
+50. Team Name:         TRICODE
+   Domain:            Artificial Intelligence
+   Email:             gokulranjan01222006@gmail.com
+   Problem Statement: Quantum vs Classical Optimization
+   Code:              AI-PS-09
+
+51. Team Name:         TWINTECH
+   Domain:            Artificial Intelligence
+   Email:             vero.ys2007@gmail.com
+   Problem Statement: Tamper-Proof Academic Credential Verification
+   Code:              AI-PS-08
+
+52. Team Name:         Vibesquare
+   Domain:            Artificial Intelligence
+   Email:             malarmannan070@gmail.com
+   Problem Statement: AI-Based UAT Test Case Generator
+   Code:              AI-PS-01
+
+53. Team Name:         VisionX
+   Domain:            Artificial Intelligence
+   Email:             tanujaelangovan038@gmail.com
+   Problem Statement: AI-Powered College Helpdesk Assistant
+   Code:              AI-PS-07
+
+54. Team Name:         Xyon
+   Domain:            Artificial Intelligence
+   Email:             preethidharma2008@gmail.com
+   Problem Statement: Quantum vs Classical Optimization
+   Code:              AI-PS-09
+
+
+--- [ CYBER SECURITY TEAMS ] ---
+
+55. Team Name:         Arcanova
+   Domain:            Cyber Security
+   Email:             hharshina57@gmail.com
+   Problem Statement: Digital Evidence Integrity & Chain-of-Custody
+   Code:              CY-PS-06
+
+56. Team Name:         Cyber titans
+   Domain:            Cyber Security
+   Email:             ashokakm2006@gmail.com
+   Problem Statement: Intelligent SOC Alert Correlation & Attack-Chain Reconstruction
+   Code:              CY-PS-02
+
+57. Team Name:         Frozon Diamonds
+   Domain:            Cyber Security
+   Email:             ilanandhini25@gmail.com
+   Problem Statement: Software Supply-Chain Threat Detection
+   Code:              CY-PS-08
+
+58. Team Name:         GENZ SQUAD
+   Domain:            Cyber Security
+   Email:             nandhunandhu2814@gmail.com
+   Problem Statement: Insider Threat & User Behavior Analytics
+   Code:              CY-PS-07
+
+59. Team Name:         Hell Fire Club
+   Domain:            Cyber Security
+   Email:             madhusri240709@gmail.com
+   Problem Statement: IoT Behavioral Anomaly Detection
+   Code:              CY-PS-09
+
+60. Team Name:         Innovexa
+   Domain:            Cyber Security
+   Email:             gauthams436@gmail.com
+   Problem Statement: Automated Cyber Incident Investigation & Response
+   Code:              CY-PS-10
+
+61. Team Name:         IQ DEFENCERS
+   Domain:            Cyber Security
+   Email:             M82461685@gmail.com
+   Problem Statement: Ransomware Early-Warning & Automated Containment
+   Code:              CY-PS-03
+
+62. Team Name:         SECURE SQUAD
+   Domain:            Cyber Security
+   Email:             krishgokul4135@gmail.com
+   Problem Statement: Adaptive Phishing Detection & Response
+   Code:              CY-PS-01
+
+63. Team Name:         Sentineliq
+   Domain:            Cyber Security
+   Email:             saravananrohith488@gmail.com
+   Problem Statement: API Abuse Detection & Dynamic Security Gateway
+   Code:              CY-PS-04

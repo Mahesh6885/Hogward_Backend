@@ -573,8 +573,8 @@
           </div>
         </div>
 
-        <!-- Official Problem Statement Card (Enchanted Parchment) -->
-        <div class="enchanted-parchment-card mb-3">
+        <!-- Official Problem Statement Card (Enchanted Parchment) for AI / Cybersecurity -->
+        <div class="enchanted-parchment-card mb-3" id="card-official-problem-statement">
           <div class="ps-card-header">
             <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
               <span class="ps-code-pill" id="draft-ps-code">AI-PS-01</span>
@@ -592,6 +592,48 @@
           <p class="text-xs text-muted" style="margin:0">
             📜 <em>Official Hogwarts Legacy 5.0 Problem Statement. This scope is permanently assigned to your team realm.</em>
           </p>
+        </div>
+
+        <!-- Open Innovation Self-Defined Problem Statement Form Card -->
+        <div class="card mb-3 hidden" id="card-oi-problem-statement" style="border:1.5px solid rgba(212,175,55,0.4);background:linear-gradient(135deg, rgba(26,21,14,0.95), rgba(16,12,8,0.98))">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(212,175,55,0.2)">
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+              <span class="ps-code-pill" style="background:var(--accent-orange);color:#fff">OI-SELF</span>
+              <span class="badge badge-orange">💡 Open Innovation Track</span>
+              <span class="badge badge-yellow" id="oi-ps-perm-badge">Editable</span>
+            </div>
+            <div id="oi-ps-lock-msg" class="text-xs hidden" style="color:var(--accent-yellow)">
+              🔒 Problem statement locked by administrator. Only project details can be edited.
+            </div>
+          </div>
+
+          <!-- Problem Statement Title Block -->
+          <div class="form-group" style="margin-bottom:1.25rem">
+            <div class="form-block-header">
+              <label class="form-block-title" for="draft-ps-custom-title">
+                <span>💡 Problem Statement Title *</span>
+              </label>
+              <button type="button" class="btn-save-draft" id="btn-save-ps-title" onclick="saveFieldDraft('project_title', this)">
+                💾 Save Draft
+              </button>
+            </div>
+            <input class="form-input" id="draft-ps-custom-title" type="text" placeholder="e.g. Autonomous AI Drone Swarm for Agricultural Pest Monitoring" style="font-weight:600;font-size:1.05rem" />
+            <div class="text-xs text-muted" style="margin-top:0.35rem">Enter the official title of the problem statement your squad has chosen to solve.</div>
+          </div>
+
+          <!-- Problem Statement Description Block -->
+          <div class="form-group" style="margin-bottom:0.5rem">
+            <div class="form-block-header">
+              <label class="form-block-title" for="draft-ps-custom-desc">
+                <span>💡 Problem Statement Description *</span>
+              </label>
+              <button type="button" class="btn-save-draft" id="btn-save-ps-desc" onclick="saveFieldDraft('problem_statement', this)">
+                💾 Save Draft
+              </button>
+            </div>
+            <textarea class="form-textarea" id="draft-ps-custom-desc" rows="4" placeholder="Articulate the problem background, industry or social pain point, domain context, and core challenge..."></textarea>
+            <div class="text-xs text-muted" style="margin-top:0.35rem">Provide a comprehensive statement defining the scope, context, and challenge.</div>
+          </div>
         </div>
 
         <!-- Abstract Form Block -->
@@ -837,20 +879,25 @@
         </div>
 
         <!-- Problem Statement Card (Enchanted Parchment) -->
-        <div class="enchanted-parchment-card mb-3">
+        <div class="enchanted-parchment-card mb-3" id="doc-problem-statement-card">
           <div class="ps-card-header">
             <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
               <span class="ps-code-pill" id="doc-ps-code">AI-PS-01</span>
               <span class="badge" id="doc-ps-realm-badge">AI Realm</span>
               <span class="badge" id="doc-ps-diff-badge">Intermediate</span>
             </div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('problem_statement', '🎯 Official Problem Statement', 'OFFICIAL CHALLENGE')">
-              🔍 [ View ] Full Scope
-            </button>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+              <button type="button" class="btn btn-secondary btn-sm hidden" id="btn-edit-oi-problem" onclick="switchToEditorMode()">
+                ✏️ Edit Problem Statement
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="viewSectionModal('problem_statement', '🎯 Problem Statement', 'PROBLEM STATEMENT')">
+                🔍 [ View ] Full Scope
+              </button>
+            </div>
           </div>
           <div class="ps-title-text" id="doc-ps-title">Official Problem Statement</div>
           <div class="ps-description-box" id="doc-problem">—</div>
-          <p class="text-xs text-muted" style="margin:0">
+          <p class="text-xs text-muted" style="margin:0" id="doc-ps-footer-note">
             📜 <em>Official Hogwarts Legacy 5.0 Problem Statement.</em>
           </p>
         </div>
@@ -1889,7 +1936,9 @@
 
       const isSubmitted = p.is_submitted === true || (p.status && p.status !== 'DRAFT');
       const hasEditPermission = Boolean(p.edit_permission || (cachedTeam && cachedTeam.edit_permission));
+      const allowPsEdit = Boolean(p.allow_problem_statement_edit || (cachedTeam && cachedTeam.allow_problem_statement_edit));
       const editReason = p.edit_permission_reason || (cachedTeam && cachedTeam.edit_permission_reason) || '';
+      const isOI = (p.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION' || p.realm === 'OPEN_INNOVATION');
 
       const editBanner = document.getElementById('edit-permission-banner');
       const draftBanner = document.getElementById('draft-banner');
@@ -1901,23 +1950,79 @@
       if (!isSubmitted || hasEditPermission) {
         // Render EDITABLE DRAFT OR RESUBMISSION FORM
         if (hasEditPermission && isSubmitted) {
-          document.getElementById('prj-read-only-badge').textContent = 'EDIT PERMISSION GRANTED (Editable)';
-          document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
-          document.getElementById('prj-header-subtitle').textContent = 'Admin has granted temporary edit permission. Update your proposal and resubmit to lock for review.';
+          if (allowPsEdit) {
+            document.getElementById('prj-read-only-badge').textContent = 'FULL EDIT ACTIVE (PS + Project)';
+            document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+            document.getElementById('prj-header-subtitle').textContent = 'Administrator has granted full permission to update your Problem Statement and Project details before resubmitting.';
+          } else {
+            document.getElementById('prj-read-only-badge').textContent = 'PROJECT EDIT ACTIVE (Details Only)';
+            document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
+            document.getElementById('prj-header-subtitle').textContent = 'Administrator has granted permission to update Project Proposal details. Problem Statement remains locked.';
+          }
           if (editBanner) {
             editBanner.classList.remove('hidden');
             const reasonEl = document.getElementById('edit-permission-reason-text');
-            if (reasonEl) reasonEl.textContent = editReason ? `Admin reason: "${editReason}"` : 'Administrator has granted you temporary editing permission.';
+            if (reasonEl) {
+              const scopeText = allowPsEdit ? 'Full Edit (Problem Statement + Project Details)' : 'Project Details Only (Problem Statement Protected)';
+              reasonEl.textContent = `Active Scope: ${scopeText}.${editReason ? ` Admin Note: "${editReason}"` : ''}`;
+            }
           }
           if (draftBanner) draftBanner.classList.add('hidden');
           if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Resubmit Project (Lock)';
         } else {
           document.getElementById('prj-read-only-badge').textContent = 'DRAFT (Editable)';
           document.getElementById('prj-read-only-badge').className = 'badge badge-yellow';
-          document.getElementById('prj-header-subtitle').textContent = 'Draft proposal mode. You can edit, save sections individually, and submit when ready.';
+          document.getElementById('prj-header-subtitle').textContent = isOI
+            ? 'Draft your Open Innovation problem statement and solution. Save drafts anytime and submit when ready.'
+            : 'Draft proposal mode. You can edit, save sections individually, and submit when ready.';
           if (editBanner) editBanner.classList.add('hidden');
           if (draftBanner) draftBanner.classList.remove('hidden');
           if (finalSubmitBtn) finalSubmitBtn.innerHTML = '🚀 Final Submit';
+        }
+
+        // Domain-specific Problem Statement UI in editor
+        const cardOfficial = document.getElementById('card-official-problem-statement');
+        const cardOI = document.getElementById('card-oi-problem-statement');
+        if (isOI) {
+          if (cardOfficial) cardOfficial.classList.add('hidden');
+          if (cardOI) {
+            cardOI.classList.remove('hidden');
+            const customTitleEl = document.getElementById('draft-ps-custom-title');
+            const customDescEl = document.getElementById('draft-ps-custom-desc');
+            const saveTitleBtn = document.getElementById('btn-save-ps-title');
+            const saveDescBtn = document.getElementById('btn-save-ps-desc');
+            const oiPermBadge = document.getElementById('oi-ps-perm-badge');
+            const oiLockMsg = document.getElementById('oi-ps-lock-msg');
+
+            const canEditPS = !isSubmitted || allowPsEdit;
+            if (customTitleEl) {
+              customTitleEl.value = p.project_title || '';
+              customTitleEl.disabled = !canEditPS;
+            }
+            if (customDescEl) {
+              customDescEl.value = p.problem_statement || '';
+              customDescEl.disabled = !canEditPS;
+            }
+            if (saveTitleBtn) saveTitleBtn.disabled = !canEditPS;
+            if (saveDescBtn) saveDescBtn.disabled = !canEditPS;
+
+            if (canEditPS) {
+              if (oiPermBadge) {
+                oiPermBadge.className = 'badge badge-yellow';
+                oiPermBadge.textContent = isSubmitted ? 'Admin Edit Active' : 'Editable Draft';
+              }
+              if (oiLockMsg) oiLockMsg.classList.add('hidden');
+            } else {
+              if (oiPermBadge) {
+                oiPermBadge.className = 'badge badge-gray';
+                oiPermBadge.textContent = '🔒 Locked';
+              }
+              if (oiLockMsg) oiLockMsg.classList.remove('hidden');
+            }
+          }
+        } else {
+          if (cardOI) cardOI.classList.add('hidden');
+          if (cardOfficial) cardOfficial.classList.remove('hidden');
         }
 
         document.getElementById('draft-abstract').value = p.abstract || '';
@@ -1932,12 +2037,16 @@
         // Configure GitHub label
         const ghLabel = document.getElementById('lbl-draft-github');
         if (ghLabel) {
-          ghLabel.innerHTML = `<span>🐙 GitHub Repository Link</span> <span class="badge badge-gray text-xs">Optional</span>`;
+          if (isOI) {
+            ghLabel.innerHTML = `<span>🐙 GitHub Repository Link *</span> <span class="badge badge-orange text-xs">Required for OI</span>`;
+          } else {
+            ghLabel.innerHTML = `<span>🐙 GitHub Repository Link</span> <span class="badge badge-gray text-xs">Optional</span>`;
+          }
         }
 
         if (p.draft_saved_at) {
           const dt = new Date(p.draft_saved_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
-          document.getElementById('draft-last-saved-time').textContent = `Draft auto-saved to PostgreSQL at ${dt}. Click 'Final Submit' when complete.`;
+          document.getElementById('draft-last-saved-time').textContent = `Draft saved to PostgreSQL at ${dt}. Click 'Final Submit' when complete.`;
         }
 
         syncChipsWithInput();
@@ -1949,13 +2058,32 @@
         document.getElementById('prj-header-subtitle').textContent = 'Submitted project documentation. Edits are locked.';
 
         document.getElementById('doc-code').textContent = p.project_code || '—';
-        document.getElementById('doc-title').textContent = (p.problem_statement && p.problem_statement.title) || p.project_title || '—';
+        document.getElementById('doc-title').textContent = (p.problem_statement && typeof p.problem_statement === 'object' && p.problem_statement.title) || p.project_title || '—';
         document.getElementById('doc-domain').textContent = p.realm || p.domain?.display_name || p.domain?.name || '—';
         document.getElementById('doc-date').textContent = p.submitted_at 
           ? new Date(p.submitted_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' }) 
           : '—';
         document.getElementById('doc-status').innerHTML = `<span class="badge ${statusColors[p.status] || 'badge-gray'}">${p.status}</span>`;
         document.getElementById('doc-round').textContent = `Round ${p.current_round} of 3`;
+
+        // Configure read-only Problem Statement Card
+        const btnEditOiPs = document.getElementById('btn-edit-oi-problem');
+        if (isOI) {
+          document.getElementById('doc-ps-code').textContent = 'OI-SELF';
+          const rBadge = document.getElementById('doc-ps-realm-badge');
+          if (rBadge) { rBadge.className = 'badge badge-orange'; rBadge.textContent = '💡 Open Innovation'; }
+          const dBadge = document.getElementById('doc-ps-diff-badge');
+          if (dBadge) { dBadge.className = 'badge badge-yellow'; dBadge.textContent = 'Self-Defined'; }
+          document.getElementById('doc-ps-title').textContent = p.project_title || 'Open Innovation Problem Statement';
+          document.getElementById('doc-problem').textContent = p.problem_statement || 'No problem statement entered.';
+          const note = document.getElementById('doc-ps-footer-note');
+          if (note) note.innerHTML = '💡 <em>Self-defined Problem Statement created by squad for Open Innovation track.</em>';
+          if (btnEditOiPs) {
+            btnEditOiPs.classList.toggle('hidden', !(hasEditPermission && allowPsEdit));
+          }
+        } else {
+          if (btnEditOiPs) btnEditOiPs.classList.add('hidden');
+        }
 
         document.getElementById('doc-abstract').textContent = p.abstract || 'No abstract provided.';
         document.getElementById('doc-objectives').textContent = p.objectives || 'No objectives provided.';
@@ -1987,7 +2115,16 @@
         document.getElementById('doc-description').innerHTML = window.renderFormattedDescription(p.project_description);
 
         if (lockedPermBanner) {
-          lockedPermBanner.classList.add('hidden');
+          if (hasEditPermission) {
+            lockedPermBanner.classList.remove('hidden');
+            const lockedReasonEl = document.getElementById('locked-perm-reason');
+            if (lockedReasonEl) {
+              const scopeText = allowPsEdit ? 'Full Edit (Problem Statement + Project Details)' : 'Project Details Only';
+              lockedReasonEl.textContent = `Administrator has granted ${scopeText} permission. Click below to modify your submission.`;
+            }
+          } else {
+            lockedPermBanner.classList.add('hidden');
+          }
         }
 
         content.classList.remove('hidden');
@@ -2059,6 +2196,8 @@
   // ── Save Individual Block Draft ──────────────────────────────────────────
   window.saveFieldDraft = async function(fieldName, btnEl) {
     const inputMap = {
+      project_title: 'draft-ps-custom-title',
+      problem_statement: 'draft-ps-custom-desc',
       abstract: 'draft-abstract',
       objectives: 'draft-objectives',
       proposed_solution: 'draft-solution',
@@ -2096,7 +2235,7 @@
         }, 1800);
       }
       document.getElementById('draft-last-saved-time').textContent = `Draft block '${fieldName}' saved at ${new Date().toLocaleTimeString()}.`;
-      toast.success('Draft saved successfully!');
+      toast.success('Draft section saved successfully!');
     } catch (err) {
       toast.error(`Could not save draft: ${err.message}`);
       if (btnEl) {
@@ -2113,6 +2252,7 @@
     btnEl.innerHTML = '<span class="spinner"></span> Saving Draft…';
     const alertEl = document.getElementById('draft-alert');
 
+    const isOI = (cachedProject?.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION' || cachedProject?.realm === 'OPEN_INNOVATION');
     const techVal = document.getElementById('draft-technologies').value.trim();
     const payload = {
       abstract: document.getElementById('draft-abstract').value.trim(),
@@ -2126,11 +2266,18 @@
       demo_url: document.getElementById('draft-demo').value.trim() || null,
     };
 
+    if (isOI) {
+      const customTitle = document.getElementById('draft-ps-custom-title')?.value.trim();
+      const customDesc = document.getElementById('draft-ps-custom-desc')?.value.trim();
+      if (customTitle !== undefined) payload.project_title = customTitle;
+      if (customDesc !== undefined) payload.problem_statement = customDesc;
+    }
+
     try {
       const res = await api.patch('/api/projects/me/draft', payload);
       cachedProject = res.data;
       alertEl.className = 'alert alert-success';
-      alertEl.innerHTML = `<span>✅</span><span>Entire project draft saved to database successfully!</span>`;
+      alertEl.innerHTML = `<span>✅</span><span>Draft saved to database! Project status remains DRAFT.</span>`;
       alertEl.classList.remove('alert-hidden');
       document.getElementById('draft-last-saved-time').textContent = `Entire draft saved at ${new Date().toLocaleTimeString()}.`;
       setTimeout(() => alertEl.classList.add('alert-hidden'), 4000);
@@ -2148,8 +2295,14 @@
 
   // ── Final Submit ─────────────────────────────────────────────────────────
   window.submitFinalProject = async function(btnEl) {
+    if (window._isSubmittingProject) return;
+
     const alertEl = document.getElementById('draft-alert');
     alertEl.classList.add('alert-hidden');
+
+    const isOI = (cachedProject?.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION' || cachedProject?.realm === 'OPEN_INNOVATION');
+    const customTitle = isOI ? (document.getElementById('draft-ps-custom-title')?.value.trim() || '') : '';
+    const customDesc = isOI ? (document.getElementById('draft-ps-custom-desc')?.value.trim() || '') : '';
 
     const abstract = document.getElementById('draft-abstract').value.trim();
     const objectives = document.getElementById('draft-objectives').value.trim();
@@ -2160,82 +2313,46 @@
     const github_url = document.getElementById('draft-github').value.trim();
     const demo_url = document.getElementById('draft-demo').value.trim() || null;
 
-    // Validation
-    if (!abstract || abstract.length < 10) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please provide an Abstract of at least 10 characters before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-abstract').focus();
-      return;
+    // Validation of required fields
+    const missing = [];
+    if (isOI) {
+      if (!customTitle || customTitle.length < 5) {
+        missing.push('Problem Statement Title (minimum 5 characters)');
+      }
+      if (!customDesc || customDesc.length < 15) {
+        missing.push('Problem Statement Description (minimum 15 characters)');
+      }
     }
-    if (!objectives || objectives.length < 10) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please provide project Objectives before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-objectives').focus();
-      return;
-    }
-    if (!solution || solution.length < 10) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please provide a Proposed Solution before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-solution').focus();
-      return;
-    }
-    if (!technologies) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please specify the Technology Stack before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-technologies').focus();
-      return;
-    }
-    if (!expected_outcome || expected_outcome.length < 10) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please describe the Expected Outcome before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-outcome').focus();
-      return;
-    }
-    if (!project_description || project_description.length < 15) {
-      alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Please provide a Detailed Project Description (Outcomes, Functionalities, Do's &amp; Don'ts) before final submission.</span>`;
-      alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-description').focus();
-      return;
+    if (!abstract || abstract.length < 10) missing.push('Project Abstract (minimum 10 characters)');
+    if (!objectives || objectives.length < 10) missing.push('Project Objectives (minimum 10 characters)');
+    if (!solution || solution.length < 10) missing.push('Proposed Solution (minimum 10 characters)');
+    if (!technologies) missing.push('Technologies Used');
+    if (!expected_outcome || expected_outcome.length < 10) missing.push('Expected Outcome (minimum 10 characters)');
+    if (!project_description || project_description.length < 15) missing.push('Detailed Project Description (minimum 15 characters)');
+
+    if (isOI && !github_url) {
+      missing.push('GitHub repository URL (mandatory for Open Innovation)');
+    } else if (github_url && !github_url.startsWith('https://github.com/')) {
+      missing.push("Valid GitHub URL starting with 'https://github.com/'");
     }
 
-    const isOI = (cachedProject?.domain?.name === 'OPEN_INNOVATION' || cachedTeam?.domain?.name === 'OPEN_INNOVATION');
-    if (isOI) {
-      if (!github_url) {
-        alertEl.className = 'alert alert-error';
-        alertEl.innerHTML = `<span>⚠️</span><span>GitHub repository URL is mandatory for Open Innovation projects.</span>`;
-        alertEl.classList.remove('alert-hidden');
-        document.getElementById('draft-github').focus();
-        return;
-      }
-      if (!github_url.startsWith('https://github.com/')) {
-        alertEl.className = 'alert alert-error';
-        alertEl.innerHTML = `<span>⚠️</span><span>GitHub URL must begin with 'https://github.com/'.</span>`;
-        alertEl.classList.remove('alert-hidden');
-        document.getElementById('draft-github').focus();
-        return;
-      }
-    } else if (github_url && !github_url.startsWith('https://github.com/')) {
+    if (missing.length > 0) {
       alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>GitHub URL must begin with 'https://github.com/'.</span>`;
+      alertEl.innerHTML = `<span>⚠️</span><div><strong>Mandatory information missing before final submission:</strong><ul style="margin:0.4rem 0 0 1.25rem;padding:0">${missing.map(m => `<li>${escHtml(m)}</li>`).join('')}</ul></div>`;
       alertEl.classList.remove('alert-hidden');
-      document.getElementById('draft-github').focus();
+      alertEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       return;
     }
 
     const hasEditPerm = Boolean(cachedProject?.edit_permission || (cachedTeam && cachedTeam.edit_permission));
     const confirmMsg = hasEditPerm
-      ? "Resubmit your finalized project proposal?\n\n⚠️ NOTE: This will resubmit your updated proposal and immediately revoke the temporary edit permission, locking your project for evaluation."
-      : "Are you sure you want to finalize and submit your project proposal?\n\n⚠️ WARNING: Once submitted, all fields will be locked and cannot be edited. Only the Administrator can make modifications after submission.";
+      ? "Resubmit your finalized project proposal?\n\n⚠️ NOTE: This will resubmit your updated proposal and immediately revoke the temporary edit permission, locking your project into evaluation mode."
+      : "Are you sure you want to finalize and submit your project proposal?\n\n⚠️ CONFIRMATION: Once submitted, your project will be LOCKED into evaluation mode. You will not be able to make further edits without administrator approval.";
     const confirmed = confirm(confirmMsg);
     if (!confirmed) return;
 
-    const origText = btnEl.textContent;
+    window._isSubmittingProject = true;
+    const origText = btnEl.innerHTML;
     btnEl.disabled = true;
     btnEl.innerHTML = '<span class="spinner"></span> Finalizing Submission…';
 
@@ -2250,23 +2367,30 @@
       github_url: github_url || null,
       demo_url: demo_url || null,
     };
+    if (isOI) {
+      payload.project_title = customTitle;
+      payload.problem_statement = customDesc;
+    }
 
     try {
       const res = await api.post('/api/projects/me/submit', payload);
       cachedProject = res.data;
-      // Magical success animation instead of alert()
-      showSuccessAnimation('🎉 Project Submitted Successfully! Your proposal is now locked for review.');
+      // Magical success animation
+      showSuccessAnimation('🎉 Project Submitted Successfully! Your proposal is now locked for evaluation.');
       toast.magic('⚡ Congratulations! Project submitted!');
-      // Transition immediately to read-only view
-      loadProjectDetails();
-      initDashboard();
+      // Transition immediately to read-only view and refresh dashboard
+      await loadProjectDetails();
+      await initDashboard();
     } catch (err) {
       alertEl.className = 'alert alert-error';
-      alertEl.innerHTML = `<span>⚠️</span><span>Submission failed: ${escHtml(err.message)}</span>`;
+      const msg = err.data?.message || err.message || 'Submission failed.';
+      alertEl.innerHTML = `<span>⚠️</span><span>Submission failed: ${escHtml(msg)}</span>`;
       alertEl.classList.remove('alert-hidden');
-      toast.error(`Submission failed: ${err.message}`);
+      toast.error(`Submission failed: ${msg}`);
+    } finally {
+      window._isSubmittingProject = false;
       btnEl.disabled = false;
-      btnEl.textContent = origText;
+      btnEl.innerHTML = origText;
     }
   };
 

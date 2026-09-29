@@ -1,0 +1,731 @@
+========================================================================================================================
+                         HOGWARTS LEGACY 5.0 — OFFICIAL PROBLEM STATEMENTS DIRECTORY
+                                COMPLETE SPECIFICATIONS & DETAILS
+========================================================================================================================
+
+Total Official Problem Statements: 20
+• Artificial Intelligence (AI): 10 Problem Statements (AI-PS-01 to AI-PS-10)
+• Cyber Security:               10 Problem Statements (CY-PS-01 to CY-PS-10)
+========================================================================================================================
+
+TABLE OF CONTENTS / QUICK OVERVIEW
+------------------------------------------------------------------------------------------------------------------------
+Code         | Domain                     | Difficulty     | Title
+------------------------------------------------------------------------------------------------------------------------
+AI-PS-01     | Artificial Intelligence (AI) | INTERMEDIATE   | AI-Based UAT Test Case Generator
+AI-PS-02     | Artificial Intelligence (AI) | INTERMEDIATE   | AI-Powered Lead Qualification & CRM Bot
+AI-PS-03     | Artificial Intelligence (AI) | ADVANCED       | Mission Failure & Recovery Simulator
+AI-PS-04     | Artificial Intelligence (AI) | INTERMEDIATE   | Computer Vision-Based Defect Detection
+AI-PS-05     | Artificial Intelligence (AI) | ADVANCED       | Rover Path Planning in Simulated Terrain
+AI-PS-06     | Artificial Intelligence (AI) | INTERMEDIATE   | IoT-Based Equipment Anomaly Detection
+AI-PS-07     | Artificial Intelligence (AI) | INTERMEDIATE   | AI-Powered College Helpdesk Assistant
+AI-PS-08     | Artificial Intelligence (AI) | INTERMEDIATE   | Tamper-Proof Academic Credential Verification
+AI-PS-09     | Artificial Intelligence (AI) | ADVANCED       | Quantum vs Classical Optimization
+AI-PS-10     | Artificial Intelligence (AI) | INTERMEDIATE   | AI-Based Digital Habit Awareness System
+CY-PS-01     | Cyber Security             | INTERMEDIATE   | Adaptive Phishing Detection & Response
+CY-PS-02     | Cyber Security             | ADVANCED       | Intelligent SOC Alert Correlation & Attack-Chain Reconstruction
+CY-PS-03     | Cyber Security             | ADVANCED       | Ransomware Early-Warning & Automated Containment
+CY-PS-04     | Cyber Security             | INTERMEDIATE   | API Abuse Detection & Dynamic Security Gateway
+CY-PS-05     | Cyber Security             | INTERMEDIATE   | Cloud Security Posture & Attack-Surface Analyzer
+CY-PS-06     | Cyber Security             | INTERMEDIATE   | Digital Evidence Integrity & Chain-of-Custody
+CY-PS-07     | Cyber Security             | INTERMEDIATE   | Insider Threat & User Behavior Analytics
+CY-PS-08     | Cyber Security             | INTERMEDIATE   | Software Supply-Chain Threat Detection
+CY-PS-09     | Cyber Security             | INTERMEDIATE   | IoT Behavioral Anomaly Detection
+CY-PS-10     | Cyber Security             | ADVANCED       | Automated Cyber Incident Investigation & Response
+------------------------------------------------------------------------------------------------------------------------
+
+
+########################################################################################################################
+### SECTION: ARTIFICIAL INTELLIGENCE (AI)
+########################################################################################################################
+
+========================================================================================================================
+PROBLEM STATEMENT #1: [AI-PS-01] AI-Based UAT Test Case Generator
+========================================================================================================================
+Problem Code:     AI-PS-01
+Title:            AI-Based UAT Test Case Generator
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Software teams often spend significant time manually converting business workflows and
+requirements into detailed User Acceptance Testing (UAT) test cases.
+
+Objective:
+Convert business requirements and workflows into structured User Acceptance Testing test
+cases.
+
+Functionalities to Implement:
+1. Requirement Input: Accept text, user stories, workflow descriptions, or uploaded documents.
+2. Requirement Understanding: Extract business rules, roles, actions, outcomes, conditions, and dependencies.
+3. Scenario Generation: Create positive, negative, and boundary test scenarios.
+4. Test Case Generation: Include test ID, scenario, preconditions, steps, test data, and expected result.
+5. Role-Based Cases: Generate cases for different roles and permission levels.
+6. Validation: Flag duplicates, incomplete cases, and requirements lacking detail.
+7. Review & Editing: Allow users to review, edit, and regenerate cases.
+8. Export & Dashboard: Display cases by scenario, priority, and role; export to Excel or CSV.
+
+Expected Demo:
+Upload a workflow → generate scenarios and test cases → review/edit → export the test suite.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #2: [AI-PS-02] AI-Powered Lead Qualification & CRM Bot
+========================================================================================================================
+Problem Code:     AI-PS-02
+Title:            AI-Powered Lead Qualification & CRM Bot
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Businesses receive enquiries from multiple customers, but manually collecting information and
+identifying high-potential leads can be time-consuming.
+
+Objective:
+Collect customer enquiries, evaluate lead quality, and manage leads through a CRM workflow.
+
+Functionalities to Implement:
+1. Customer Chatbot: Provide a chat interface and understand natural-language enquiries.
+2. Information Collection: Collect name, contact details, requirements, budget, and timeline; ask follow-up questions
+when needed.
+3. Information Extraction: Convert conversation details into structured fields.
+4. Qualification Engine: Evaluate leads using configurable budget, need, timeline, and business-fit criteria.
+5. Lead Scoring: Assign scores and categorize leads as High, Medium, or Low priority.
+6. Lead Categorization: Classify leads by product/service interest and enquiry type.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 3
+7. CRM Management: Create, edit, and store leads in a database.
+8. Assignment & Pipeline: Assign leads to representatives and track New, Qualified, Contacted, and Converted stages.
+9. Dashboard & Summary: Show leads, scores, statuses, conversion statistics, and concise conversation summaries.
+
+Expected Demo:
+Customer chats → bot collects details → qualifies and scores lead → saves it to the CRM dashboard.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #3: [AI-PS-03] Mission Failure & Recovery Simulator
+========================================================================================================================
+Problem Code:     AI-PS-03
+Title:            Mission Failure & Recovery Simulator
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Autonomous drones may encounter unexpected situations such as GPS loss, low battery,
+communication failure, or obstacles during a mission.
+
+Objective:
+Simulate drone mission failures and demonstrate how an autonomous system detects and
+responds.
+
+Functionalities to Implement:
+1. Mission Simulator: Create a visual environment with drone, start point, and destination.
+2. Mission Configuration: Set mission parameters and destination.
+3. Failure Scenarios: Simulate GPS loss, low battery, communication failure, and obstacles.
+4. Failure Detection: Monitor simulated status and detect predefined failure conditions.
+5. Failure Classification: Identify failure type, severity, and potential mission impact.
+6. Recovery Decision Engine: Select actions such as return-to-home, hover, or alternate route based on failure.
+7. Recovery Simulation: Execute the action in simulation and show whether recovery succeeds.
+8. Dashboard & Timeline: Display battery, GPS, communication, mission state, failures, recovery decisions, and final
+outcome.
+
+Expected Demo:
+Start a simulated mission → trigger a failure → detect it → select recovery → display the mission
+outcome.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #4: [AI-PS-04] Computer Vision-Based Defect Detection
+========================================================================================================================
+Problem Code:     AI-PS-04
+Title:            Computer Vision-Based Defect Detection
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Manufacturing industries need to identify defective products quickly and consistently during
+quality inspection.
+
+Objective:
+Identify and classify predefined defects in manufactured product images or camera input.
+
+Functionalities to Implement:
+1. Image Input: Upload product images or use live camera input where available.
+2. Preprocessing: Resize and normalize images for model input.
+3. Defect Detection: Use a trained computer-vision model to identify predefined defects.
+4. Defect Classification: Classify scratches, cracks, dents, or other selected defect categories.
+5. Defect Localization: Highlight defects with bounding boxes or segmentation masks, depending on the model.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 4
+6. Confidence Scoring: Display model confidence for each detection.
+7. Acceptance Decision: Mark products Accepted or Rejected using predefined rules.
+8. Inspection History & Dashboard: Store results and show defect categories and acceptance/rejection statistics.
+9. Inspection Report: Include image, detected defects, and final decision.
+
+Expected Demo:
+Upload a product image → detect and highlight defects → classify them → show acceptance/rejection.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #5: [AI-PS-05] Rover Path Planning in Simulated Terrain
+========================================================================================================================
+Problem Code:     AI-PS-05
+Title:            Rover Path Planning in Simulated Terrain
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Autonomous rovers operating in unknown or challenging environments need to reach specific
+destinations while avoiding obstacles.
+
+Objective:
+Plan a safe and efficient route for a rover through an obstacle-filled simulated environment.
+
+Functionalities to Implement:
+1. Terrain Simulator: Create a grid/map with free paths, obstacles, and restricted areas.
+2. Start/Destination: Let users select starting point and destination.
+3. Obstacle Configuration: Add/remove obstacles and choose preset terrain layouts.
+4. Pathfinding: Implement A*, Dijkstra, or another suitable algorithm to find a safe route.
+5. Path Optimization: Minimize distance or movement cost using defined criteria.
+6. Movement Simulation: Animate rover movement and display current position.
+7. Dynamic Obstacles: Introduce obstacles during movement and recalculate the route.
+8. Visualization & Metrics: Show planned/actual path, distance, steps, and planning time.
+9. Mission Summary: Report whether the rover reached its destination and the route taken.
+
+Expected Demo:
+Create terrain → set start and destination → plan and animate route → add an obstacle → show
+replanning.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #6: [AI-PS-06] IoT-Based Equipment Anomaly Detection
+========================================================================================================================
+Problem Code:     AI-PS-06
+Title:            IoT-Based Equipment Anomaly Detection
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Industrial equipment can develop faults when parameters such as temperature, vibration, or
+power consumption move outside normal operating patterns.
+
+Objective:
+Monitor equipment sensor data and identify abnormal conditions early.
+
+Functionalities to Implement:
+1. Equipment Registration: Register equipment with unique IDs and types.
+2. Sensor Data: Collect or simulate temperature, vibration, and power readings.
+3. Live Monitoring: Display incoming readings and update equipment status.
+4. Normal Baseline: Define normal ranges or expected patterns for each sensor.
+5. Anomaly Detection: Detect abnormal values or patterns using thresholds or a model.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 5
+6. Anomaly Classification: Categorize overheating, excessive vibration, or unusual power consumption.
+7. Health Scoring: Calculate equipment health/risk from sensor readings.
+8. Alerts & Dashboard: Trigger alerts and show readings, health, anomaly history, and affected equipment.
+9. Monitoring Report: Summarize anomalies and recommended inspection actions.
+
+Expected Demo:
+Simulate sensor data → introduce abnormal readings → detect anomaly → alert and display
+equipment health.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #7: [AI-PS-07] AI-Powered College Helpdesk Assistant
+========================================================================================================================
+Problem Code:     AI-PS-07
+Title:            AI-Powered College Helpdesk Assistant
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Students frequently need information about examinations, academic processes, departments,
+events, and various college services.
+
+Objective:
+Answer student questions using an approved college knowledge base.
+
+Functionalities to Implement:
+1. Chat Interface: Allow students to ask natural-language questions.
+2. Knowledge Base: Upload academic calendars, exam schedules, regulations, and department information; organize
+by category.
+3. Document Processing: Extract text and split documents into searchable sections.
+4. Knowledge Retrieval: Retrieve relevant information through semantic or keyword search.
+5. AI Response: Generate answers grounded in retrieved information.
+6. Source Citations: Show the supporting document or section for each answer.
+7. Query Categories: Handle examinations, admissions, departments, events, and academic processes.
+8. Fallback Handling: State when information is unavailable and record unanswered queries.
+9. Admin & Dashboard: Let authorized staff update documents; show query history, FAQs, and unanswered questions.
+
+Expected Demo:
+Upload college documents → ask a student question → retrieve information → answer with a source.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #8: [AI-PS-08] Tamper-Proof Academic Credential Verification
+========================================================================================================================
+Problem Code:     AI-PS-08
+Title:            Tamper-Proof Academic Credential Verification
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Academic certificates can be difficult to verify manually, creating challenges for institutions,
+employers, and students.
+
+Objective:
+Enable institutions to issue digital credentials and allow authorized users to verify authenticity.
+
+Functionalities to Implement:
+1. Institution Registration: Register credential-issuing institutions and maintain their status.
+2. Credential Issuance: Create certificates with student, qualification, institution, and issue-date details.
+3. Unique Credential ID: Generate a unique identifier for each credential.
+4. QR Code: Generate a QR code linking to the verification page.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 6
+5. Integrity Protection: Hash credential data and store the integrity reference securely.
+6. Credential Verification: Verify using credential ID or QR code.
+7. Tampering Detection: Detect modified, invalid, revoked, or unrecognized credentials.
+8. Revocation: Allow authorized institutions to revoke credentials and show current status.
+9. Dashboard & History: Display verification results and record issuance, revocation, and verification events.
+
+Expected Demo:
+Issue a certificate → generate QR → verify it → alter a test record → demonstrate tampering detection.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #9: [AI-PS-09] Quantum vs Classical Optimization
+========================================================================================================================
+Problem Code:     AI-PS-09
+Title:            Quantum vs Classical Optimization
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+Real-world problems such as scheduling, routing, and resource allocation often involve finding
+the most efficient solution among many possible combinations.
+
+Objective:
+Solve a selected optimization problem with classical and quantum or quantum-inspired
+approaches and compare results.
+
+Functionalities to Implement:
+1. Problem Selection: Choose scheduling, routing, or resource allocation; define objective and constraints.
+2. Input Interface: Configure parameters and provide sample datasets.
+3. Classical Engine: Implement a suitable classical algorithm and produce a solution.
+4. Quantum-Based Engine: Implement a quantum or quantum-inspired method using a simulator/framework if needed.
+5. Constraint Validation: Check feasibility and identify violated constraints.
+6. Objective Calculation: Calculate the objective value for each solution.
+7. Performance Comparison: Compare solution quality, execution time, and feasibility.
+8. Visualization & Experiments: Show results in tables/charts and allow parameter changes and repeated runs.
+9. Comparison Report: Summarize settings, solutions, and metrics.
+
+Expected Demo:
+Configure a problem → run both approaches → compare solutions, feasibility, and performance.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #10: [AI-PS-10] AI-Based Digital Habit Awareness System
+========================================================================================================================
+Problem Code:     AI-PS-10
+Title:            AI-Based Digital Habit Awareness System
+Domain / Realm:   ARTIFICIAL INTELLIGENCE (AI)
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario:
+People spend significant time using digital devices and applications, but may not always
+understand their own usage patterns and habits.
+
+Objective:
+Analyze digital usage patterns and provide personalized awareness insights.
+
+Functionalities to Implement:
+1. Usage Data Input: Import or manually enter screen-time and application usage data.
+2. Application Tracking: Track time by app and categorize usage.
+3. Pattern Analysis: Identify daily/weekly trends, peak periods, and frequently used apps.
+4. Notification Analysis: Measure notification frequency and high-notification periods.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 7
+5. Habit Detection: Identify long sessions, repeated patterns, and changes over time.
+6. AI Insights: Generate personalized, explainable insights from usage data.
+7. Recommendations: Suggest screen-time goals or reducing unnecessary notifications; let users configure goals.
+8. Goal Tracking: Set daily targets and monitor progress.
+9. Dashboard & Report: Show screen time, app usage, notifications, trends, goals, and recommendations.
+
+Expected Demo:
+Import usage data → analyze habits → generate insights → show recommendations and goal
+progress.
+
+HOGWARTS LEGACY | Hackathon Functionality Guide
+Page 8
+------------------------------------------------------------------------------------------------------------------------
+
+
+########################################################################################################################
+### SECTION: CYBER SECURITY
+########################################################################################################################
+
+========================================================================================================================
+PROBLEM STATEMENT #11: [CY-PS-01] Adaptive Phishing Detection & Response
+========================================================================================================================
+Problem Code:     CY-PS-01
+Title:            Adaptive Phishing Detection & Response
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+Employees receive suspicious links through emails, messaging apps, and social media. Attackers create fake websites that look like real banking, company, or government websites to steal user information.
+
+Objective
+Identify phishing websites, assess risk, and warn users before they interact with malicious content.
+
+Functionalities to Implement
+1. URL Scanner: Accept URLs; inspect suspicious characters, misleading subdomains, shortened links, and redirects.
+2. Domain Analysis: Check domain age and registration details where available; compare domain reputation against threat-intelligence sources.
+3. Website Content Analysis: Inspect webpage content for suspicious login forms, impersonation indicators, and misleading links.
+4. Phishing Detection Engine: Use rules or a machine-learning model to classify sites as Safe, Suspicious, or Phishing.
+5. Risk Scoring: Generate a 0–100 risk score and explain the factors contributing to it.
+6. User Warning System: Warn users about suspicious or malicious sites and explain why they were flagged.
+7. Threat Dashboard: Show scanned URLs, scores, results, and scan history.
+8. Security Report: Export URL, findings, score, and recommended actions.
+
+Expected Demo:
+Enter a suspicious URL → analyze it → show score and reasons → display a warning and generate a report.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #12: [CY-PS-02] Intelligent SOC Alert Correlation & Attack-Chain Reconstruction
+========================================================================================================================
+Problem Code:     CY-PS-02
+Title:            Intelligent SOC Alert Correlation & Attack-Chain Reconstruction
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A Security Operations Center receives thousands of alerts from firewalls, servers, endpoints, DNS, and authentication systems. Some alerts look harmless individually but may actually be different steps of the same cyberattack.
+
+Objective
+Correlate security alerts from different sources and reconstruct the sequence of a potential cyberattack.
+
+Functionalities to Implement
+1. Log Ingestion: Import firewall, server, endpoint, DNS, and authentication logs from CSV or JSON samples.
+2. Log Normalization: Convert logs to a common structure with timestamps, IPs, usernames, event types, and severity.
+3. Alert Correlation: Link alerts using shared IPs, accounts, devices, and time windows; group them into incidents.
+4. Attack Pattern Detection: Identify sequences such as repeated failed logins followed by a successful login.
+5. Timeline Reconstruction: Arrange related events chronologically from initial activity to potential impact.
+6. MITRE ATT&CK Mapping: Map detected activity to relevant tactics and techniques.
+7. Incident Risk Scoring: Prioritize incidents using severity, affected assets, and correlated activity.
+8. SOC Dashboard & Report: Show incidents, alerts, severity, timeline, affected assets, and recommended actions.
+
+Expected Demo:
+Upload logs → correlate related alerts → reconstruct the attack timeline → display severity and an investigation report.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #13: [CY-PS-03] Ransomware Early-Warning & Automated Containment
+========================================================================================================================
+Problem Code:     CY-PS-03
+Title:            Ransomware Early-Warning & Automated Containment
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+An employee's computer suddenly starts opening and modifying hundreds of files. Antivirus does not recognize the process, and within minutes many documents become unreadable.
+
+Objective
+Detect ransomware-like behavior by monitoring file and process activity and demonstrate a safe response.
+
+Functionalities to Implement
+1. File Activity Monitoring: Monitor file creation, modification, renaming, and deletion in a designated test directory.
+2. Process Monitoring: Observe processes accessing files and flag suspicious activity.
+3. Behavior Detection: Identify rapid file changes, suspicious extensions, and unusual access patterns.
+4. Early Warning: Score behavior and trigger alerts when a defined threshold is crossed.
+5. Safe Containment: Demonstrate suspending a simulated process or restricting the test environment; include manual confirmation.
+6. Recovery Support: Use backups or snapshots to demonstrate recovery of test files.
+7. Evidence Collection: Record process details, file activity, and timestamps.
+8. Dashboard & Report: Show monitored files, alerts, containment status, affected files, and response actions.
+
+Expected Demo:
+Run a harmless behavior simulation in a test directory → detect abnormal changes → alert → demonstrate containment and recovery.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #14: [CY-PS-04] API Abuse Detection & Dynamic Security Gateway
+========================================================================================================================
+Problem Code:     CY-PS-04
+Title:            API Abuse Detection & Dynamic Security Gateway
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A financial application provides APIs for login, payments, and account information. Attackers start sending abnormal requests to guess accounts, abuse APIs, manipulate parameters, and perform automated attacks.
+
+Objective
+Monitor API traffic, detect suspicious requests, and apply appropriate security controls.
+
+Functionalities to Implement
+1. API Gateway: Route requests to backend APIs and support authentication and validation.
+2. Request Monitoring: Capture endpoints, methods, timestamps, frequency, and request/response metadata.
+3. Rate-Limit Detection: Detect excessive requests, repeated login attempts, and request bursts.
+4. Abuse Detection: Flag suspicious parameter manipulation, abnormal patterns, and common injection indicators in a safe test setup.
+5. Behavioral Analysis: Establish normal client patterns and identify deviations.
+6. Risk Scoring: Score requests or sessions and categorize risk.
+7. Dynamic Controls: Apply rate limits, temporary blocks, and administrator-configurable rules.
+8. Dashboard & Audit Logs: Show traffic, suspicious clients, blocked requests, detected patterns, and actions taken.
+
+Expected Demo:
+Send normal and suspicious API requests → detect abnormal behavior → apply rate limiting or blocking → review security events.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #15: [CY-PS-05] Cloud Security Posture & Attack-Surface Analyzer
+========================================================================================================================
+Problem Code:     CY-PS-05
+Title:            Cloud Security Posture & Attack-Surface Analyzer
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A company has moved many systems to the cloud. Over time, some storage, servers, databases, permissions, and network services have accidentally become exposed or overly accessible.
+
+Objective
+Identify insecure cloud configurations, exposed resources, and excessive permissions.
+
+Functionalities to Implement
+1. Asset Inventory: Import or register storage, virtual machines, databases, and network services.
+2. Configuration Scanner: Scan configuration files or a sample environment for public exposure and insecure settings.
+3. Permission Analysis: Flag overly broad roles, access policies, and unnecessary administrative privileges.
+4. Network Exposure Analysis: Identify exposed ports and unrestricted inbound rules.
+5. Misconfiguration Detection: Detect public storage, missing encryption, and other insecure configurations.
+6. Risk Prioritization: Assign severity based on exposure and potential impact.
+7. Remediation Guidance: Provide concrete corrective actions for each finding.
+8. Dashboard & Report: Show assets, findings, severity, risk distribution, and recommended fixes.
+
+Expected Demo:
+Import a sample cloud configuration → scan it → display prioritized weaknesses → show remediation steps.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #16: [CY-PS-06] Digital Evidence Integrity & Chain-of-Custody
+========================================================================================================================
+Problem Code:     CY-PS-06
+Title:            Digital Evidence Integrity & Chain-of-Custody
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+During a cybercrime investigation, investigators collect computers, mobile data, disk images, screenshots, and network captures. The evidence is transferred between different authorized investigators during the investigation.
+
+Objective
+Maintain digital evidence integrity and record each custody transfer.
+
+Functionalities to Implement
+1. Evidence Registration: Upload files such as documents, screenshots, logs, or forensic images and assign a unique ID.
+2. Cryptographic Hash: Generate a SHA-256 hash and preserve it as the integrity reference.
+3. Metadata Management: Record evidence type, collection date, source, and investigator.
+4. Custody Tracking: Record transfers with timestamps, sender, receiver, and purpose.
+5. Role-Based Access: Separate investigator and administrator permissions.
+6. Integrity Verification: Recalculate hashes and compare them with the original to detect changes.
+7. Audit Trail: Log uploads, access, transfers, and verification actions chronologically.
+8. Dashboard & Report: Show evidence, custody history, integrity status, hash, and access history.
+
+Expected Demo:
+Upload evidence → generate its hash → transfer custody → alter a test copy → verify tampering and review custody history.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #17: [CY-PS-07] Insider Threat & User Behavior Analytics
+========================================================================================================================
+Problem Code:     CY-PS-07
+Title:            Insider Threat & User Behavior Analytics
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+An employee account suddenly accesses sensitive files at unusual times and transfers large amounts of data. The account is valid and no obvious malware is detected.
+
+Objective
+Detect unusual user activity that may indicate an insider threat or compromised account while protecting privacy.
+
+Functionalities to Implement
+1. Activity Log Collection: Import login, file access, privilege-change, and data-transfer logs.
+2. Behavior Baseline: Establish typical login times, resource access, and activity frequency.
+3. Anomaly Detection: Flag unusual login times/locations, abnormal file access, excessive transfers, and privilege changes.
+4. User Risk Scoring: Score deviations and categorize severity.
+5. Alerting & Investigation: Explain suspicious activity and display the sequence of actions for investigation.
+6. Privacy Controls: Use pseudonymous identifiers where possible and restrict access to sensitive records.
+7. Dashboard: Show activity, anomalies, scores, and incident history.
+8. Investigation Report: Summarize suspicious actions, risk indicators, and recommended follow-up.
+
+Expected Demo:
+Import activity logs → establish a baseline → detect unusual activity → generate a risk score and investigation report.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #18: [CY-PS-08] Software Supply-Chain Threat Detection
+========================================================================================================================
+Problem Code:     CY-PS-08
+Title:            Software Supply-Chain Threat Detection
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A development team installs a third-party software package during a routine update. The package looks normal but secretly contains suspicious code and communicates with an unknown external server.
+
+Objective
+Analyze software dependencies to identify vulnerabilities, suspicious packages, and integrity issues.
+
+Functionalities to Implement
+1. Dependency Upload: Accept package.json, requirements.txt, or Maven pom.xml and extract package names and versions.
+2. Dependency Inventory: List direct and, where supported, transitive dependencies.
+3. Vulnerability Detection: Check packages against a vulnerability database and identify known issues.
+4. Integrity Verification: Verify checksums or signatures where available and flag unexpected changes.
+5. Suspicious Package Detection: Flag known malicious indicators or suspicious package metadata for review.
+6. Risk Scoring: Score dependencies using vulnerability severity and integrity findings.
+7. SBOM Generation: Generate a Software Bill of Materials with package names, versions, and dependency information.
+8. Remediation & Report: Suggest safer versions or fixes and export findings, inventory, and SBOM.
+
+Expected Demo:
+Upload a dependency file → scan packages → identify vulnerabilities → generate an SBOM and remediation report.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #19: [CY-PS-09] IoT Behavioral Anomaly Detection
+========================================================================================================================
+Problem Code:     CY-PS-09
+Title:            IoT Behavioral Anomaly Detection
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: INTERMEDIATE
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A smart facility has hundreds of cameras, sensors, controllers, and other IoT devices. A normally isolated sensor suddenly starts communicating with an unknown external server and sends unusually high network traffic.
+
+Objective
+Learn normal IoT communication patterns and detect suspicious deviations.
+
+Functionalities to Implement
+1. Device Registration: Register devices with unique IDs, types, and expected communication behavior.
+2. Traffic Collection: Import or simulate traffic; record source/destination IP, protocol, volume, and timestamp.
+3. Behavior Baseline: Record expected destinations, protocols, and traffic levels for each device.
+4. Anomaly Detection: Flag unknown destinations, traffic spikes, unexpected protocols, or unusual activity times.
+5. Device Risk Scoring: Score anomalies and identify devices needing investigation.
+6. Isolation Simulation: Demonstrate simulated network isolation of a suspicious device.
+7. Alerts & Dashboard: Show device behavior, anomalies, risk, and alerts with reasons.
+8. Incident Report: Summarize suspicious traffic and recommended containment.
+
+Expected Demo:
+Simulate normal device traffic → introduce unusual communication → detect and flag the device → demonstrate simulated isolation.
+------------------------------------------------------------------------------------------------------------------------
+
+
+========================================================================================================================
+PROBLEM STATEMENT #20: [CY-PS-10] Automated Cyber Incident Investigation & Response
+========================================================================================================================
+Problem Code:     CY-PS-10
+Title:            Automated Cyber Incident Investigation & Response
+Domain / Realm:   CYBER SECURITY
+Difficulty Level: ADVANCED
+Status:           ACTIVE
+
+FULL DETAILS & SPECIFICATIONS:
+------------------------------------------------------------------------------------------------------------------------
+Scenario
+A company notices unusual login attempts, suspicious web requests, an unknown process on an employee computer, and communication with an unfamiliar external IP. These events are recorded by different security systems.
+
+Objective
+Correlate security events, reconstruct attack activity, identify affected systems, and recommend response actions.
+
+Functionalities to Implement
+1. Event Collection: Import authentication, endpoint, firewall, and network logs.
+2. Event Normalization: Convert records into a common event structure.
+3. Incident Correlation: Group related events using timestamps, IPs, usernames, and device IDs.
+4. Attack Timeline: Arrange events chronologically and identify a suspected sequence.
+5. Affected Asset Identification: Identify potentially affected devices, accounts, and services.
+6. Attack Classification: Map suspicious activity to relevant techniques and classify the incident.
+7. Risk Scoring: Score severity using event sequence and affected assets.
+8. Response Recommendations: Suggest actions such as disabling accounts or isolating endpoints; require authorization for real actions.
+9. Dashboard & Report: Show incidents, timeline, affected assets, risk, and response plan.
+
+Expected Demo:
+Import multiple logs → correlate events → reconstruct the attack → identify assets → generate a response plan.
+------------------------------------------------------------------------------------------------------------------------
+

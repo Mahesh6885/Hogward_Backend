@@ -161,6 +161,16 @@ def auto_migrate_schema(engine: Engine) -> None:
                 except Exception as ex:
                     print(f"  [MIGRATION] Drop uq_reviews_project_round notice: {ex}")
 
+            # Ensure allow_problem_statement_edit exists on users
+            try:
+                cmd_ps_edit = "ALTER TABLE users ADD COLUMN IF NOT EXISTS allow_problem_statement_edit BOOLEAN DEFAULT FALSE;" if is_postgres else "ALTER TABLE users ADD COLUMN allow_problem_statement_edit BOOLEAN DEFAULT 0;"
+                conn.execute(text(cmd_ps_edit))
+                conn.execute(text("UPDATE users SET allow_problem_statement_edit = FALSE WHERE allow_problem_statement_edit IS NULL;"))
+                if is_postgres:
+                    conn.execute(text("ALTER TABLE projects ALTER COLUMN status SET DEFAULT 'DRAFT';"))
+            except Exception as psex:
+                print(f"  [MIGRATION] allow_problem_statement_edit notice: {psex}")
+
             # Clean default null values
             try:
                 conn.execute(text("UPDATE users SET edit_permission = FALSE WHERE edit_permission IS NULL;"))

@@ -62,7 +62,7 @@ class Project(Base):
     status: Mapped[str] = mapped_column(
         SAEnum(ProjectStatus, name="project_status_enum"),
         nullable=False,
-        default=ProjectStatus.SUBMITTED,
+        default=ProjectStatus.DRAFT,
     )
     current_round: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     draft_saved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

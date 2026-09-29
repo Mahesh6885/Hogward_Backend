@@ -58,6 +58,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
                 role=user.role,
                 domain=domain_display,
                 edit_permission=getattr(user, "edit_permission", False),
+                allow_problem_statement_edit=getattr(user, "allow_problem_statement_edit", False),
                 edit_permission_reason=getattr(user, "edit_permission_reason", None),
             ),
         ),
@@ -79,6 +80,7 @@ def get_me(current_user: User = Depends(get_current_user)):
             role=current_user.role,
             domain=domain_display,
             edit_permission=getattr(current_user, "edit_permission", False),
+            allow_problem_statement_edit=getattr(current_user, "allow_problem_statement_edit", False),
             edit_permission_reason=getattr(current_user, "edit_permission_reason", None),
         ),
     )

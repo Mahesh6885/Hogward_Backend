@@ -27,16 +27,16 @@ def get_team_and_project(db: Session, team_id: int) -> tuple[User, Project]:
     project = db.query(Project).filter(Project.user_id == user.id).first()
     if not project:
         # Create default draft project container if team has none yet
-        from app.services.project_service import _next_project_code
         prefix = "OI" if (user.domain and user.domain.name == "OPEN_INNOVATION") else ("AI" if (user.domain and user.domain.name == "AI") else "CY")
         project = Project(
             project_code=f"PRJ-{prefix}-{user.id:04d}",
             user_id=user.id,
             domain_id=user.domain_id,
             project_title=f"{user.team_name or user.name} Project",
-            status=ProjectStatus.SUBMITTED,
+            status=ProjectStatus.DRAFT,
             current_round=1,
-            is_submitted=True,
+            is_submitted=False,
+            submitted_at=None,
         )
         db.add(project)
         db.commit()

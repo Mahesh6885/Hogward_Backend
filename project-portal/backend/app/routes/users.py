@@ -38,6 +38,10 @@ def _user_dict(user: User) -> dict:
         "domain": domain_basic,
         "role": user.role,
         "status": user.status,
+        "edit_permission": getattr(user, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(user, "allow_problem_statement_edit", False),
+        "edit_permission_reason": getattr(user, "edit_permission_reason", None),
+        "edit_permission_granted_at": user.edit_permission_granted_at.isoformat() if getattr(user, "edit_permission_granted_at", None) else None,
         "created_at": user.created_at.isoformat(),
         "updated_at": user.updated_at.isoformat(),
     }
@@ -124,6 +128,10 @@ def _serialize_project(project) -> dict:
         "draft_saved_at": project.draft_saved_at.isoformat() if project.draft_saved_at else None,
         "submitted_at": project.submitted_at.isoformat() if project.submitted_at else None,
         "updated_at": project.updated_at.isoformat(),
+        "edit_permission": getattr(project.user, "edit_permission", False),
+        "allow_problem_statement_edit": getattr(project.user, "allow_problem_statement_edit", False),
+        "edit_permission_reason": getattr(project.user, "edit_permission_reason", None),
+        "edit_permission_granted_at": project.user.edit_permission_granted_at.isoformat() if getattr(project.user, "edit_permission_granted_at", None) else None,
     }
 
 

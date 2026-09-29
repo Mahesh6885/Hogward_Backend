@@ -1699,6 +1699,78 @@
   </div>
 </div>
 
+<!-- ── UNLOCK TEAM MODAL (Admin Edit Permission) ────────────────────────── -->
+<div class="modal-overlay" id="modal-unlock-team">
+  <div class="modal modal-md">
+    <div class="modal-header">
+      <div class="modal-title">
+        <span>🔓</span> Manage Team Editing Permission
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-unlock-team')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="unlock-team-info-banner" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem">
+        <div>
+          <div id="unlock-modal-team-name" style="font-weight:700;font-size:1.05rem;color:var(--text-primary)">Team Name</div>
+          <div id="unlock-modal-team-domain" style="margin-top:0.25rem"><span class="badge badge-orange">Open Innovation</span></div>
+        </div>
+        <div id="unlock-modal-current-status"><span class="badge badge-gray">Locked</span></div>
+      </div>
+
+      <form id="form-unlock-team" onsubmit="event.preventDefault(); submitTeamUnlock();">
+        <input type="hidden" id="unlock-team-id" />
+        <input type="hidden" id="unlock-team-is-oi" />
+
+        <!-- Permission Selection for Open Innovation -->
+        <div id="unlock-oi-options" class="form-group">
+          <label class="form-label" style="font-weight:700;margin-bottom:0.75rem;color:var(--text-primary)">
+            Select Permission Level for Open Innovation:
+          </label>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.85rem 1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;cursor:pointer">
+              <input type="radio" name="unlock_scope" id="unlock-scope-project" value="project" checked style="margin-top:0.25rem" />
+              <div>
+                <strong style="color:var(--text-primary)">Project Details Editing Only</strong>
+                <div class="text-xs text-muted" style="margin-top:0.2rem">
+                  Allows the team to edit Abstract, Objectives, Solution, Technologies, Outcome, Description, and Links. Their existing Problem Statement remains locked.
+                </div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.85rem 1rem;background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.4);border-radius:8px;cursor:pointer">
+              <input type="radio" name="unlock_scope" id="unlock-scope-full" value="full" style="margin-top:0.25rem" />
+              <div>
+                <strong style="color:var(--accent-gold)">Project Details + Problem Statement Editing (Full Edit)</strong>
+                <div class="text-xs text-muted" style="margin-top:0.2rem">
+                  Allows the team to modify their self-defined Problem Statement Title &amp; Description in addition to all project proposal fields.
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Non-OI info note -->
+        <div id="unlock-non-oi-note" class="alert alert-info hidden" style="margin-bottom:1rem">
+          <span>ℹ️</span>
+          <span class="text-sm">This team is in the <strong id="unlock-non-oi-realm-name">AI</strong> track. Pre-assigned official problem statements remain protected. Unlocking grants <strong>Project Details Editing Only</strong>.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="unlock-reason">Reason for Permission (Optional / Displayed to Team)</label>
+          <input type="text" class="form-input" id="unlock-reason" placeholder="e.g. Corrections requested during Review 1" />
+        </div>
+
+        <div id="unlock-alert" class="alert alert-hidden mb-2"></div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.5rem">
+          <button type="button" class="btn btn-ghost" onclick="closeModal('modal-unlock-team')">Cancel</button>
+          <button type="button" class="btn btn-danger hidden" id="btn-unlock-modal-revoke" onclick="revokeFromUnlockModal()">🔒 Revoke Permission</button>
+          <button type="submit" class="btn btn-primary" id="btn-unlock-modal-grant">✏️ Grant Edit Permission</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <!-- ── Client Logic ────────────────────────────────────────────────────── -->
 <script type="module">
   import { requireAdmin, logout } from './js/auth.js';
@@ -2116,6 +2188,9 @@
         return;
       }
 
+      window.teamsMap = window.teamsMap || {};
+      resp.data.forEach(t => { window.teamsMap[t.id] = t; });
+
       tbody.innerHTML = resp.data.map(u => {
         const teamName = u.team_name || u.name || u.username;
         const leader = u.team_leader || u.name || '—';
@@ -2126,9 +2201,11 @@
         const currentRound = u.project ? `Round ${u.project.current_round}` : '—';
         const createdDate = new Date(u.created_at).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' });
 
-      const editPermBadge = u.edit_permission
-        ? `<span class="badge badge-green" title="Edit granted: ${escHtml(u.edit_permission_reason||'')}">✓ Edit</span>`
-        : `<span class="badge badge-gray">Locked</span>`;
+        const editPermBadge = u.edit_permission
+          ? (u.allow_problem_statement_edit
+              ? `<span class="badge badge-green" title="Full edit (PS + Project) granted: ${escHtml(u.edit_permission_reason||'')}">✓ Full Edit</span>`
+              : `<span class="badge badge-green" title="Project edit granted: ${escHtml(u.edit_permission_reason||'')}">✓ Project Edit</span>`)
+          : `<span class="badge badge-gray">Locked</span>`;
 
         return `
           <tr data-team-id="${u.id}">
@@ -2283,20 +2360,108 @@
     }
   });
 
-  // Toggle edit permission for individual team
-  window.toggleEditPermission = async function(userId, currentPerm) {
-    const newPerm = !currentPerm;
-    let reason = null;
-    if (newPerm) {
-      reason = prompt('Optional: Enter reason for granting edit permission:');
+  // Open Unlock / Edit Permission Modal
+  window.openUnlockModal = function(userId) {
+    const team = window.teamsMap ? window.teamsMap[userId] : null;
+    if (!team) return;
+
+    document.getElementById('unlock-team-id').value = team.id;
+    document.getElementById('unlock-modal-team-name').textContent = team.team_name || team.name || team.username;
+    
+    const dName = team.domain ? (team.domain.display_name || team.domain.name) : 'None';
+    const isOI = (team.domain?.name === 'OPEN_INNOVATION' || dName === 'Open Innovation');
+    document.getElementById('unlock-team-is-oi').value = isOI ? 'true' : 'false';
+
+    const dBadge = domainColors[team.domain?.name] || domainColors[dName] || 'badge-gray';
+    document.getElementById('unlock-modal-team-domain').innerHTML = `<span class="badge ${dBadge}">${escHtml(dName)}</span>`;
+
+    const statusBadge = team.edit_permission
+      ? (team.allow_problem_statement_edit
+          ? `<span class="badge badge-green">✓ Full Edit (PS + Project) Active</span>`
+          : `<span class="badge badge-green">✓ Project Edit Active</span>`)
+      : `<span class="badge badge-gray">🔒 Locked</span>`;
+    document.getElementById('unlock-modal-current-status').innerHTML = statusBadge;
+
+    if (isOI) {
+      document.getElementById('unlock-oi-options').classList.remove('hidden');
+      document.getElementById('unlock-non-oi-note').classList.add('hidden');
+      if (team.allow_problem_statement_edit) {
+        document.getElementById('unlock-scope-full').checked = true;
+      } else {
+        document.getElementById('unlock-scope-project').checked = true;
+      }
     } else {
-      if (!confirm('Revoke editing permission for this team?')) return;
+      document.getElementById('unlock-oi-options').classList.add('hidden');
+      document.getElementById('unlock-non-oi-note').classList.remove('hidden');
+      document.getElementById('unlock-non-oi-realm-name').textContent = dName;
+      document.getElementById('unlock-scope-project').checked = true;
     }
+
+    document.getElementById('unlock-reason').value = team.edit_permission_reason || '';
+    const alertEl = document.getElementById('unlock-alert');
+    alertEl.className = 'alert alert-hidden mb-2';
+
+    const revokeBtn = document.getElementById('btn-unlock-modal-revoke');
+    const grantBtn = document.getElementById('btn-unlock-modal-grant');
+    if (team.edit_permission) {
+      revokeBtn.classList.remove('hidden');
+      grantBtn.innerHTML = '✏️ Update Permission';
+    } else {
+      revokeBtn.classList.add('hidden');
+      grantBtn.innerHTML = '✏️ Grant Edit Permission';
+    }
+
+    openModal('modal-unlock-team');
+  };
+
+  window.toggleEditPermission = function(userId, currentPerm) {
+    window.openUnlockModal(userId);
+  };
+
+  window.submitTeamUnlock = async function() {
+    const teamId = document.getElementById('unlock-team-id').value;
+    const isOI = document.getElementById('unlock-team-is-oi').value === 'true';
+    const isFullEdit = isOI && document.getElementById('unlock-scope-full').checked;
+    const reason = document.getElementById('unlock-reason').value.trim();
+    const alertEl = document.getElementById('unlock-alert');
+    const grantBtn = document.getElementById('btn-unlock-modal-grant');
+
+    grantBtn.disabled = true;
+    grantBtn.innerHTML = '<span class="spinner"></span> Saving…';
+
     try {
-      await api.patch(`/api/admin/teams/${userId}/edit-permission`, { edit_permission: newPerm, reason: reason || null });
-      toast.success(newPerm ? '✏️ Edit permission granted!' : '🔒 Edit permission revoked');
+      await api.patch(`/api/admin/teams/${teamId}/edit-permission`, {
+        edit_permission: true,
+        allow_problem_statement_edit: isFullEdit,
+        reason: reason || null,
+      });
+      closeModal('modal-unlock-team');
+      toast.success(isFullEdit ? '✨ Full edit permission (PS + Project) granted!' : '✏️ Project edit permission granted!');
       loadTeams();
-    } catch (e) { toast.error(e.message); }
+    } catch (e) {
+      alertEl.className = 'alert alert-error mb-2';
+      alertEl.innerHTML = `<span>⚠️</span><span>${escHtml(e.message)}</span>`;
+      alertEl.classList.remove('alert-hidden');
+    } finally {
+      grantBtn.disabled = false;
+      grantBtn.innerHTML = '✏️ Grant Edit Permission';
+    }
+  };
+
+  window.revokeFromUnlockModal = async function() {
+    const teamId = document.getElementById('unlock-team-id').value;
+    if (!confirm('Revoke editing permission for this team?')) return;
+    try {
+      await api.patch(`/api/admin/teams/${teamId}/edit-permission`, {
+        edit_permission: false,
+        allow_problem_statement_edit: false,
+      });
+      closeModal('modal-unlock-team');
+      toast.success('🔒 Edit permission revoked');
+      loadTeams();
+    } catch (e) {
+      toast.error(e.message);
+    }
   };
 
   // Reset team password to default

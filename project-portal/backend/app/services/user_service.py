@@ -178,27 +178,28 @@ def create_user(db: Session, data: UserCreate, created_by: User) -> User:
             detail={"success": False, "message": "Username or email already exists", "error_code": "DUPLICATE"},
         )
 
-    # For USER role, automatically create the Project linked to the chosen problem statement
-    if data.role == UserRole.USER and ps:
+    # For USER role, automatically create the Project linked to the chosen problem statement (or empty draft for OI)
+    if data.role == UserRole.USER:
         from app.utils.helpers import generate_project_code
         from sqlalchemy import func
         max_id = db.query(func.max(Project.id)).scalar() or 0
         proj_code = generate_project_code(max_id + 1)
 
         now_utc = datetime.now(timezone.utc)
+        is_oi = bool(domain and domain.name in (DomainName.OPEN_INNOVATION.value, "OPEN_INNOVATION", "Open Innovation"))
         project = Project(
             project_code=proj_code,
             user_id=user.id,
             domain_id=domain.id if domain else None,
-            problem_statement_id=ps.id,
-            problem_code=ps.problem_code,
-            realm=ps.realm,
-            project_title=ps.title,
-            problem_statement=ps.description,
+            problem_statement_id=ps.id if ps else None,
+            problem_code=ps.problem_code if ps else None,
+            realm=ps.realm if ps else None,
+            project_title=ps.title if ps else (f"{user.team_name or user.name} Project" if not is_oi else None),
+            problem_statement=ps.description if ps else None,
             status=ProjectStatus.DRAFT,
             is_submitted=False,
             current_round=1,
-            assigned_at=now_utc,
+            assigned_at=now_utc if ps else None,
             created_at=now_utc,
         )
         db.add(project)
@@ -446,13 +447,23 @@ def set_team_edit_permission(db: Session, user_id: int, data, admin: User) -> Us
     # Accept both schema object and raw args
     edit_permission = data.edit_permission if hasattr(data, 'edit_permission') else data
     reason = data.reason if hasattr(data, 'reason') else None
+    allow_ps_edit = getattr(data, 'allow_problem_statement_edit', False) if edit_permission else False
+
     user = get_user_by_id(db, user_id)
-    user.edit_permission = edit_permission
+    is_oi = bool(user.domain and user.domain.name in (DomainName.OPEN_INNOVATION.value, "OPEN_INNOVATION", "Open Innovation"))
+    if allow_ps_edit and not is_oi:
+        allow_ps_edit = False  # Strictly protect AI and Cybersecurity problem statements
+
+    user.edit_permission = bool(edit_permission)
+    user.allow_problem_statement_edit = bool(allow_ps_edit) if edit_permission else False
     user.edit_permission_reason = reason.strip() if reason else None
     user.edit_permission_granted_at = datetime.now(timezone.utc) if edit_permission else None
 
     action = "editing_permission_granted" if edit_permission else "editing_permission_revoked"
     desc = f"Admin {admin.name} ({admin.username}) {'granted' if edit_permission else 'revoked'} editing permission for team '{user.team_name}'."
+    if edit_permission:
+        perm_type = "Project Details + Problem Statement" if user.allow_problem_statement_edit else "Project Details Only"
+        desc += f" (Permission: {perm_type})"
     if reason:
         desc += f" Reason: {reason.strip()}"
     log = AuditLog(
@@ -492,21 +503,27 @@ def bulk_set_edit_permission(db: Session, data, admin: User) -> list:
     team_ids = data.team_ids if hasattr(data, 'team_ids') else data
     edit_permission = data.edit_permission if hasattr(data, 'edit_permission') else True
     reason = data.reason if hasattr(data, 'reason') else None
+    allow_ps_edit = getattr(data, 'allow_problem_statement_edit', False) if edit_permission else False
     users = db.query(User).filter(User.id.in_(team_ids)).all()
     now = datetime.now(timezone.utc) if edit_permission else None
     r_clean = reason.strip() if reason else None
     action = "editing_permission_granted" if edit_permission else "editing_permission_revoked"
 
     for u in users:
-        u.edit_permission = edit_permission
+        is_oi = bool(u.domain and u.domain.name in (DomainName.OPEN_INNOVATION.value, "OPEN_INNOVATION", "Open Innovation"))
+        effective_allow_ps = bool(allow_ps_edit and is_oi) if edit_permission else False
+        u.edit_permission = bool(edit_permission)
+        u.allow_problem_statement_edit = effective_allow_ps
         u.edit_permission_reason = r_clean
         u.edit_permission_granted_at = now
+
+        perm_type = "Project Details + Problem Statement" if effective_allow_ps else "Project Details Only"
         log = AuditLog(
             admin_id=admin.id,
             action=action,
             target_type="team",
             target_id=u.id,
-            description=f"Bulk action: Admin {admin.username} {'granted' if edit_permission else 'revoked'} editing permission.",
+            description=f"Bulk action: Admin {admin.username} {'granted (' + perm_type + ')' if edit_permission else 'revoked'} editing permission.",
         )
         db.add(log)
     db.commit()
