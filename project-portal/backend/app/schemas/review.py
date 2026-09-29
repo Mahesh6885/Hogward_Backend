@@ -87,6 +87,27 @@ class ReviewSingleResponse(BaseModel):
     data: ReviewResponse
 
 
+class ParticipantReviewResponse(BaseModel):
+    review_round: int
+    review_title: str
+    status: str
+    review_date: Optional[str] = None
+    evaluator_comments: Optional[str] = None
+    suggested_improvements: Optional[str] = None
+    # Compatibility fields for existing tests / client callers (no scores, no evaluator PII)
+    id: Optional[int] = None
+    round_number: Optional[int] = None
+    review_text: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
+class ParticipantReviewListResponse(BaseModel):
+    success: bool
+    message: str
+    data: list[ParticipantReviewResponse]
+
+
 # ─── Phase 3: Round 1, 2, 3 Evaluation Schemas ────────────────────────────────
 
 class ReviewRound1Submit(BaseModel):

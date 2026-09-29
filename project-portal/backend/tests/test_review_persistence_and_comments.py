@@ -73,28 +73,35 @@ class TestReviewPersistenceAndComments:
         assert r1_saved["is_published"] is True
         assert r1_saved["status"] == "COMPLETED"
 
-        # ── 3. Participant opens dashboard Review History ─────────────────────
+        # ── 3. Participant opens dashboard Review History (Scores Restricted) ───
         team_eval_resp = client.get("/api/projects/me/evaluations", headers=team_h)
         assert team_eval_resp.status_code == 200
         team_eval = team_eval_resp.json()["data"]
 
+        # Scores must be omitted for participants
+        assert team_eval.get("scores") is None
         team_r1 = team_eval["round_1"]
         assert team_r1 is not None
-        assert team_r1["total_score"] == 45
-        assert team_r1["score_solution_quality"] == 9
-        assert team_r1["score_confidence_qa"] == 7
+        assert team_r1.get("total_score") is None
+        assert team_r1.get("score_solution_quality") is None
+        assert team_r1.get("score_confidence_qa") is None
         assert team_r1["comments"] == "Outstanding problem statement clarity and architecture."
         assert team_r1["suggestions"] == "Focus on backend latency optimizations for Round 2."
-        assert team_r1["is_published"] is True
+        assert team_r1["status"] == "Completed"
 
-        # Verify participant reviews API
+        # Verify participant reviews API matches ParticipantReviewResponse schema
         team_revs_resp = client.get("/api/projects/me/reviews", headers=team_h)
         assert team_revs_resp.status_code == 200
         team_revs = team_revs_resp.json()["data"]
         assert len(team_revs) >= 1
-        r1_legacy = next(r for r in team_revs if r["round_number"] == 1)
-        assert r1_legacy["review_text"] == "Outstanding problem statement clarity and architecture."
-        assert r1_legacy["suggested_improvements"] == "Focus on backend latency optimizations for Round 2."
+        r1_part = next(r for r in team_revs if (r.get("review_round") == 1 or r.get("round_number") == 1))
+        assert r1_part["review_title"] == "REVIEW 1 — PROBLEM & PLAN"
+        assert r1_part["status"] == "Completed"
+        assert r1_part["evaluator_comments"] == "Outstanding problem statement clarity and architecture."
+        assert r1_part["suggested_improvements"] == "Focus on backend latency optimizations for Round 2."
+        assert "total_score" not in r1_part
+        assert "score" not in r1_part
+        assert "admin" not in r1_part
 
         # Verify participant timeline
         timeline_resp = client.get("/api/projects/me/timeline", headers=team_h)
@@ -180,12 +187,26 @@ class TestReviewPersistenceAndComments:
         assert final_eval["round_3"]["score_tech_understanding"] == 10
         assert final_eval["round_3"]["recommendation"] == "RECOMMENDED_FOR_AWARDS"
 
-        # ── 8. Verify participant dashboard gets full data ────────────────────
+        # ── 8. Verify participant dashboard gets comments & suggestions (no scores)
         final_team_eval = client.get("/api/projects/me/evaluations", headers=team_h).json()["data"]
+        assert final_team_eval.get("scores") is None
         assert final_team_eval["round_1"]["comments"] == "Outstanding problem statement clarity and architecture."
         assert final_team_eval["round_2"]["review_notes"] == "Rapid progress across frontend and backend endpoints."
         assert final_team_eval["round_3"]["final_remarks"] == "Exceptional execution, well-architected solution ready for deployment."
-        assert final_team_eval["round_3"]["strengths"] == "Robust security, pristine UX, clean code."
+        assert final_team_eval["round_3"]["recommendation"] == "RECOMMENDED_FOR_AWARDS"
+
+        final_team_revs = client.get("/api/projects/me/reviews", headers=team_h).json()["data"]
+        assert len(final_team_revs) == 3
+        for rev in final_team_revs:
+            assert "review_round" in rev
+            assert "review_title" in rev
+            assert "status" in rev
+            assert "review_date" in rev
+            assert "evaluator_comments" in rev
+            assert "suggested_improvements" in rev
+            assert "total_score" not in rev
+            assert "score" not in rev
+            assert "admin" not in rev
 
     def test_score_validation_strictly_rejects_out_of_range(self, client: TestClient, admin_user, ai_user, domains):
         """Verify scores outside 1-10 are rejected with 422 Unprocessable Entity."""

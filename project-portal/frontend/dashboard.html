@@ -2470,334 +2470,99 @@
     list.innerHTML = '';
 
     try {
-      const [res, evalRes] = await Promise.all([
-        api.get('/api/projects/me/reviews').catch(() => ({ data: [] })),
-        api.get('/api/projects/me/evaluations').catch(() => null)
-      ]);
+      const res = await api.get('/api/projects/me/reviews').catch(() => ({ data: [] }));
+      const reviews = res.data || [];
 
-      const rawReviews = res.data || [];
-      const ev = evalRes ? evalRes.data : null;
-
-      // Deduplicate legacy reviews
-      const seenIds = new Set();
-      const reviews = rawReviews.filter(r => {
-        if (seenIds.has(r.id)) return false;
-        seenIds.add(r.id);
-        return true;
-      });
-
-      const r1 = ev ? ev.round_1 : null;
-      const r2 = ev ? ev.round_2 : null;
-      const r3 = ev ? ev.round_3 : null;
-
-      const hasR1 = r1 && (r1.status === 'COMPLETED' || r1.is_published || r1.total_score > 0 || r1.comments);
-      const hasR2 = r2 && (r2.status === 'COMPLETED' || r2.is_published || r2.total_score > 0 || r2.review_notes);
-      const hasR3 = r3 && (r3.status === 'COMPLETED' || r3.is_published || r3.total_score > 0 || r3.final_remarks);
-      const hasEvaluations = Boolean(hasR1 || hasR2 || hasR3);
-
-      if (reviews.length === 0 && !hasEvaluations) {
+      if (!reviews || reviews.length === 0) {
         empty.classList.remove('hidden');
         return;
       }
 
+      // Sort reviews by round ascending (1, 2, 3...)
+      reviews.sort((a, b) => (a.review_round || a.round_number || 0) - (b.review_round || b.round_number || 0));
+
+      const roundTitles = {
+        1: 'REVIEW 1 — PROBLEM & PLAN',
+        2: 'REVIEW 2 — WORKING PROGRESS',
+        3: 'REVIEW 3 — FINAL READINESS'
+      };
+
+      const roundIcons = {
+        1: '📜',
+        2: '⚙️',
+        3: '🏆'
+      };
+
       let html = '';
 
-      // ── Official Evaluation Scorecard Banner ───────────────────────────────
-      if (hasEvaluations && ev.scores) {
-        const scores = ev.scores || {};
-        html += `
-          <div class="card mb-3" style="border:1.5px solid var(--gold);background:linear-gradient(135deg, rgba(26,21,14,0.95), rgba(16,12,8,0.98));box-shadow:0 10px 30px rgba(212,175,55,0.15)">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid rgba(212,175,55,0.3)">
-              <div>
-                <div style="font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.5rem">
-                  <span>🏆</span> Official Hackathon Evaluation Scorecard
-                </div>
-                <div class="text-xs text-muted mt-1">Multi-round evaluation criteria verified by Ministry of Magic Arbiters</div>
-              </div>
-              <div style="text-align:right">
-                <div class="text-xs text-muted uppercase">Grand Total Score</div>
-                <div style="font-family:'Cinzel',serif;font-size:1.6rem;font-weight:800;color:var(--gold-light)">
-                  ${scores.grand_total} <span style="font-size:1rem;color:var(--text-muted)">/ 200</span>
-                </div>
-                <div class="text-xs text-muted">${scores.percentage}% Overall</div>
-              </div>
-            </div>
+      reviews.forEach(r => {
+        const roundNum = r.review_round || r.round_number || 1;
+        const title = r.review_title || roundTitles[roundNum] || `REVIEW ${roundNum}`;
+        const icon = roundIcons[roundNum] || '📝';
 
-            <!-- Quick Round Score Badges -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:0.75rem">
-              <div style="background:rgba(0,0,0,0.3);padding:0.75rem 1rem;border-radius:6px;border:1px solid ${hasR1 ? 'rgba(34,197,94,0.3)' : 'var(--border)'}">
-                <div class="text-xs text-muted">Round 1 — Problem &amp; Plan</div>
-                <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light);font-size:1.1rem;margin-top:0.25rem">
-                  ${hasR1 ? `${r1.total_score} / 60` : 'Pending'}
-                </div>
-              </div>
-              <div style="background:rgba(0,0,0,0.3);padding:0.75rem 1rem;border-radius:6px;border:1px solid ${hasR2 ? 'rgba(34,197,94,0.3)' : 'var(--border)'}">
-                <div class="text-xs text-muted">Round 2 — Working Progress</div>
-                <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light);font-size:1.1rem;margin-top:0.25rem">
-                  ${hasR2 ? `${r2.total_score} / 70` : 'Pending'}
-                </div>
-              </div>
-              <div style="background:rgba(0,0,0,0.3);padding:0.75rem 1rem;border-radius:6px;border:1px solid ${hasR3 ? 'rgba(34,197,94,0.3)' : 'var(--border)'}">
-                <div class="text-xs text-muted">Round 3 — Final Readiness</div>
-                <div style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold-light);font-size:1.1rem;margin-top:0.25rem">
-                  ${hasR3 ? `${r3.total_score} / 70` : 'Pending'}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }
-
-      // ── Detailed Round 1 Evaluation Card ──────────────────────────────────
-      if (hasR1) {
-        const r1Date = r1.evaluated_at ? new Date(r1.evaluated_at).toLocaleDateString(undefined, {
-          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        }) : '—';
-        const r1Criteria = [
-          { name: '1. Problem Statement Clarity', score: r1.score_problem_clarity },
-          { name: '2. Proposed Solution Quality', score: (r1.score_solution_quality ?? r1.score_proposed_solution) },
-          { name: '3. Tech Stack Appropriation', score: r1.score_tech_stack },
-          { name: '4. Idea Presentation', score: r1.score_idea_presentation },
-          { name: '5. Feasibility', score: r1.score_feasibility },
-          { name: '6. Team Confidence & Q&A Handling', score: (r1.score_confidence_qa ?? r1.score_team_confidence_qa) },
-        ];
-
-        html += `
-          <div class="review-history-card mb-3" style="border:1px solid rgba(212,175,55,0.4)">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span style="font-size:1.5rem">📜</span>
-                <div>
-                  <h3 style="font-weight:700;font-size:1.15rem;font-family:'Cinzel',serif">Review 1 — Problem &amp; Plan</h3>
-                  <span class="text-xs text-muted">Evaluated by: <strong>${escHtml(r1.evaluator_name || 'Chief Arbiter')}</strong></span>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span class="badge ${r1.status === 'COMPLETED' ? 'badge-green' : 'badge-yellow'}">${r1.status === 'COMPLETED' ? 'Completed' : 'Draft'}</span>
-                <span class="text-xs text-muted font-mono">${r1Date}</span>
-              </div>
-            </div>
-
-            <div style="margin:1rem 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-              <span style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700">Total Score: <span style="color:var(--gold-light)">${r1.total_score} / 60</span></span>
-              <span class="text-xs text-muted">${Math.round((r1.total_score / 60) * 100)}% achieved</span>
-            </div>
-
-            <table style="width:100%;border-collapse:collapse;margin:0.75rem 0 1.25rem;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;border:1px solid rgba(212,175,55,0.15)">
-              <thead>
-                <tr style="background:rgba(212,175,55,0.08);border-bottom:1px solid rgba(212,175,55,0.25);color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.85rem">
-                  <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600">Evaluation Criteria</th>
-                  <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;width:110px">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${r1Criteria.map(c => `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                    <td style="padding:0.55rem 0.75rem;font-size:0.9rem;color:var(--text-primary)">${escHtml(c.name)}</td>
-                    <td style="padding:0.55rem 0.75rem;text-align:right;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">${c.score !== undefined && c.score !== null ? c.score : 0} <span style="font-size:0.75rem;color:var(--text-muted)">/ 10</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
-            <div class="feedback-box">
-              <div class="feedback-box-title">💬 Evaluator Comments</div>
-              <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r1.comments || 'No comments provided.')}</div>
-            </div>
-
-            ${(r1.suggestions || r1.suggestions_next_round) ? `
-              <div class="improvement-box" style="margin-top:0.75rem">
-                <div class="improvement-box-title">💡 Suggested Improvements</div>
-                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r1.suggestions || r1.suggestions_next_round)}</div>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-
-      // ── Detailed Round 2 Evaluation Card ──────────────────────────────────
-      if (hasR2) {
-        const r2Date = r2.evaluated_at ? new Date(r2.evaluated_at).toLocaleDateString(undefined, {
-          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        }) : '—';
-        const r2Criteria = [
-          { name: '1. Project Planning & Workflow', score: r2.score_planning_workflow },
-          { name: '2. Frontend Development Progress', score: r2.score_frontend_progress },
-          { name: '3. Backend Development Progress', score: r2.score_backend_progress },
-          { name: '4. Prototype Development Progress', score: r2.score_prototype_progress },
-          { name: '5. Technical Implementation Quality', score: r2.score_technical_quality },
-          { name: '6. Team Collaboration', score: r2.score_team_collaboration },
-          { name: '7. Time Management & Milestone Completion', score: r2.score_milestone_completion },
-        ];
-
-        html += `
-          <div class="review-history-card mb-3" style="border:1px solid rgba(212,175,55,0.4)">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span style="font-size:1.5rem">⚙️</span>
-                <div>
-                  <h3 style="font-weight:700;font-size:1.15rem;font-family:'Cinzel',serif">Review 2 — Working Progress</h3>
-                  <span class="text-xs text-muted">Evaluated by: <strong>${escHtml(r2.evaluator_name || 'Chief Arbiter')}</strong></span>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span class="badge ${r2.status === 'COMPLETED' ? 'badge-green' : 'badge-yellow'}">${r2.status === 'COMPLETED' ? 'Completed' : 'Draft'}</span>
-                <span class="text-xs text-muted font-mono">${r2Date}</span>
-              </div>
-            </div>
-
-            <div style="margin:1rem 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-              <span style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700">Total Score: <span style="color:var(--gold-light)">${r2.total_score} / 70</span></span>
-              <span class="text-xs text-muted">${Math.round((r2.total_score / 70) * 100)}% achieved</span>
-            </div>
-
-            <table style="width:100%;border-collapse:collapse;margin:0.75rem 0 1.25rem;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;border:1px solid rgba(212,175,55,0.15)">
-              <thead>
-                <tr style="background:rgba(212,175,55,0.08);border-bottom:1px solid rgba(212,175,55,0.25);color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.85rem">
-                  <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600">Evaluation Criteria</th>
-                  <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;width:110px">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${r2Criteria.map(c => `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                    <td style="padding:0.55rem 0.75rem;font-size:0.9rem;color:var(--text-primary)">${escHtml(c.name)}</td>
-                    <td style="padding:0.55rem 0.75rem;text-align:right;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">${c.score !== undefined && c.score !== null ? c.score : 0} <span style="font-size:0.75rem;color:var(--text-muted)">/ 10</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
-            <div class="feedback-box">
-              <div class="feedback-box-title">💬 Evaluator Notes</div>
-              <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r2.review_notes || 'No review notes provided.')}</div>
-            </div>
-
-            ${r2.improvement_suggestions ? `
-              <div class="improvement-box" style="margin-top:0.75rem">
-                <div class="improvement-box-title">💡 Suggested Improvements</div>
-                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r2.improvement_suggestions)}</div>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-
-      // ── Detailed Round 3 Evaluation Card ──────────────────────────────────
-      if (hasR3) {
-        const r3Date = r3.evaluated_at ? new Date(r3.evaluated_at).toLocaleDateString(undefined, {
-          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-        }) : '—';
-        const r3Criteria = [
-          { name: '1. Tech Stack Understanding', score: (r3.score_tech_understanding ?? r3.score_tech_stack_understanding) },
-          { name: '2. Final Problem–Solution Fit', score: r3.score_problem_solution_fit },
-          { name: '3. Innovation & Creativity', score: r3.score_innovation_creativity },
-          { name: '4. Prototype Functionality', score: r3.score_prototype_functionality },
-          { name: '5. Completeness of Solution', score: r3.score_solution_completeness },
-          { name: '6. Teamwork & Execution', score: r3.score_teamwork_execution },
-          { name: '7. Q&A Handling', score: r3.score_qa_handling },
-        ];
-
-        html += `
-          <div class="review-history-card mb-3" style="border:1px solid rgba(212,175,55,0.4)">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span style="font-size:1.5rem">🏆</span>
-                <div>
-                  <h3 style="font-weight:700;font-size:1.15rem;font-family:'Cinzel',serif">Review 3 — Final Readiness</h3>
-                  <span class="text-xs text-muted">Evaluated by: <strong>${escHtml(r3.evaluator_name || 'Chief Arbiter')}</strong></span>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:0.75rem">
-                <span class="badge ${r3.status === 'COMPLETED' ? 'badge-green' : 'badge-yellow'}">${r3.status === 'COMPLETED' ? 'Completed' : 'Draft'}</span>
-                <span class="text-xs text-muted font-mono">${r3Date}</span>
-              </div>
-            </div>
-
-            <div style="margin:1rem 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-              <span style="font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700">Total Score: <span style="color:var(--gold-light)">${r3.total_score} / 70</span></span>
-              <span class="text-xs text-muted">${Math.round((r3.total_score / 70) * 100)}% achieved</span>
-            </div>
-
-            <table style="width:100%;border-collapse:collapse;margin:0.75rem 0 1.25rem;background:rgba(0,0,0,0.2);border-radius:6px;overflow:hidden;border:1px solid rgba(212,175,55,0.15)">
-              <thead>
-                <tr style="background:rgba(212,175,55,0.08);border-bottom:1px solid rgba(212,175,55,0.25);color:var(--gold-light);font-family:'Cinzel',serif;font-size:0.85rem">
-                  <th style="padding:0.6rem 0.75rem;text-align:left;font-weight:600">Evaluation Criteria</th>
-                  <th style="padding:0.6rem 0.75rem;text-align:right;font-weight:600;width:110px">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${r3Criteria.map(c => `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
-                    <td style="padding:0.55rem 0.75rem;font-size:0.9rem;color:var(--text-primary)">${escHtml(c.name)}</td>
-                    <td style="padding:0.55rem 0.75rem;text-align:right;font-weight:700;color:var(--gold-light);font-family:'Cinzel',serif">${c.score !== undefined && c.score !== null ? c.score : 0} <span style="font-size:0.75rem;color:var(--text-muted)">/ 10</span></td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
-            <div class="feedback-box">
-              <div class="feedback-box-title">💬 Evaluator Final Remarks</div>
-              <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r3.final_remarks || 'No remarks provided.')}</div>
-            </div>
-
-            ${(r3.strengths || r3.weaknesses || r3.recommendation) ? `
-              <div class="improvement-box" style="margin-top:0.75rem">
-                <div class="improvement-box-title">💡 Assessment Breakdown</div>
-                ${r3.strengths ? `<div class="text-xs text-success mt-1">✓ <strong>Strengths:</strong> ${escHtml(r3.strengths)}</div>` : ''}
-                ${r3.weaknesses ? `<div class="text-xs text-warning mt-1">⚠ <strong>Weaknesses:</strong> ${escHtml(r3.weaknesses)}</div>` : ''}
-                ${r3.recommendation ? `<div class="text-xs text-muted mt-1">🏆 <strong>Recommendation:</strong> ${escHtml(r3.recommendation)}</div>` : ''}
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-
-      // ── Any Legacy Standalone Reviews (if not matching round 1/2/3) ────────
-      const remainingReviews = reviews.filter(r => {
-        if (r.round_number === 1 && hasR1) return false;
-        if (r.round_number === 2 && hasR2) return false;
-        if (r.round_number === 3 && hasR3) return false;
-        return true;
-      });
-
-      if (remainingReviews.length > 0) {
-        html += remainingReviews.map(r => {
-          const formattedDate = new Date(r.reviewed_at || r.created_at).toLocaleDateString(undefined, {
-            year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+        // Date formatting: e.g. 29 Sep 2026
+        let dateStr = '—';
+        if (r.review_date) {
+          if (!isNaN(Date.parse(r.review_date))) {
+            dateStr = new Date(r.review_date).toLocaleDateString('en-GB', {
+              day: 'numeric', month: 'short', year: 'numeric'
+            });
+          } else {
+            dateStr = r.review_date;
+          }
+        } else if (r.reviewed_at || r.created_at) {
+          const rawDate = r.reviewed_at || r.created_at;
+          dateStr = new Date(rawDate).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric'
           });
+        }
 
-          return `
-            <div class="review-history-card mb-3" data-review-id="${r.id}">
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
-                <div style="display:flex;align-items:center;gap:0.75rem">
-                  <span style="font-size:1.5rem">📝</span>
-                  <div>
-                    <h3 style="font-weight:700;font-size:1.15rem;font-family:'Cinzel',serif">Round ${r.round_number} Review Decision</h3>
-                    <span class="text-xs text-muted">Evaluated by: <strong>${escHtml(r.admin?.name || 'Administrator')}</strong></span>
-                  </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:0.75rem">
-                  <span class="badge ${statusColors[r.status] || 'badge-gray'}">${escHtml(r.status)}</span>
-                  <span class="text-xs text-muted font-mono">${formattedDate}</span>
+        const status = r.status || 'Under Review';
+        const isCompleted = status.toLowerCase() === 'completed' || status.toLowerCase() === 'passed';
+        const badgeClass = isCompleted ? 'badge-green' : (status.toLowerCase().includes('need') ? 'badge-orange' : 'badge-yellow');
+
+        const comments = r.evaluator_comments || r.review_text || '';
+        const suggestions = r.suggested_improvements || '';
+
+        html += `
+          <div class="review-history-card mb-3" style="border: 1px solid rgba(212,175,55,0.35); background: linear-gradient(135deg, rgba(20,16,11,0.95), rgba(12,9,6,0.98)); box-shadow: 0 8px 24px rgba(0,0,0,0.35); border-radius: 8px; padding: 1.25rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;padding-bottom:1rem;border-bottom:1px solid rgba(212,175,55,0.2)">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span style="font-size:1.5rem">${icon}</span>
+                <div>
+                  <h3 style="font-weight:700;font-size:1.15rem;font-family:'Cinzel',serif;letter-spacing:0.5px;color:var(--gold-light);margin:0">
+                    ${escHtml(title.toUpperCase())}
+                  </h3>
                 </div>
               </div>
-
-              <div class="feedback-box">
-                <div class="feedback-box-title">Admin Feedback</div>
-                <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.review_text)}</div>
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span class="badge ${badgeClass}">${escHtml(status)}</span>
+                <span class="text-xs text-muted font-mono">Date: ${escHtml(dateStr)}</span>
               </div>
-
-              ${r.suggested_improvements ? `
-                <div class="improvement-box">
-                  <div class="improvement-box-title">💡 Suggested Improvements</div>
-                  <div class="text-sm" style="color:var(--text-primary);line-height:1.6;white-space:pre-line">${escHtml(r.suggested_improvements)}</div>
-                </div>
-              ` : ''}
             </div>
-          `;
-        }).join('');
-      }
+
+            <div class="feedback-box mt-3" style="background:rgba(0,0,0,0.25);border-left:3px solid var(--gold);padding:0.9rem 1rem;border-radius:4px">
+              <div class="feedback-box-title" style="font-family:'Cinzel',serif;font-weight:700;color:var(--gold);font-size:0.95rem;margin-bottom:0.4rem">
+                💬 Evaluator Comments
+              </div>
+              <div class="text-sm" style="color:var(--text-primary);line-height:1.65;white-space:pre-line">
+                ${escHtml(comments || 'No comments provided.')}
+              </div>
+            </div>
+
+            ${suggestions ? `
+              <div class="improvement-box mt-3" style="background:rgba(0,0,0,0.25);border-left:3px solid #38bdf8;padding:0.9rem 1rem;border-radius:4px">
+                <div class="improvement-box-title" style="font-family:'Cinzel',serif;font-weight:700;color:#38bdf8;font-size:0.95rem;margin-bottom:0.4rem">
+                  💡 Suggested Improvements
+                </div>
+                <div class="text-sm" style="color:var(--text-primary);line-height:1.65;white-space:pre-line">
+                  ${escHtml(suggestions)}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      });
 
       list.innerHTML = html;
     } catch (e) {

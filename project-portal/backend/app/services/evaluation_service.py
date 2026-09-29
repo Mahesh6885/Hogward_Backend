@@ -427,8 +427,8 @@ def sync_existing_evaluations_to_reviews(db: Session) -> int:
     return count
 
 
-def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
-    """Fetch complete evaluation details across R1, R2, R3 for a team."""
+def get_team_evaluation_details(db: Session, team_id: int, for_participant: bool = False) -> Dict[str, Any]:
+    """Fetch evaluation details across R1, R2, R3 for a team. Restricts scores/criteria if for_participant=True."""
     user, project = get_team_and_project(db, team_id)
 
     r1 = db.query(ReviewRound1).filter(ReviewRound1.team_id == team_id).order_by(ReviewRound1.id.desc()).first()
@@ -447,7 +447,7 @@ def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
     d_name = project.domain.name if project.domain else (user.domain.name if user.domain else "AI")
     d_display = {"AI": "AI", "CYBERSECURITY": "Cybersecurity", "OPEN_INNOVATION": "Open Innovation"}.get(d_name, d_name)
 
-    return {
+    base = {
         "team": {
             "id": user.id,
             "team_name": user.team_name or user.name,
@@ -467,73 +467,103 @@ def get_team_evaluation_details(db: Session, team_id: int) -> Dict[str, Any]:
             "current_round": project.current_round,
             "status": project.status,
         },
-        "scores": {
-            "r1": r1_score,
-            "r2": r2_score,
-            "r3": r3_score,
-            "grand_total": grand_total,
-            "percentage": percentage,
-        },
-        "round_1": {
+    }
+
+    if for_participant:
+        # Strictly qualitative feedback for participants - NO scores, NO criteria, NO evaluator details
+        base["scores"] = None
+        base["round_1"] = {
             "id": r1.id if r1 else None,
-            "evaluator_name": r1.evaluator_name if r1 else "",
-            "score_problem_clarity": r1.score_problem_clarity if r1 else 0,
-            "score_solution_quality": r1.score_solution_quality if r1 else 0,
-            "score_proposed_solution": r1.score_solution_quality if r1 else 0,
-            "score_tech_stack": r1.score_tech_stack if r1 else 0,
-            "score_idea_presentation": r1.score_idea_presentation if r1 else 0,
-            "score_feasibility": r1.score_feasibility if r1 else 0,
-            "score_confidence_qa": r1.score_confidence_qa if r1 else 0,
-            "score_team_confidence_qa": r1.score_confidence_qa if r1 else 0,
-            "total_score": r1.total_score if r1 else 0,
             "comments": r1.comments if r1 else "",
             "suggestions": r1.suggestions if r1 else "",
             "suggestions_next_round": r1.suggestions if r1 else "",
-            "status": r1.status if r1 else "PENDING",
-            "is_locked": r1.is_locked if r1 else False,
-            "is_published": getattr(r1, "is_published", True) if r1 else True,
+            "status": "Completed" if (r1 and r1.status == "COMPLETED") else ("Draft" if r1 else "Pending"),
             "evaluated_at": r1.evaluated_at.isoformat() if r1 and r1.evaluated_at else None,
-        } if r1 else None,
-        "round_2": {
+        } if r1 else None
+        base["round_2"] = {
             "id": r2.id if r2 else None,
-            "evaluator_name": r2.evaluator_name if r2 else "",
-            "score_planning_workflow": r2.score_planning_workflow if r2 else 0,
-            "score_frontend_progress": r2.score_frontend_progress if r2 else 0,
-            "score_backend_progress": r2.score_backend_progress if r2 else 0,
-            "score_prototype_progress": r2.score_prototype_progress if r2 else 0,
-            "score_technical_quality": r2.score_technical_quality if r2 else 0,
-            "score_team_collaboration": r2.score_team_collaboration if r2 else 0,
-            "score_milestone_completion": r2.score_milestone_completion if r2 else 0,
-            "total_score": r2.total_score if r2 else 0,
             "review_notes": r2.review_notes if r2 else "",
             "improvement_suggestions": r2.improvement_suggestions if r2 else "",
-            "status": r2.status if r2 else "PENDING",
-            "is_locked": r2.is_locked if r2 else False,
-            "is_published": getattr(r2, "is_published", True) if r2 else True,
+            "status": "Completed" if (r2 and r2.status == "COMPLETED") else ("Draft" if r2 else "Pending"),
             "evaluated_at": r2.evaluated_at.isoformat() if r2 and r2.evaluated_at else None,
-        } if r2 else None,
-        "round_3": {
+        } if r2 else None
+        base["round_3"] = {
             "id": r3.id if r3 else None,
-            "evaluator_name": r3.evaluator_name if r3 else "",
-            "score_tech_understanding": r3.score_tech_understanding if r3 else 0,
-            "score_tech_stack_understanding": r3.score_tech_understanding if r3 else 0,
-            "score_problem_solution_fit": r3.score_problem_solution_fit if r3 else 0,
-            "score_innovation_creativity": r3.score_innovation_creativity if r3 else 0,
-            "score_prototype_functionality": r3.score_prototype_functionality if r3 else 0,
-            "score_solution_completeness": r3.score_solution_completeness if r3 else 0,
-            "score_teamwork_execution": r3.score_teamwork_execution if r3 else 0,
-            "score_qa_handling": r3.score_qa_handling if r3 else 0,
-            "total_score": r3.total_score if r3 else 0,
             "final_remarks": r3.final_remarks if r3 else "",
-            "strengths": r3.strengths if r3 else "",
-            "weaknesses": r3.weaknesses if r3 else "",
             "recommendation": r3.recommendation if r3 else "",
-            "status": r3.status if r3 else "PENDING",
-            "is_locked": r3.is_locked if r3 else False,
-            "is_published": getattr(r3, "is_published", True) if r3 else True,
+            "status": "Completed" if (r3 and r3.status == "COMPLETED") else ("Draft" if r3 else "Pending"),
             "evaluated_at": r3.evaluated_at.isoformat() if r3 and r3.evaluated_at else None,
-        } if r3 else None,
+        } if r3 else None
+        return base
+
+    # Full administrative review details for admins
+    base["scores"] = {
+        "r1": r1_score,
+        "r2": r2_score,
+        "r3": r3_score,
+        "grand_total": grand_total,
+        "percentage": percentage,
     }
+    base["round_1"] = {
+        "id": r1.id if r1 else None,
+        "evaluator_name": r1.evaluator_name if r1 else "",
+        "score_problem_clarity": r1.score_problem_clarity if r1 else 0,
+        "score_solution_quality": r1.score_solution_quality if r1 else 0,
+        "score_proposed_solution": r1.score_solution_quality if r1 else 0,
+        "score_tech_stack": r1.score_tech_stack if r1 else 0,
+        "score_idea_presentation": r1.score_idea_presentation if r1 else 0,
+        "score_feasibility": r1.score_feasibility if r1 else 0,
+        "score_confidence_qa": r1.score_confidence_qa if r1 else 0,
+        "score_team_confidence_qa": r1.score_confidence_qa if r1 else 0,
+        "total_score": r1.total_score if r1 else 0,
+        "comments": r1.comments if r1 else "",
+        "suggestions": r1.suggestions if r1 else "",
+        "suggestions_next_round": r1.suggestions if r1 else "",
+        "status": r1.status if r1 else "PENDING",
+        "is_locked": r1.is_locked if r1 else False,
+        "is_published": getattr(r1, "is_published", True) if r1 else True,
+        "evaluated_at": r1.evaluated_at.isoformat() if r1 and r1.evaluated_at else None,
+    } if r1 else None
+    base["round_2"] = {
+        "id": r2.id if r2 else None,
+        "evaluator_name": r2.evaluator_name if r2 else "",
+        "score_planning_workflow": r2.score_planning_workflow if r2 else 0,
+        "score_frontend_progress": r2.score_frontend_progress if r2 else 0,
+        "score_backend_progress": r2.score_backend_progress if r2 else 0,
+        "score_prototype_progress": r2.score_prototype_progress if r2 else 0,
+        "score_technical_quality": r2.score_technical_quality if r2 else 0,
+        "score_team_collaboration": r2.score_team_collaboration if r2 else 0,
+        "score_milestone_completion": r2.score_milestone_completion if r2 else 0,
+        "total_score": r2.total_score if r2 else 0,
+        "review_notes": r2.review_notes if r2 else "",
+        "improvement_suggestions": r2.improvement_suggestions if r2 else "",
+        "status": r2.status if r2 else "PENDING",
+        "is_locked": r2.is_locked if r2 else False,
+        "is_published": getattr(r2, "is_published", True) if r2 else True,
+        "evaluated_at": r2.evaluated_at.isoformat() if r2 and r2.evaluated_at else None,
+    } if r2 else None
+    base["round_3"] = {
+        "id": r3.id if r3 else None,
+        "evaluator_name": r3.evaluator_name if r3 else "",
+        "score_tech_understanding": r3.score_tech_understanding if r3 else 0,
+        "score_tech_stack_understanding": r3.score_tech_understanding if r3 else 0,
+        "score_problem_solution_fit": r3.score_problem_solution_fit if r3 else 0,
+        "score_innovation_creativity": r3.score_innovation_creativity if r3 else 0,
+        "score_prototype_functionality": r3.score_prototype_functionality if r3 else 0,
+        "score_solution_completeness": r3.score_solution_completeness if r3 else 0,
+        "score_teamwork_execution": r3.score_teamwork_execution if r3 else 0,
+        "score_qa_handling": r3.score_qa_handling if r3 else 0,
+        "total_score": r3.total_score if r3 else 0,
+        "final_remarks": r3.final_remarks if r3 else "",
+        "strengths": r3.strengths if r3 else "",
+        "weaknesses": r3.weaknesses if r3 else "",
+        "recommendation": r3.recommendation if r3 else "",
+        "status": r3.status if r3 else "PENDING",
+        "is_locked": r3.is_locked if r3 else False,
+        "is_published": getattr(r3, "is_published", True) if r3 else True,
+        "evaluated_at": r3.evaluated_at.isoformat() if r3 and r3.evaluated_at else None,
+    } if r3 else None
+    return base
 
 
 def get_all_evaluations_summary(

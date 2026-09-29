@@ -284,14 +284,28 @@ class TestPhase3ReviewEvaluation:
         assert lb_data["podium"]["gold"]["team_id"] == user_id
         assert lb_data["podium"]["gold"]["grand_total"] == 178
 
-        # ── 6. Verify User Access to Read-only Evaluations ───────────────────
+        # ── 6. Verify User Access to Read-only Evaluations (Scores Restricted) ────
         user_eval_resp = client.get("/api/projects/me/evaluations", headers=auth_headers(user_token))
         assert user_eval_resp.status_code == 200
         user_eval = user_eval_resp.json()["data"]
-        assert user_eval["scores"]["grand_total"] == 178
-        assert user_eval["round_1"]["total_score"] == 51
-        assert user_eval["round_2"]["total_score"] == 61
-        assert user_eval["round_3"]["total_score"] == 66
+        assert user_eval.get("scores") is None
+        assert user_eval["round_1"]["comments"] == "Superb understanding of problem statement and viable tech stack."
+        assert user_eval["round_1"].get("total_score") is None
+        assert user_eval["round_1"].get("score_problem_clarity") is None
+
+        user_rev_resp = client.get("/api/projects/me/reviews", headers=auth_headers(user_token))
+        assert user_rev_resp.status_code == 200
+        user_revs = user_rev_resp.json()["data"]
+        assert len(user_revs) >= 1
+        for rev in user_revs:
+            assert "review_round" in rev
+            assert "review_title" in rev
+            assert "status" in rev
+            assert "evaluator_comments" in rev
+            assert "suggested_improvements" in rev
+            assert "total_score" not in rev
+            assert "score" not in rev
+            assert "admin" not in rev
 
         # ── 7. Verify User Cannot Submit Evaluations ─────────────────────────
         forbidden_resp = client.post(

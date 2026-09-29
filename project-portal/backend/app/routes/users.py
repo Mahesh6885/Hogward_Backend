@@ -195,16 +195,16 @@ def get_my_project(current_user: User = Depends(get_current_user), db: Session =
 
 @router.get("/me/reviews", status_code=200)
 def get_my_reviews(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """Get all reviews for the current user's project."""
+    """Get all reviews for the current user's project (participant-restricted)."""
     project = get_user_project(db, current_user)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"success": False, "message": "You have not submitted a project yet", "error_code": "NOT_FOUND"},
         )
-    reviews = get_project_reviews(db, project.id)
+    from app.routes.projects import _get_participant_reviews
     return {
         "success": True,
         "message": "Reviews retrieved",
-        "data": [_serialize_review(r) for r in reviews],
+        "data": _get_participant_reviews(db, project, current_user),
     }

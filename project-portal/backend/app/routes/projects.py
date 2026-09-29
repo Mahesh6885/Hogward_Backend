@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database.database import get_db
 from app.core.dependencies import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.project import ProjectSubmitRequest, ProjectDraftRequest
 from app.services.project_service import (
     submit_project,
@@ -139,6 +139,59 @@ def _serialize_project(project) -> dict:
     }
 
 
+ROUND_TITLES = {
+    1: "REVIEW 1 — PROBLEM & PLAN",
+    2: "REVIEW 2 — WORKING PROGRESS",
+    3: "REVIEW 3 — FINAL READINESS",
+}
+
+
+def _serialize_participant_review(r) -> dict:
+    round_num = getattr(r, "round_number", 1)
+    title = ROUND_TITLES.get(round_num, f"REVIEW {round_num}")
+    status_raw = r.status.value if hasattr(r.status, "value") else str(r.status)
+    if status_raw.upper() in ("PASSED", "COMPLETED"):
+        status_disp = "Completed"
+    elif status_raw.upper() in ("PENDING", "DRAFT"):
+        status_disp = "Under Review"
+    elif status_raw.upper() == "NEEDS_IMPROVEMENT":
+        status_disp = "Needs Improvement"
+    elif status_raw.upper() == "FAILED":
+        status_disp = "Failed"
+    else:
+        status_disp = status_raw.capitalize()
+
+    dt = getattr(r, "reviewed_at", None) or getattr(r, "created_at", None)
+    if dt:
+        date_str = dt.strftime("%d %b %Y") if hasattr(dt, "strftime") else str(dt)[:10]
+    else:
+        date_str = None
+
+    comments = getattr(r, "review_text", "") or ""
+    improvements = getattr(r, "suggested_improvements", None)
+
+    return {
+        "id": getattr(r, "id", None),
+        "review_round": round_num,
+        "round_number": round_num,
+        "review_title": title,
+        "status": status_disp,
+        "review_date": date_str,
+        "reviewed_at": dt.isoformat() if dt and hasattr(dt, "isoformat") else (str(dt) if dt else None),
+        "evaluator_comments": comments,
+        "review_text": comments,
+        "suggested_improvements": improvements,
+    }
+
+
+def _get_participant_reviews(db: Session, project, user) -> list[dict]:
+    """Retrieve participant-facing reviews for the project without any scores or criteria."""
+    from app.services.review_service import get_project_reviews
+
+    reviews = get_project_reviews(db, project.id)
+    return [_serialize_participant_review(r) for r in reviews]
+
+
 def _serialize_review(r) -> dict:
     admin_info = {"id": r.admin.id, "name": r.admin.name, "username": r.admin.username} if r.admin else {"id": r.admin_id or 1, "name": "Chief Arbiter", "username": "admin"}
     status_str = r.status.value if hasattr(r.status, "value") else str(r.status)
@@ -244,18 +297,17 @@ def get_my_project_reviews(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get all reviews for the current team's project with feedback and suggested improvements."""
+    """Get all reviews for the current team's project with feedback and suggested improvements (participant-restricted)."""
     project = get_user_project(db, current_user)
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"success": False, "message": "You have not started a project yet", "error_code": "NOT_FOUND"},
         )
-    reviews = get_project_reviews(db, project.id)
     return {
         "success": True,
         "message": "Reviews retrieved",
-        "data": [_serialize_review(r) for r in reviews],
+        "data": _get_participant_reviews(db, project, current_user),
     }
 
 
@@ -290,9 +342,9 @@ def get_my_project_evaluations(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get evaluated round scores, totals, evaluator remarks, and suggestions for the team."""
+    """Get evaluated round reviews, remarks, and suggestions for the team (scores strictly restricted for participants)."""
     from app.services.evaluation_service import get_team_evaluation_details
-    data = get_team_evaluation_details(db, current_user.id)
+    data = get_team_evaluation_details(db, current_user.id, for_participant=(current_user.role != UserRole.ADMIN))
     return {
         "success": True,
         "message": "Team evaluations retrieved",
