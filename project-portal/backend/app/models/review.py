@@ -78,8 +78,8 @@ class ReviewRound1(Base):
 
     total_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False, index=True)
 
-    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
-    suggestions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    comments: Mapped[str | None] = mapped_column(Text, nullable=False)
+    suggestions: Mapped[str | None] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(20), default="COMPLETED", nullable=False)  # DRAFT or COMPLETED
     is_locked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_published: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
